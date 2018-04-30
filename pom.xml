@@ -52,7 +52,7 @@
                 <artifactId>apache-rat-plugin</artifactId>
                 <configuration>
                     <excludes>
-                        <exclude>readme.md</exclude>
+                        <exclude>*.md</exclude>
                     </excludes>
                 </configuration>
             </plugin>
@@ -86,8 +86,8 @@
 
         <!-- Testing -->
         <dependency>
-        	    <groupId>junit</groupId>
-        	    <artifactId>junit</artifactId>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
 
