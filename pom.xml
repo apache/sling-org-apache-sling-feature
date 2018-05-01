@@ -22,7 +22,7 @@
     </parent>
 
     <artifactId>org.apache.sling.feature</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.1.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Feature</name>
