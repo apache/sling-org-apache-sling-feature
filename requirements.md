@@ -1,4 +1,4 @@
-# An Introduction to the OSGi Feature Model
+# An Introduction to the Sling Feature Model
 
 Typical OSGi applications are assembled out of bundles and configured through both, OSGi configurations and framework properties (though these are less frequently used than OSGi configurations). Depending on the nature of the application, there might be additional artifact types involved.
 
