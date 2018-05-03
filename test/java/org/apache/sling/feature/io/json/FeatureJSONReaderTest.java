@@ -25,7 +25,6 @@ import org.apache.sling.feature.Extensions;
 import org.apache.sling.feature.Feature;
 import org.apache.sling.feature.Include;
 import org.apache.sling.feature.KeyValueMap;
-import org.apache.sling.feature.io.json.FeatureJSONReader;
 import org.apache.sling.feature.io.json.FeatureJSONReader.SubstituteVariables;
 import org.junit.Test;
 import org.osgi.resource.Capability;
@@ -192,7 +191,7 @@ public class FeatureJSONReaderTest {
         Extensions extensions = feature.getExtensions();
         assertEquals(1, extensions.size());
         Extension ext = extensions.iterator().next();
-        assertEquals("some repo init\ntext\n", ext.getText());
+        assertEquals("[\"some repo init\",\"text\"]", ext.getJSON());
     }
 
     @Test public void testHandleVars() throws Exception {
