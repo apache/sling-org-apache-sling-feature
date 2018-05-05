@@ -54,6 +54,7 @@ public class FeatureJSONReader extends JSONReaderBase {
      *
      * @param reader The reader for the feature
      * @param location Optional location
+     * @param phase If variables need to be substituted, the phase the this should be done for.
      * @return The read feature
      * @throws IOException If an IO errors occurs or the JSON is invalid.
      */
@@ -69,6 +70,7 @@ public class FeatureJSONReader extends JSONReaderBase {
      * @param reader The reader for the feature
      * @param providedId Optional artifact id
      * @param location Optional location
+     * @param phase If variables need to be substituted, the phase the this should be done for.
      * @return The read feature
      * @throws IOException If an IO errors occurs or the JSON is invalid.
      */

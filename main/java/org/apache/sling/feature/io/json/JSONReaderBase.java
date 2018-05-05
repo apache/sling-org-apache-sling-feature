@@ -88,6 +88,8 @@ abstract class JSONReaderBase {
     }
 
     /** Get the JSON object as a map, removing all comments that start with a '#' character
+     * @param json The JSON object to process
+     * @return A map representing the JSON object.
      */
     protected Map<String, Object> getJsonMap(JsonObject json) {
         @SuppressWarnings("unchecked")

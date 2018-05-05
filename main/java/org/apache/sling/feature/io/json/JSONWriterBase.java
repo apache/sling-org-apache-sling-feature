@@ -108,9 +108,8 @@ abstract class JSONWriterBase {
 
     /**
      * Write the list of configurations into a "configurations" element
-     * @param w The json generator
-     * @param cfgs The list of configurations
-     * @return
+     * @param cfgs The list of configurations.
+     * @return The JSON element containing the configurations.
      */
     protected JsonObject writeConfigurationsMap(final Configurations cfgs) {
         JsonObjectBuilder configObj = Json.createObjectBuilder();
