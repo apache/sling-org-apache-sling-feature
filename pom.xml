@@ -35,9 +35,9 @@
     </properties>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/support/feature</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/support/feature</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/tooling/support/feature</url>
+        <connection>scm:git:https://gitbox.apache.org/repos/asf/sling-org-apache-sling-feature.git</connection>
+        <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/sling-org-apache-sling-feature.git</developerConnection>
+        <url>https://gitbox.apache.org/repos/asf?p=sling-org-apache-sling-feature.git</url>
     </scm>
 
     <build>
