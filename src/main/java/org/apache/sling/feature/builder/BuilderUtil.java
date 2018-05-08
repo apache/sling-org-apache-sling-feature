@@ -17,17 +17,22 @@
 package org.apache.sling.feature.builder;
 
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import javax.json.Json;
 import javax.json.JsonArray;
+import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonStructure;
 import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
+import javax.json.JsonWriter;
 
+import jdk.nashorn.internal.ir.debug.JSONWriter;
 import org.apache.sling.feature.Application;
 import org.apache.sling.feature.Artifact;
 import org.apache.sling.feature.Bundles;
@@ -51,8 +56,8 @@ class BuilderUtil {
 
     // bundles
     static void mergeBundles(final Bundles target,
-            final Bundles source,
-            final ArtifactMerge artifactMergeAlg) {
+        final Bundles source,
+        final ArtifactMerge artifactMergeAlg) {
         for(final Map.Entry<Integer, List<Artifact>> entry : source.getBundlesByStartOrder().entrySet()) {
             for(final Artifact a : entry.getValue()) {
                 // version handling - use provided algorithm
@@ -118,71 +123,79 @@ class BuilderUtil {
 
     // default merge for extensions
     static void mergeExtensions(final Extension target,
-            final Extension source,
-            final ArtifactMerge artifactMergeAlg) {
+        final Extension source,
+        final ArtifactMerge artifactMergeAlg) {
         switch ( target.getType() ) {
             case TEXT : // simply append
-                        target.setText(target.getText() + "\n" + source.getText());
-                        break;
-            case JSON : final JsonStructure struct1;
-                        try ( final StringReader reader = new StringReader(target.getJSON()) ) {
-                            struct1 = Json.createReader(reader).read();
-                        }
-                        final JsonStructure struct2;
-                        try ( final StringReader reader = new StringReader(source.getJSON()) ) {
-                            struct2 = Json.createReader(reader).read();
-                        }
+                target.setText(target.getText() + "\n" + source.getText());
+                break;
+            case JSON : JsonStructure struct1;
+                try ( final StringReader reader = new StringReader(target.getJSON()) ) {
+                    struct1 = Json.createReader(reader).read();
+                }
+                JsonStructure struct2;
+                try ( final StringReader reader = new StringReader(source.getJSON()) ) {
+                    struct2 = Json.createReader(reader).read();
+                }
 
-                        if ( struct1.getValueType() != struct2.getValueType() ) {
-                            throw new IllegalStateException("Found different JSON types for extension " + target.getName()
-                                + " : " + struct1.getValueType() + " and " + struct2.getValueType());
-                        }
-                        if ( struct1.getValueType() == ValueType.ARRAY ) {
-                            // array is append
-                            final JsonArray a1 = (JsonArray)struct1;
-                            final JsonArray a2 = (JsonArray)struct2;
-                            for(final JsonValue val : a2) {
-                                a1.add(val);
-                            }
-                        } else {
-                            // object is merge
-                            merge((JsonObject)struct1, (JsonObject)struct2);
-                        }
-                        break;
+                if ( struct1.getValueType() != struct2.getValueType() ) {
+                    throw new IllegalStateException("Found different JSON types for extension " + target.getName()
+                        + " : " + struct1.getValueType() + " and " + struct2.getValueType());
+                }
+                if ( struct1.getValueType() == ValueType.ARRAY ) {
+                    final JsonArrayBuilder builder = Json.createArrayBuilder();
+
+                    Stream.concat(
+                        ((JsonArray) struct1).stream(),
+                        ((JsonArray) struct2).stream()
+                    ).forEachOrdered(builder::add);
+
+                    struct1 = builder.build();
+                } else {
+                    // object is merge
+                    merge((JsonObject)struct1, (JsonObject)struct2);
+                }
+                StringWriter buffer = new StringWriter();
+                try (JsonWriter writer = Json.createWriter(buffer))
+                {
+                    writer.write(struct1);
+                }
+                target.setJSON(buffer.toString());
+                break;
 
             case ARTIFACTS : for(final Artifact a : source.getArtifacts()) {
-                                 // use artifactMergeAlg
-                                 boolean add = true;
-                                 for(final Artifact targetArtifact : target.getArtifacts()) {
-                                     if ( targetArtifact.getId().isSame(a.getId()) ) {
-                                         if ( artifactMergeAlg == ArtifactMerge.HIGHEST ) {
-                                             if ( targetArtifact.getId().getOSGiVersion().compareTo(a.getId().getOSGiVersion()) > 0 ) {
-                                                 add = false;
-                                             } else {
-                                                 target.getArtifacts().remove(targetArtifact);
-                                             }
-                                         } else { // latest
+                // use artifactMergeAlg
+                boolean add = true;
+                for(final Artifact targetArtifact : target.getArtifacts()) {
+                    if ( targetArtifact.getId().isSame(a.getId()) ) {
+                        if ( artifactMergeAlg == ArtifactMerge.HIGHEST ) {
+                            if ( targetArtifact.getId().getOSGiVersion().compareTo(a.getId().getOSGiVersion()) > 0 ) {
+                                add = false;
+                            } else {
+                                target.getArtifacts().remove(targetArtifact);
+                            }
+                        } else { // latest
 
-                                             target.getArtifacts().remove(targetArtifact);
-                                         }
-                                         break;
-                                     }
-                                 }
+                            target.getArtifacts().remove(targetArtifact);
+                        }
+                        break;
+                    }
+                }
 
-                                 if ( add ) {
-                                     target.getArtifacts().add(a);
-                                 }
+                if ( add ) {
+                    target.getArtifacts().add(a);
+                }
 
-                             }
-                             break;
+            }
+                break;
         }
     }
 
     // extensions (add/merge)
     static void mergeExtensions(final Feature target,
-            final Feature source,
-            final ArtifactMerge artifactMergeAlg,
-            final BuilderContext context) {
+        final Feature source,
+        final ArtifactMerge artifactMergeAlg,
+        final BuilderContext context) {
         for(final Extension ext : source.getExtensions()) {
             boolean found = false;
             for(final Extension current : target.getExtensions()) {
@@ -190,7 +203,7 @@ class BuilderUtil {
                     found = true;
                     if ( current.getType() != ext.getType() ) {
                         throw new IllegalStateException("Found different types for extension " + current.getName()
-                        + " : " + current.getType() + " and " + ext.getType());
+                            + " : " + current.getType() + " and " + ext.getType());
                     }
                     boolean handled = false;
                     for(final FeatureExtensionHandler fem : context.getFeatureExtensionHandlers()) {
@@ -219,8 +232,8 @@ class BuilderUtil {
     }
 
     static void mergeExtensions(final Application target,
-            final Feature source,
-            final ArtifactMerge artifactMergeAlg) {
+        final Feature source,
+        final ArtifactMerge artifactMergeAlg) {
         for(final Extension ext : source.getExtensions()) {
             boolean found = false;
             for(final Extension current : target.getExtensions()) {
@@ -228,7 +241,7 @@ class BuilderUtil {
                     found = true;
                     if ( current.getType() != ext.getType() ) {
                         throw new IllegalStateException("Found different types for extension " + current.getName()
-                        + " : " + current.getType() + " and " + ext.getType());
+                            + " : " + current.getType() + " and " + ext.getType());
                     }
                     // default merge
                     mergeExtensions(current, ext, artifactMergeAlg);
@@ -250,12 +263,14 @@ class BuilderUtil {
                     // new type wins
                     obj1.put(entry.getKey(), entry.getValue());
                 } else if ( oldValue.getValueType() == ValueType.ARRAY ) {
-                    final JsonArray a1 = (JsonArray)oldValue;
-                    final JsonArray a2 = (JsonArray)entry.getValue();
-                    for(final JsonValue val : a2) {
-                        a1.add(val);
-                    }
+                    final JsonArrayBuilder builder = Json.createArrayBuilder();
 
+                    Stream.concat(
+                        ((JsonArray) oldValue).stream(),
+                        ((JsonArray)entry.getValue()).stream()
+                    ).forEachOrdered(builder::add);
+
+                    obj1.put(entry.getKey(), builder.build());
                 } else if ( oldValue.getValueType() == ValueType.OBJECT ) {
                     merge((JsonObject)oldValue, (JsonObject)entry.getValue());
                 } else {

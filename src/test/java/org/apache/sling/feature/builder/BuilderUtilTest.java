@@ -19,6 +19,8 @@ package org.apache.sling.feature.builder;
 import org.apache.sling.feature.Artifact;
 import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Bundles;
+import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.builder.BuilderUtil;
 import org.apache.sling.feature.builder.BuilderUtil.ArtifactMerge;
 import org.junit.Test;
@@ -149,6 +151,21 @@ public class BuilderUtilTest {
         assertContains(result, 1, ArtifactId.parse("g/d/1.1"));
         assertContains(result, 2, ArtifactId.parse("g/e/1.9"));
         assertContains(result, 3, ArtifactId.parse("g/f/2.5"));
+    }
+
+    @Test public void testMergeExtensions() {
+        Extension target = new Extension(ExtensionType.JSON, "target", true);
+
+        target.setJSON("[\"target1\", \"target2\"]");
+
+        Extension source = new Extension(ExtensionType.JSON, "source", true);
+
+        source.setJSON("[\"source1\",\"source2\"]");
+
+        BuilderUtil.mergeExtensions(target, source, ArtifactMerge.HIGHEST);
+
+        assertEquals(target.getJSON(), "[\"target1\",\"target2\",\"source1\",\"source2\"]");
+
     }
 
     public static Artifact createBundle(final String id, final int startOrder) {
