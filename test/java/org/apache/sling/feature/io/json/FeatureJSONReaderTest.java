@@ -213,6 +213,11 @@ public class FeatureJSONReaderTest {
         }
     }
 
+    @Test public void testReadArtifactsExtensions() throws Exception {
+        final Feature feature = U.readFeature("artifacts-extension", SubstituteVariables.NONE);
+        ArtifactsExtensions.testReadArtifactsExtensions(feature);
+    }
+
     private void setPrivateField(Object obj, String name, Object value) throws Exception {
         Field field = obj.getClass().getDeclaredField(name);
         field.setAccessible(true);

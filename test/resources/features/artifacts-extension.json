@@ -1,0 +1,9 @@
+{
+  "id": "test/artifacts-extension/1.0.0",
+  "my-extension1:ARTIFACTS|false":[
+    "org.apache.sling/my-extension1/1.2.3"
+  ],
+  "my-extension2:ARTIFACTS|true":[
+    "org.apache.sling/my-extension2/1.2.3"
+  ]
+}

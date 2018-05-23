@@ -47,4 +47,17 @@ public class FeatureJSONWriterTest {
                 U.findCapability(rf.getCapabilities(), "osgi.service").getAttributes().get("objectClass"));
     }
 
+    @Test public void testExtensionsWriteRead() throws Exception {
+        final Feature f = U.readFeature("artifacts-extension");
+        final Feature rf;
+        try ( final StringWriter writer = new StringWriter() ) {
+            FeatureJSONWriter.write(writer, f);
+            try ( final StringReader reader = new StringReader(writer.toString()) ) {
+                rf = FeatureJSONReader.read(reader, null, SubstituteVariables.RESOLVE);
+            }
+        }
+
+        ArtifactsExtensions.testReadArtifactsExtensions(rf);
+    }
+
 }
