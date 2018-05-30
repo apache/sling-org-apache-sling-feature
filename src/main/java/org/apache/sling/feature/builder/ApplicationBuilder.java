@@ -16,51 +16,14 @@
  */
 package org.apache.sling.feature.builder;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
 import org.apache.sling.feature.Application;
 import org.apache.sling.feature.Artifact;
-import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Feature;
 
 /**
  * Build an application based on features.
  */
 public class ApplicationBuilder {
-
-    /**
-     * Assemble an application based on the provided feature Ids.
-     * The features are processed in the order they are provided.
-     *
-     * @param app The optional application to use as a base.
-     * @param context The builder context
-     * @param featureIds The feature ids
-     * @return The application
-     * throws IllegalArgumentException If context or featureIds is {@code null}
-     * throws IllegalStateException If the provided ids are invalid, or the feature can't be provided
-     */
-    public static Application assemble(final Application app,
-            final BuilderContext context,
-            final String... featureIds) {
-        if ( featureIds == null || context == null ) {
-            throw new IllegalArgumentException("Features and/or context must not be null");
-        }
-
-        final Feature[] features = new Feature[featureIds.length];
-        int index = 0;
-        for(final String id : featureIds) {
-            features[index] = context.getFeatureProvider().provide(ArtifactId.parse(id));
-            if ( features[index] == null ) {
-                throw new IllegalStateException("Unable to find included feature " + id);
-            }
-            index++;
-        }
-        return assemble(app, context, features);
-    }
 
     /**
      * Assemble an application based on the provided features.
@@ -88,60 +51,7 @@ public class ApplicationBuilder {
             app = new Application();
         }
 
-        // Remove duplicate features by selecting the one with the highest version
-        final List<Feature> featureList = new ArrayList<>();
-        for(final Feature f : features) {
-            Feature found = null;
-            for(final Feature s : featureList) {
-                if ( s.getId().isSame(f.getId()) ) {
-                    found = s;
-                    break;
-                }
-            }
-            boolean add = true;
-            // feature with different version found
-            if ( found != null ) {
-                if ( f.getId().getOSGiVersion().compareTo(found.getId().getOSGiVersion()) <= 0 ) {
-                    // higher version already included
-                    add = false;
-                } else {
-                    // remove lower version, higher version will be added
-                    featureList.remove(found);
-                }
-            }
-            if ( add ) {
-                featureList.add(f);
-            }
-        }
-
-        // assemble each features
-        final List<Feature> assembledFeatures = new ArrayList<>();
-        final Set<ArtifactId> included = new HashSet<>();
-        for(final Feature f : featureList) {
-            final Feature assembled = FeatureBuilder.assemble(f, context.clone(new FeatureProvider() {
-
-                @Override
-                public Feature provide(final ArtifactId id) {
-                    included.add(id);
-                    for(final Feature f : features) {
-                        if ( f.getId().equals(id) ) {
-                            return f;
-                        }
-                    }
-                    return context.getFeatureProvider().provide(id);
-                }
-            }));
-            assembledFeatures.add(assembled);
-        }
-
-        // filter out included features
-        final Iterator<Feature> iter = assembledFeatures.iterator();
-        while ( iter.hasNext() ) {
-            final Feature f = iter.next();
-            if ( included.contains(f.getId())) {
-                iter.remove();
-            }
-        }
+        final Feature[] assembledFeatures = FeatureBuilder.deduplicate(context, features);
 
         // assemble application
         int featureStartOrder = 5; // begin with start order a little higher than 0

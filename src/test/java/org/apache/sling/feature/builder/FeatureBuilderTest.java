@@ -16,6 +16,17 @@
  */
 package org.apache.sling.feature.builder;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.felix.utils.resource.CapabilityImpl;
 import org.apache.felix.utils.resource.RequirementImpl;
 import org.apache.sling.feature.Artifact;
@@ -27,17 +38,6 @@ import org.apache.sling.feature.Include;
 import org.junit.Test;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 public class FeatureBuilderTest {
 
@@ -299,5 +299,46 @@ public class FeatureBuilderTest {
 
         // and test
         equals(result, assembled);
+    }
+
+    @Test public void testDeduplicationInclude() throws Exception {
+        final ArtifactId idA = ArtifactId.fromMvnId("g:a:1.0.0");
+        final ArtifactId idB = ArtifactId.fromMvnId("g:b:1.0.0");
+
+        final Feature a = new Feature(idA);
+        final Feature b = new Feature(idB);
+        // feature b includes feature a
+        final Include inc = new Include(idA);
+        b.getIncludes().add(inc);
+
+        // assemble application, it should only contain feature b as a is included by b
+        Feature[] features = FeatureBuilder.deduplicate(new BuilderContext(new FeatureProvider() {
+
+            @Override
+            public Feature provide(ArtifactId id) {
+                return null;
+            }
+        }), a, b);
+        assertEquals(1, features.length);
+        assertEquals(idB, features[0].getId());
+    }
+
+    @Test public void testDeduplicationVersion() throws Exception {
+        final ArtifactId idA = ArtifactId.fromMvnId("g:a:1.0.0");
+        final ArtifactId idB = ArtifactId.fromMvnId("g:a:1.1.0");
+
+        final Feature a = new Feature(idA);
+        final Feature b = new Feature(idB);
+
+        // assemble application, it should only contain feature b as a is included by b
+        Feature[] features = FeatureBuilder.deduplicate(new BuilderContext(new FeatureProvider() {
+
+            @Override
+            public Feature provide(ArtifactId id) {
+                return null;
+            }
+        }), a, b);
+        assertEquals(1, features.length);
+        assertEquals(idB, features[0].getId());
     }
 }

@@ -17,9 +17,11 @@
 package org.apache.sling.feature.builder;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.sling.feature.Artifact;
 import org.apache.sling.feature.ArtifactId;
@@ -45,6 +47,107 @@ public class FeatureBuilder {
             throw new IllegalArgumentException("Feature and/or context must not be null");
         }
         return internalAssemble(new ArrayList<>(), feature, context);
+    }
+
+    /**
+     * Resolve a set of features based on their ids.
+     *
+     * @param context The builder context
+     * @param featureIds The feature ids
+     * @return An array of features, the array has the same order as the provided ids
+     * throws IllegalArgumentException If context or featureIds is {@code null}
+     * throws IllegalStateException If the provided ids are invalid, or the feature can't be provided
+     */
+    public static Feature[] resolve(final BuilderContext context,
+            final String... featureIds) {
+        if ( featureIds == null || context == null ) {
+            throw new IllegalArgumentException("Features and/or context must not be null");
+        }
+
+        final Feature[] features = new Feature[featureIds.length];
+        int index = 0;
+        for(final String id : featureIds) {
+            features[index] = context.getFeatureProvider().provide(ArtifactId.parse(id));
+            if ( features[index] == null ) {
+                throw new IllegalStateException("Unable to find included feature " + id);
+            }
+            index++;
+        }
+        return features;
+    }
+
+    /**
+     * Remove duplicate and included features.
+     * If a feature with the same id but different version is contained several times,
+     * only the one with the highest version is kept in the result list.
+     * If a feature includes another feature from the provided set, the included feature
+     * is removed from the set.
+     *
+     * @param context The builder context
+     * @param features A list of features
+     * @return A list of features without duplicates.
+     */
+    public static Feature[] deduplicate(final BuilderContext context,
+            final Feature... features) {
+        if ( features == null || context == null ) {
+            throw new IllegalArgumentException("Features and/or context must not be null");
+        }
+
+        // Remove duplicate features by selecting the one with the highest version
+        final List<Feature> featureList = new ArrayList<>();
+        for(final Feature f : features) {
+            Feature found = null;
+            for(final Feature s : featureList) {
+                if ( s.getId().isSame(f.getId()) ) {
+                    found = s;
+                    break;
+                }
+            }
+            boolean add = true;
+            // feature with different version found
+            if ( found != null ) {
+                if ( f.getId().getOSGiVersion().compareTo(found.getId().getOSGiVersion()) <= 0 ) {
+                    // higher version already included
+                    add = false;
+                } else {
+                    // remove lower version, higher version will be added
+                    featureList.remove(found);
+                }
+            }
+            if ( add ) {
+                featureList.add(f);
+            }
+        }
+
+        // assemble each features
+        final List<Feature> assembledFeatures = new ArrayList<>();
+        final Set<ArtifactId> included = new HashSet<>();
+        for(final Feature f : featureList) {
+            final Feature assembled = FeatureBuilder.assemble(f, context.clone(new FeatureProvider() {
+
+                @Override
+                public Feature provide(final ArtifactId id) {
+                    included.add(id);
+                    for(final Feature f : features) {
+                        if ( f.getId().equals(id) ) {
+                            return f;
+                        }
+                    }
+                    return context.getFeatureProvider().provide(id);
+                }
+            }));
+            assembledFeatures.add(assembled);
+        }
+
+        // filter out included features
+        final Iterator<Feature> iter = assembledFeatures.iterator();
+        while ( iter.hasNext() ) {
+            final Feature f = iter.next();
+            if ( included.contains(f.getId())) {
+                iter.remove();
+            }
+        }
+        return assembledFeatures.toArray(new Feature[assembledFeatures.size()]);
     }
 
     private static Feature internalAssemble(final List<String> processedFeatures,
