@@ -17,7 +17,10 @@
 package org.apache.sling.feature.builder;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.sling.feature.Application;
 import org.apache.sling.feature.Artifact;
@@ -111,14 +114,15 @@ public class ApplicationBuilder {
             }
         }
 
-        // assemble
-        int featureStartOrder = 5; // begin with start order a little higher than 0
+        // assemble each features
+        final List<Feature> assembledFeatures = new ArrayList<>();
+        final Set<ArtifactId> included = new HashSet<>();
         for(final Feature f : featureList) {
-            app.getFeatureIds().add(f.getId());
             final Feature assembled = FeatureBuilder.assemble(f, context.clone(new FeatureProvider() {
 
                 @Override
                 public Feature provide(final ArtifactId id) {
+                    included.add(id);
                     for(final Feature f : features) {
                         if ( f.getId().equals(id) ) {
                             return f;
@@ -127,6 +131,22 @@ public class ApplicationBuilder {
                     return context.getFeatureProvider().provide(id);
                 }
             }));
+            assembledFeatures.add(assembled);
+        }
+
+        // filter out included features
+        final Iterator<Feature> iter = assembledFeatures.iterator();
+        while ( iter.hasNext() ) {
+            final Feature f = iter.next();
+            if ( included.contains(f.getId())) {
+                iter.remove();
+            }
+        }
+
+        // assemble application
+        int featureStartOrder = 5; // begin with start order a little higher than 0
+        for(final Feature assembled : assembledFeatures) {
+            app.getFeatureIds().add(assembled.getId());
 
             int globalStartOrder = featureStartOrder;
             for (Artifact a : assembled.getBundles()) {
