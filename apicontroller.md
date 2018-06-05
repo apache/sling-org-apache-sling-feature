@@ -20,7 +20,11 @@ A feature can have an additional extension JSON named regions:
     "regions" : {
         "region" : "platform", // name of the region
         "global-exports" : [
-            "org.apache.sling.resource.api.*"
+            "org.apache.sling.resource.api",
+            "org.apache.sling.resource.api.adapter",
+            "org.apache.sling.resource.api.auth",
+            "org.apache.sling.resource.api.request",
+            "org.apache.sling.resource.api.resource"
         ],
         "region-exports" : [
             "org.apache.sling.commons.scheduler"
@@ -30,7 +34,7 @@ A feature can have an additional extension JSON named regions:
 In the example above the feature declares:
 
 * The name of the region it belongs to (platform)
-* The list of packages it is exporting to everyone (Sling's resource API)
+* The list of packages it is exporting to everyone (Sling's resource API). This list needs to be explicit and does not allow patterns.
 * The additional list of packages it is exporting to features within the same region (scheduler api)
 
 Of course the above mentioned packages need to be exported by some bundle within the feature.
