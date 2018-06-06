@@ -15,34 +15,40 @@ We can generalize this by saying that API is either globally visible (to every c
 
 Without any further information, API is globally visible by default. However, for platform features we want the opposite as we want to ensure that newly added API is not world-wide visible by default. Therefore we'll add an additional build time check (analyzer) that checks that each platform feature has an api controller configuration as below.
 
-A feature can have an additional extension JSON named regions:
+A feature can have an additional extension JSON named regions. This example exposes some packages to the global region and an additional package to the platform region. Exports declared earlier in the api-regions array also apply to later elements in the array, so the platform region also contains all exports declared for the global region.
 
-    "regions" : {
-        "region" : "platform", // name of the region
-        "global-exports" : [
-            "org.apache.sling.resource.api",
-            "org.apache.sling.resource.api.adapter",
-            "org.apache.sling.resource.api.auth",
-            "org.apache.sling.resource.api.request",
-            "org.apache.sling.resource.api.resource"
-        ],
-        "region-exports" : [
-            "org.apache.sling.commons.scheduler"
-        ]
-    }
-
-In the example above the feature declares:
-
-* The name of the region it belongs to (platform)
-* The list of packages it is exporting to everyone (Sling's resource API). This list needs to be explicit and does not allow patterns.
-* The additional list of packages it is exporting to features within the same region (scheduler api)
+    "api-regions:JSON|false" : [
+        {
+            "name": "global",
+            "exports": [
+                // Export Sling's resource API in the global region.
+                "org.apache.sling.resource.api",
+                "org.apache.sling.resource.api.adapter",
+                "org.apache.sling.resource.api.auth",
+                "org.apache.sling.resource.api.request",
+                "org.apache.sling.resource.api.resource"
+            ]
+        },{
+            "name": "platform",
+            "exports": [
+                // Export the scheduler API in the platform region.
+                // All exports in earlier regions defined here also apply.
+                "org.apache.sling.commons.scheduler"
+            ]
+        }
+    ]
 
 Of course the above mentioned packages need to be exported by some bundle within the feature.
+By exporting packages to a given region, a feature automatically also sees all packages available to that region (or regions).
 
-If the regions extension is missing, it is assumed that all packages are exported and that the feature runs in the global region.
+A feature can also just consume packages from a region, without having to export any packages to it. This can be done by just mentioning the region name. For example:
 
-If the region information is missing, the global region is used. If the packages list for global-exports or local-exports is missing, it is assumed to be all packages. If none should be exported, an empty array needs to be specified.
+    "api-regions:JSON|false" : [ "platform" ]
 
-This model is intentionally kept simple and restricted to a feature being in only a single region. In theory we could think of use cases where a feature is shared across two (or more) regions, but not shared globally. However this gets pretty complicated easily and therefore we suggest to make such features global.
+If the api-regions extension is missing or the api-regions information is missing, it is assumed that all packages are exported to the "global" region and all packages in the global region are visible to the feature.
+
+If a feature exports no packages and only wants to import packages from the global region, this can be specified as follows:
+    
+    "api-regions:JSON|false" : [ "global" ]
 
 To support feature inheritance, a custom extension handler must be registered which will merge the extension - if the inherited one and the target feature use a different region, this is considered an error. If they have the same region, the packages are merged. Of course the inheriting feature can remove this extension before processing. In addition the extension handler must mark each bundle with the region, otherwise this relationship gets lost later on when the application is build.
