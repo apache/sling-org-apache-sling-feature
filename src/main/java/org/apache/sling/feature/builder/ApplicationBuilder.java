@@ -54,19 +54,13 @@ public class ApplicationBuilder {
         final Feature[] assembledFeatures = FeatureBuilder.deduplicate(context, features);
 
         // assemble application
-        int featureStartOrder = 5; // begin with start order a little higher than 0
         for(final Feature assembled : assembledFeatures) {
             app.getFeatureIds().add(assembled.getId());
 
-            int globalStartOrder = featureStartOrder;
             for (Artifact a : assembled.getBundles()) {
-                int so = a.getStartOrder() + featureStartOrder;
-                if (so > globalStartOrder)
-                    globalStartOrder = so;
+                int so = a.getMetadata().get("start-level") != null ? Integer.parseInt(a.getMetadata().get("start-level")) : 1;
                 a.setStartOrder(so);
             }
-            // Next feature will have a higher start order than the previous
-            featureStartOrder = globalStartOrder + 1;
 
             merge(app, assembled);
         }
