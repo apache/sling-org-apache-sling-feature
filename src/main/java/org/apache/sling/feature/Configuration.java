@@ -16,8 +16,9 @@
  */
 package org.apache.sling.feature;
 
+import org.apache.sling.feature.impl.OrderedDictionary;
+
 import java.util.Dictionary;
-import java.util.Hashtable;
 
 
 /**
@@ -40,7 +41,7 @@ public class Configuration
     private final String factoryPid;
 
     /** The properties. */
-    private final Dictionary<String, Object> properties = new Hashtable<>();
+    private final Dictionary<String, Object> properties = new OrderedDictionary<>();
 
     /**
      * Create a new configuration
