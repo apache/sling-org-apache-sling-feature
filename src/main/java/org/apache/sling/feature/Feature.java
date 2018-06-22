@@ -23,6 +23,7 @@ import org.osgi.resource.Requirement;
 
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -301,9 +302,9 @@ public class Feature implements Comparable<Feature> {
         // configurations
         for(final Configuration cfg : this.getConfigurations()) {
             final Configuration c = cfg.isFactoryConfiguration() ? new Configuration(cfg.getFactoryPid(), cfg.getName()) : new Configuration(cfg.getPid());
-            final Enumeration<String> keyEnum = cfg.getProperties().keys();
-            while ( keyEnum.hasMoreElements() ) {
-                final String key = keyEnum.nextElement();
+            final Iterator<String> keyEnum = cfg.getProperties().keySet().iterator();
+            while ( keyEnum.hasNext() ) {
+                final String key = keyEnum.next();
                 c.getProperties().put(key, cfg.getProperties().get(key));
             }
             result.getConfigurations().add(c);

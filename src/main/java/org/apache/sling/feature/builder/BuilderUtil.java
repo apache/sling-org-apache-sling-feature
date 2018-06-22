@@ -19,6 +19,7 @@ package org.apache.sling.feature.builder;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -84,9 +85,9 @@ class BuilderUtil {
                 if ( current.compareTo(cfg) == 0 ) {
                     found = true;
                     // merge / override properties
-                    final Enumeration<String> i = cfg.getProperties().keys();
-                    while ( i.hasMoreElements() ) {
-                        final String key = i.nextElement();
+                    final Iterator<String> i = cfg.getProperties().keySet().iterator();
+                    while ( i.hasNext() ) {
+                        final String key = i.next();
                         current.getProperties().put(key, cfg.getProperties().get(key));
                     }
                     break;
