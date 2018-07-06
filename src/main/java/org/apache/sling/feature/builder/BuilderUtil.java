@@ -16,6 +16,17 @@
  */
 package org.apache.sling.feature.builder;
 
+import org.apache.sling.feature.Application;
+import org.apache.sling.feature.Artifact;
+import org.apache.sling.feature.Bundles;
+import org.apache.sling.feature.Configuration;
+import org.apache.sling.feature.Configurations;
+import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.KeyValueMap;
+import org.osgi.resource.Capability;
+import org.osgi.resource.Requirement;
+
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Enumeration;
@@ -32,17 +43,6 @@ import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
 import javax.json.JsonWriter;
 
-import org.apache.sling.feature.Application;
-import org.apache.sling.feature.Artifact;
-import org.apache.sling.feature.Bundles;
-import org.apache.sling.feature.Configuration;
-import org.apache.sling.feature.Configurations;
-import org.apache.sling.feature.Extension;
-import org.apache.sling.feature.Feature;
-import org.apache.sling.feature.KeyValueMap;
-import org.osgi.resource.Capability;
-import org.osgi.resource.Requirement;
-
 /**
  * Utility methods for the builders
  */
@@ -52,6 +52,11 @@ class BuilderUtil {
         LATEST,
         HIGHEST
     };
+
+    // variables
+    public static void mergeVariables(KeyValueMap target, KeyValueMap source) {
+        target.putAll(source);
+    }
 
     // bundles
     static void mergeBundles(final Bundles target,

@@ -69,6 +69,7 @@ public class ApplicationBuilder {
     }
 
     private static void merge(final Application target, final Feature source) {
+        BuilderUtil.mergeVariables(target.getVariables(), source.getVariables());
         BuilderUtil.mergeBundles(target.getBundles(), source.getBundles(), BuilderUtil.ArtifactMerge.HIGHEST);
         BuilderUtil.mergeConfigurations(target.getConfigurations(), source.getConfigurations());
         BuilderUtil.mergeFrameworkProperties(target.getFrameworkProperties(), source.getFrameworkProperties());

@@ -16,17 +16,16 @@
  */
 package org.apache.sling.feature.builder;
 
-import static org.junit.Assert.assertEquals;
-
 import org.apache.sling.feature.Application;
 import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Feature;
 import org.apache.sling.feature.Include;
+import org.apache.sling.feature.KeyValueMap;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+
 public class ApplicationBuilderTest {
-
-
     @Test public void testIncludedFeatureProvided() throws Exception {
         final ArtifactId idA = ArtifactId.fromMvnId("g:a:1.0.0");
         final ArtifactId idB = ArtifactId.fromMvnId("g:b:1.0.0");
@@ -47,5 +46,29 @@ public class ApplicationBuilderTest {
         }), a, b);
         assertEquals(1, app.getFeatureIds().size());
         assertEquals(idB, app.getFeatureIds().get(0));
+    }
+
+    @Test public void testMergeHandlesVariables() {
+        Application app = new Application();
+        app.getVariables().put("alreadythere", "aval");
+
+        Feature feat = new Feature(new ArtifactId("gid", "aid", "9.9.9", null, null));
+        KeyValueMap featVars = feat.getVariables();
+        featVars.put("xxx", "yyy");
+        featVars.put("zzz", "123");
+
+        BuilderContext ctx = new BuilderContext(new FeatureProvider() {
+            @Override
+            public Feature provide(ArtifactId id) {
+                return null;
+            }
+        });
+        ApplicationBuilder.assemble(app, ctx, feat);
+
+        KeyValueMap appVars = app.getVariables();
+        assertEquals(3, appVars.size());
+        assertEquals("aval", appVars.get("alreadythere"));
+        assertEquals("yyy", appVars.get("xxx"));
+        assertEquals("123", appVars.get("zzz"));
     }
 }

@@ -21,7 +21,7 @@ import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Bundles;
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.ExtensionType;
-import org.apache.sling.feature.builder.BuilderUtil;
+import org.apache.sling.feature.KeyValueMap;
 import org.apache.sling.feature.builder.BuilderUtil.ArtifactMerge;
 import org.junit.Test;
 
@@ -166,6 +166,22 @@ public class BuilderUtilTest {
 
         assertEquals(target.getJSON(), "[\"target1\",\"target2\",\"source1\",\"source2\"]");
 
+    }
+
+    @Test public void testMergeVariables() {
+        KeyValueMap target = new KeyValueMap();
+        target.put("x", "327");
+
+        KeyValueMap source = new KeyValueMap();
+        source.put("a", "b");
+
+        BuilderUtil.mergeVariables(target, source);
+        assertEquals(1, source.size());
+        assertEquals("b", source.get("a"));
+
+        assertEquals(2, target.size());
+        assertEquals("b", target.get("a"));
+        assertEquals("327", target.get("x"));
     }
 
     public static Artifact createBundle(final String id, final int startOrder) {
