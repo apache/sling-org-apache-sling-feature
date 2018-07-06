@@ -21,7 +21,6 @@ import org.apache.felix.utils.resource.RequirementImpl;
 import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Feature;
 import org.apache.sling.feature.Include;
-import org.apache.sling.feature.KeyValueMap;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
 
@@ -33,8 +32,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -44,9 +41,6 @@ import javax.json.JsonObject;
  */
 public class FeatureJSONReader extends JSONReaderBase {
     public enum SubstituteVariables { NONE, RESOLVE, LAUNCH }
-
-    // The pattern that variables in Feature JSON follow
-    private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\{[a-zA-Z0-9.-_]+\\}");
 
     /**
      * Read a new feature from the reader
@@ -92,9 +86,6 @@ public class FeatureJSONReader extends JSONReaderBase {
 
     /** The provided id. */
     private final ArtifactId providedId;
-
-    /** The variables from the JSON. */
-    private Map<String, String> variables;
 
     /** The current reading phase. */
     private final SubstituteVariables phase;
@@ -172,7 +163,7 @@ public class FeatureJSONReader extends JSONReaderBase {
     @Override
     protected Object handleResolveVars(Object val) {
         if (phase == SubstituteVariables.RESOLVE) {
-            return handleVars(val);
+            return handleVars(val, feature.getVariables());
         } else {
             return val;
         }
@@ -181,58 +172,9 @@ public class FeatureJSONReader extends JSONReaderBase {
     @Override
     protected Object handleLaunchVars(Object val) {
         if (phase == SubstituteVariables.LAUNCH) {
-            return handleVars(val);
+            return handleVars(val, feature.getVariables());
         }
         return val;
-    }
-
-    private Object handleVars(Object value) {
-        if (!(value instanceof String)) {
-            return value;
-        }
-
-        String textWithVars = (String) value;
-
-        Matcher m = VARIABLE_PATTERN.matcher(textWithVars.toString());
-        StringBuffer sb = new StringBuffer();
-        while (m.find()) {
-            String var = m.group();
-
-            int len = var.length();
-            String name = var.substring(2, len - 1);
-            String val = variables.get(name);
-            if (val != null) {
-                m.appendReplacement(sb, Matcher.quoteReplacement(val));
-            } else {
-                throw new IllegalStateException("Undefined variable: " + name);
-            }
-        }
-        m.appendTail(sb);
-
-        return sb.toString();
-    }
-
-    private void readVariables(Map<String, Object> map, KeyValueMap kvMap) throws IOException {
-        variables = new HashMap<>();
-
-        if (map.containsKey(JSONConstants.FEATURE_VARIABLES)) {
-            final Object variablesObj = map.get(JSONConstants.FEATURE_VARIABLES);
-            checkType(JSONConstants.FEATURE_VARIABLES, variablesObj, Map.class);
-
-            @SuppressWarnings("unchecked")
-            final Map<String, Object> vars = (Map<String, Object>) variablesObj;
-            for (final Map.Entry<String, Object> entry : vars.entrySet()) {
-                checkType("variable value", entry.getValue(), String.class, Boolean.class, Number.class);
-
-                String key = entry.getKey();
-                if (kvMap.get(key) != null) {
-                    throw new IOException(this.exceptionPrefix + "Duplicate variable " + key);
-                }
-                String value = "" + entry.getValue();
-                kvMap.put(key, value);
-                variables.put(key, value);
-            }
-        }
     }
 
     private void readIncludes(final Map<String, Object> map) throws IOException {

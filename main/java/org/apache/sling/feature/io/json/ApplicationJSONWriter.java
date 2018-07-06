@@ -59,6 +59,9 @@ public class ApplicationJSONWriter extends JSONWriterBase {
             ob.add(JSONConstants.APP_FRAMEWORK, app.getFramework().toMvnId());
         }
 
+        // variables
+        writeVariables(ob, app.getVariables());
+
         // features
         if ( !app.getFeatureIds().isEmpty() ) {
             JsonArrayBuilder featuresArr = Json.createArrayBuilder();

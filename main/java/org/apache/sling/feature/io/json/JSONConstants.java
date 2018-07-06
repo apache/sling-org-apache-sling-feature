@@ -81,6 +81,7 @@ public abstract class JSONConstants {
     public static final String APP_FEATURES = "features";
 
     public static final List<String> APP_KNOWN_PROPERTIES = Arrays.asList(APP_FRAMEWORK,
+            FEATURE_VARIABLES,
             FEATURE_BUNDLES,
             FEATURE_FRAMEWORK_PROPERTIES,
             FEATURE_CONFIGURATIONS,

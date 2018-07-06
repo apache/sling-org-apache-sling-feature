@@ -35,9 +35,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -196,11 +194,14 @@ public class FeatureJSONReaderTest {
 
     @Test public void testHandleVars() throws Exception {
         FeatureJSONReader reader = new FeatureJSONReader(null, null, SubstituteVariables.LAUNCH);
-        Map<String, Object> vars = new HashMap<>();
-        vars.put("var1", "bar");
-        vars.put("varvariable", "${myvar}");
-        vars.put("var.2", "2");
-        setPrivateField(reader, "variables", vars);
+
+        ArtifactId aid = new ArtifactId("gid", "aid", "1.2.3", null, null);
+        Feature feature = new Feature(aid);
+        KeyValueMap kvMap = feature.getVariables();
+        kvMap.put("var1", "bar");
+        kvMap.put("varvariable", "${myvar}");
+        kvMap.put("var.2", "2");
+        setPrivateField(reader, "feature", feature);
 
         assertEquals("foobarfoo", reader.handleLaunchVars("foo${var1}foo"));
         assertEquals("barbarbar", reader.handleLaunchVars("${var1}${var1}${var1}"));

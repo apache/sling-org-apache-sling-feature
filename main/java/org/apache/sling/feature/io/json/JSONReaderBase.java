@@ -38,12 +38,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
@@ -56,6 +59,8 @@ import javax.json.JsonWriter;
  * Common methods for JSON reading.
  */
 abstract class JSONReaderBase {
+    // The pattern that variables in Feature/Application JSON follow
+    private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\{[a-zA-Z0-9.-_]+\\}");
 
     /** The optional location. */
     protected final String location;
@@ -134,6 +139,38 @@ abstract class JSONReaderBase {
         }
         return null;
     }
+
+    /**
+     * Read the variables section
+     * @param map The map describing the feature or application
+     * @param kvMap The variables will be written to this Key Value Map
+     * @return The same variables as a normal map
+     * @throws IOException If the json is invalid.
+     */
+    protected Map<String, String> readVariables(Map<String, Object> map, KeyValueMap kvMap) throws IOException {
+        HashMap<String, String> variables = new HashMap<>();
+
+        if (map.containsKey(JSONConstants.FEATURE_VARIABLES)) {
+            final Object variablesObj = map.get(JSONConstants.FEATURE_VARIABLES);
+            checkType(JSONConstants.FEATURE_VARIABLES, variablesObj, Map.class);
+
+            @SuppressWarnings("unchecked")
+            final Map<String, Object> vars = (Map<String, Object>) variablesObj;
+            for (final Map.Entry<String, Object> entry : vars.entrySet()) {
+                checkType("variable value", entry.getValue(), String.class, Boolean.class, Number.class);
+
+                String key = entry.getKey();
+                if (kvMap.get(key) != null) {
+                    throw new IOException(this.exceptionPrefix + "Duplicate variable " + key);
+                }
+                String value = "" + entry.getValue();
+                kvMap.put(key, value);
+                variables.put(key, value);
+            }
+        }
+        return variables;
+    }
+
 
     /**
      * Read the bundles / start levels section
@@ -475,6 +512,42 @@ abstract class JSONReaderBase {
         if ( !valid ) {
             throw new IOException(this.exceptionPrefix + "Key " + key + " is not one of the allowed types " + Arrays.toString(types) + " : " + val.getClass());
         }
+    }
+
+    /**
+     * Substitute variables in the provided value. The variables must follow the
+     * syntax ${variable_name} and are looked up in the provided variables.
+     * If the provided value contains no variables, it will be returned as-is.
+     * @param value The value that can contain variables
+     * @param variables The variables that can be substituted.
+     * @return The value with the variables substituted.
+     * @throws IllegalStateException when a variable in the value is not present
+     * in the variables map.
+     */
+    protected Object handleVars(Object value, KeyValueMap variables) {
+        if (!(value instanceof String)) {
+            return value;
+        }
+
+        String textWithVars = (String) value;
+
+        Matcher m = VARIABLE_PATTERN.matcher(textWithVars.toString());
+        StringBuffer sb = new StringBuffer();
+        while (m.find()) {
+            String var = m.group();
+
+            int len = var.length();
+            String name = var.substring(2, len - 1);
+            String val = variables.get(name);
+            if (val != null) {
+                m.appendReplacement(sb, Matcher.quoteReplacement(val));
+            } else {
+                throw new IllegalStateException("Undefined variable: " + name);
+            }
+        }
+        m.appendTail(sb);
+
+        return sb.toString();
     }
 }
 

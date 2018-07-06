@@ -16,6 +16,10 @@
  */
 package org.apache.sling.feature.io.json;
 
+import org.apache.felix.configurator.impl.json.JSONUtil;
+import org.apache.sling.feature.Application;
+import org.apache.sling.feature.ArtifactId;
+
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
@@ -23,10 +27,6 @@ import java.util.Map;
 
 import javax.json.Json;
 import javax.json.JsonObject;
-
-import org.apache.felix.configurator.impl.json.JSONUtil;
-import org.apache.sling.feature.Application;
-import org.apache.sling.feature.ArtifactId;
 
 /**
  * This class offers a method to read an {@code Application} using a {@code Reader} instance.
@@ -79,6 +79,7 @@ public class ApplicationJSONReader extends JSONReaderBase {
         if ( frameworkId != null ) {
             app.setFramework(ArtifactId.parse(frameworkId));
         }
+        this.readVariables(map, app.getVariables());
         this.readBundles(map, app.getBundles(), app.getConfigurations());
         this.readFrameworkProperties(map, app.getFrameworkProperties());
         this.readConfigurations(map, app.getConfigurations());
@@ -86,6 +87,16 @@ public class ApplicationJSONReader extends JSONReaderBase {
         this.readExtensions(map,
                 JSONConstants.APP_KNOWN_PROPERTIES,
                 this.app.getExtensions(), this.app.getConfigurations());
+    }
+
+    @Override
+    protected Object handleResolveVars(Object val) {
+        return handleVars(val, app.getVariables());
+    }
+
+    @Override
+    protected Object handleLaunchVars(Object val) {
+        return handleVars(val, app.getVariables());
     }
 }
 
