@@ -1,0 +1,24 @@
+{
+  "frameworkId":"org.apache.felix:org.apache.felix.framework:6.0.0",
+  "variables":{
+    "web.port":"8888"
+  },
+  "features":[
+    "org.apache.sling:mytestfeature:slingfeature:test:0.0.1-SNAPSHOT"
+  ],
+  "bundles":[
+    {
+      "id":"org.apache.felix:org.apache.felix.log:1.0.1",
+      "start-level":"1",
+      "start-order":"1"
+    }
+  ],
+  "configurations":{
+    "org.apache.felix.http":{
+      "org.osgi.service.http.port":"${web.port}"
+    }
+  },
+  "framework-properties":{
+    "org.osgi.framework.bootdelegation":"sun.*,com.sun.*"
+  }
+}

@@ -19,10 +19,12 @@ package org.apache.sling.feature.io.json;
 import org.apache.felix.configurator.impl.json.JSONUtil;
 import org.apache.sling.feature.Application;
 import org.apache.sling.feature.ArtifactId;
+import org.apache.sling.feature.KeyValueMap;
 
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.Collections;
 import java.util.Map;
 
 import javax.json.Json;
@@ -41,11 +43,26 @@ public class ApplicationJSONReader extends JSONReaderBase {
      * @return The application
      * @throws IOException If an IO errors occurs or the JSON is invalid.
      */
-    public static Application read(final Reader reader)
+    public static Application read(final Reader reader) throws IOException {
+        return read(reader, Collections.emptyMap());
+    }
+
+    /**
+     * Read a new application from the reader
+     * The reader is not closed. It is up to the caller to close the reader.
+     *
+     * @param reader The reader for the feature
+     * @param overriddenVariables Map of variables that override the variable
+     * values as in the application JSON
+     * @return The application
+     * @throws IOException If an IO errors occurs or the JSON is invalid.
+     */
+    public static Application read(final Reader reader, Map<String, String> overriddenVariables)
     throws IOException {
         try {
             final ApplicationJSONReader mr = new ApplicationJSONReader();
-            mr.readApplication(reader);
+
+            mr.readApplication(reader, overriddenVariables);
             return mr.app;
         } catch (final IllegalStateException | IllegalArgumentException e) {
             throw new IOException(e);
@@ -54,6 +71,11 @@ public class ApplicationJSONReader extends JSONReaderBase {
 
     /** The read application. */
     private final Application app;
+
+    /** This holds the application variables including any overrides provided,
+     * e.g. via the launcher commandline.
+     */
+    private volatile KeyValueMap variables;
 
     /**
      * Private constructor
@@ -66,9 +88,10 @@ public class ApplicationJSONReader extends JSONReaderBase {
     /**
      * Read a full application
      * @param reader The reader
+     * @param overriddenVariables
      * @throws IOException If an IO error occurs or the JSON is not valid.
      */
-    private void readApplication(final Reader reader)
+    private void readApplication(final Reader reader, Map<String, String> overriddenVariables)
     throws IOException {
         final JsonObject json = Json.createReader(new StringReader(minify(reader))).readObject();
 
@@ -80,6 +103,15 @@ public class ApplicationJSONReader extends JSONReaderBase {
             app.setFramework(ArtifactId.parse(frameworkId));
         }
         this.readVariables(map, app.getVariables());
+
+        this.variables = new KeyValueMap();
+        this.variables.putAll(app.getVariables());
+
+        // Apply the overrides
+        for (Map.Entry<String, String> entry : overriddenVariables.entrySet()) {
+            variables.put(entry.getKey(), entry.getValue());
+        }
+
         this.readBundles(map, app.getBundles(), app.getConfigurations());
         this.readFrameworkProperties(map, app.getFrameworkProperties());
         this.readConfigurations(map, app.getConfigurations());
@@ -91,12 +123,12 @@ public class ApplicationJSONReader extends JSONReaderBase {
 
     @Override
     protected Object handleResolveVars(Object val) {
-        return handleVars(val, app.getVariables());
+        return handleVars(val, variables);
     }
 
     @Override
     protected Object handleLaunchVars(Object val) {
-        return handleVars(val, app.getVariables());
+        return handleVars(val, variables);
     }
 }
 
