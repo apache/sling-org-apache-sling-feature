@@ -15,7 +15,9 @@ We can generalize this by saying that API is either globally visible (to every c
 
 Without any further information, API is globally visible by default. However, for platform features we want the opposite as we want to ensure that newly added API is not world-wide visible by default. Therefore we'll add an additional build time check (analyzer) that checks that each platform feature has an api controller configuration as below.
 
-A feature can have an additional extension JSON named api-regions. This example exposes some packages to the global region and an additional package to the platform region. Exports declared earlier in the api-regions array also apply to later elements in the array, so the platform region also contains all exports declared for the global region.
+A feature can have an additional extension JSON named api-regions. The following example exposes some packages to the global region and an additional package to the platform region. Exports declared earlier in the api-regions array also apply to later elements in the array, so the platform region also contains all exports declared for the global region.
+
+Note that the 'global' region is a predefined region that exports the listed packages to everyone. Other region names can be chosen freely. Packages listed in these other regions are only exposed to bundles in features that are in the same region.
 
     "api-regions:JSON|false" : [
         {
