@@ -45,6 +45,7 @@ public class FeatureBuilderTest {
 
     static {
         final Feature f1 = new Feature(ArtifactId.parse("g/a/1"));
+        f1.getVariables().put("varx", "myvalx");
 
         f1.getFrameworkProperties().put("foo", "2");
         f1.getFrameworkProperties().put("bar", "X");
@@ -106,6 +107,9 @@ public class FeatureBuilderTest {
         assertEquals(expected.getDescription(), actuals.getDescription());
         assertEquals(expected.getVendor(), actuals.getVendor());
         assertEquals(expected.getLicense(), actuals.getLicense());
+
+        // variables
+        assertEquals(expected.getVariables(), actuals.getVariables());
 
         // bundles
         final List<Map.Entry<Integer, Artifact>> expectedBundles = getBundles(expected);
@@ -287,6 +291,7 @@ public class FeatureBuilderTest {
 
         // create the expected result
         final Feature result = base.copy();
+        result.getVariables().put("varx", "myvalx");
         result.getIncludes().remove(0);
         result.getFrameworkProperties().put("bar", "X");
         result.getBundles().add(BuilderUtilTest.createBundle("org.apache.sling/foo-bar/4.5.6", 3));

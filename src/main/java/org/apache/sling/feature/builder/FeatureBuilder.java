@@ -169,6 +169,7 @@ public class FeatureBuilder {
             final List<Include> includes = new ArrayList<>(result.getIncludes());
 
             // clear everything in the result, will be added in the process
+            result.getVariables().clear();
             result.getBundles().clear();
             result.getFrameworkProperties().clear();
             result.getConfigurations().clear();
@@ -201,6 +202,7 @@ public class FeatureBuilder {
     private static void merge(final Feature target,
             final Feature source,
             final BuilderContext context) {
+        BuilderUtil.mergeVariables(target.getVariables(), source.getVariables());
         BuilderUtil.mergeBundles(target.getBundles(), source.getBundles(), BuilderUtil.ArtifactMerge.LATEST);
         BuilderUtil.mergeConfigurations(target.getConfigurations(), source.getConfigurations());
         BuilderUtil.mergeFrameworkProperties(target.getFrameworkProperties(), source.getFrameworkProperties());
