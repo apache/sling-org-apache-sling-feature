@@ -16,20 +16,6 @@
  */
 package org.apache.sling.feature.io.json;
 
-import org.apache.felix.configurator.impl.json.JSMin;
-import org.apache.felix.configurator.impl.json.JSONUtil;
-import org.apache.felix.configurator.impl.json.TypeConverter;
-import org.apache.felix.configurator.impl.model.Config;
-import org.apache.sling.feature.Artifact;
-import org.apache.sling.feature.ArtifactId;
-import org.apache.sling.feature.Bundles;
-import org.apache.sling.feature.Configuration;
-import org.apache.sling.feature.Configurations;
-import org.apache.sling.feature.Extension;
-import org.apache.sling.feature.ExtensionType;
-import org.apache.sling.feature.Extensions;
-import org.apache.sling.feature.KeyValueMap;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringWriter;
@@ -54,6 +40,20 @@ import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonStructure;
 import javax.json.JsonWriter;
+
+import org.apache.felix.configurator.impl.json.JSMin;
+import org.apache.felix.configurator.impl.json.JSONUtil;
+import org.apache.felix.configurator.impl.json.TypeConverter;
+import org.apache.felix.configurator.impl.model.Config;
+import org.apache.sling.feature.Artifact;
+import org.apache.sling.feature.ArtifactId;
+import org.apache.sling.feature.Bundles;
+import org.apache.sling.feature.Configuration;
+import org.apache.sling.feature.Configurations;
+import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.ExtensionType;
+import org.apache.sling.feature.Extensions;
+import org.apache.sling.feature.KeyValueMap;
 
 /**
  * Common methods for JSON reading.
@@ -224,6 +224,10 @@ abstract class JSONReaderBase {
             final Artifact artifact;
             checkType(artifactType, entry, Map.class, String.class);
             if ( entry instanceof String ) {
+                // skip comments
+                if ( entry.toString().startsWith("#") ) {
+                    continue;
+                }
                 artifact = new Artifact(ArtifactId.parse(handleResolveVars(entry).toString()));
             } else {
                 @SuppressWarnings("unchecked")

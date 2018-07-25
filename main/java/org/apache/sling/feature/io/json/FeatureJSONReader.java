@@ -16,14 +16,6 @@
  */
 package org.apache.sling.feature.io.json;
 
-import org.apache.felix.utils.resource.CapabilityImpl;
-import org.apache.felix.utils.resource.RequirementImpl;
-import org.apache.sling.feature.ArtifactId;
-import org.apache.sling.feature.Feature;
-import org.apache.sling.feature.Include;
-import org.osgi.resource.Capability;
-import org.osgi.resource.Requirement;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
@@ -35,6 +27,14 @@ import java.util.function.BiConsumer;
 
 import javax.json.Json;
 import javax.json.JsonObject;
+
+import org.apache.felix.utils.resource.CapabilityImpl;
+import org.apache.felix.utils.resource.RequirementImpl;
+import org.apache.sling.feature.ArtifactId;
+import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.Include;
+import org.osgi.resource.Capability;
+import org.osgi.resource.Requirement;
 
 /**
  * This class offers a method to read a {@code Feature} using a {@code Reader} instance.
@@ -210,6 +210,9 @@ public class FeatureJSONReader extends JSONReaderBase {
                             final List<Object> list = (List<Object>)removalObj.get(JSONConstants.FEATURE_BUNDLES);
                             for(final Object val : list) {
                                 checkType("Include removal bundles", val, String.class);
+                                if ( val.toString().startsWith("#")) {
+                                    continue;
+                                }
                                 include.getBundleRemovals().add(ArtifactId.parse(val.toString()));
                             }
                         }
@@ -218,7 +221,7 @@ public class FeatureJSONReader extends JSONReaderBase {
                             @SuppressWarnings("unchecked")
                             final List<Object> list = (List<Object>)removalObj.get(JSONConstants.FEATURE_CONFIGURATIONS);
                             for(final Object val : list) {
-                                checkType("Include removal bundles", val, String.class);
+                                checkType("Include removal configuration", val, String.class);
                                 include.getConfigurationRemovals().add(val.toString());
                             }
                         }
@@ -227,7 +230,7 @@ public class FeatureJSONReader extends JSONReaderBase {
                             @SuppressWarnings("unchecked")
                             final List<Object> list = (List<Object>)removalObj.get(JSONConstants.FEATURE_FRAMEWORK_PROPERTIES);
                             for(final Object val : list) {
-                                checkType("Include removal bundles", val, String.class);
+                                checkType("Include removal framework properties", val, String.class);
                                 include.getFrameworkPropertiesRemovals().add(val.toString());
                             }
                         }
@@ -238,6 +241,9 @@ public class FeatureJSONReader extends JSONReaderBase {
                             for(final Object val : list) {
                                 checkType("Include removal extension", val, String.class, Map.class);
                                 if ( val instanceof String ) {
+                                    if ( val.toString().startsWith("#")) {
+                                        continue;
+                                    }
                                     include.getExtensionRemovals().add(val.toString());
                                 } else {
                                     @SuppressWarnings("unchecked")
