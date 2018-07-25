@@ -29,6 +29,7 @@ import org.apache.sling.feature.Configuration;
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.Feature;
 import org.apache.sling.feature.Include;
+import org.osgi.framework.Version;
 
 public class FeatureBuilder {
 
@@ -218,12 +219,33 @@ public class FeatureBuilder {
         // process removals
         // bundles
         for(final ArtifactId a : i.getBundleRemovals()) {
-            base.getBundles().removeExact(a);
+            boolean removed = false;
+            final boolean ignoreVersion = a.getOSGiVersion().equals(Version.emptyVersion);
+            if ( ignoreVersion ) {
+                // remove any version of that bundle
+                while (base.getBundles().removeSame(a)) {
+                    // continue to remove
+                    removed = true;
+                }
+            } else {
+                // remove exact version
+                removed = base.getBundles().removeExact(a);
+            }
+            if ( !removed ) {
+                throw new IllegalStateException("Bundle " + a + " can't be removed from feature " + base.getId() + " as it is not part of that feature.");
+            }
             final Iterator<Configuration> iter = base.getConfigurations().iterator();
             while ( iter.hasNext() ) {
                 final Configuration cfg = iter.next();
                 final String bundleId = (String)cfg.getProperties().get(Configuration.PROP_ARTIFACT);
-                if ( a.toMvnId().equals(bundleId) ) {
+                final ArtifactId bundleArtifactId = ArtifactId.fromMvnId(bundleId);
+                boolean remove = false;
+                if ( ignoreVersion ) {
+                    remove = bundleArtifactId.isSame(a);
+                } else {
+                    remove = bundleArtifactId.equals(a);
+                }
+                if (  remove) {
                     iter.remove();
                 }
             }
@@ -271,12 +293,34 @@ public class FeatureBuilder {
         for(final Map.Entry<String, List<ArtifactId>> entry : i.getArtifactExtensionRemovals().entrySet()) {
             for(final Extension ext : base.getExtensions()) {
                 if ( ext.getName().equals(entry.getKey()) ) {
-                    for(final ArtifactId id : entry.getValue() ) {
-                        for(final Artifact a : ext.getArtifacts()) {
-                            if ( a.getId().equals(id) ) {
-                                ext.getArtifacts().remove(a);
+                    for(final ArtifactId toRemove : entry.getValue() ) {
+                        boolean removed = false;
+                        final boolean ignoreVersion = toRemove.getOSGiVersion().equals(Version.emptyVersion);
+                        final Iterator<Artifact> iter = ext.getArtifacts().iterator();
+                        while ( iter.hasNext() ) {
+                            final Artifact a = iter.next();
+
+                            boolean remove = false;
+                            if ( ignoreVersion ) {
+                                // remove any version of that bundle
+                                if ( a.getId().isSame(toRemove) ) {
+                                    remove = true;
+                                }
+                            } else {
+                                // remove exact version
+
+                                remove = a.getId().equals(toRemove);
+                            }
+                            if ( remove ) {
+                                iter.remove();
+                                removed = true;
+                            }
+                            if ( remove && !ignoreVersion ) {
                                 break;
                             }
+                        }
+                        if ( !removed ) {
+                            throw new IllegalStateException("Artifact " + toRemove + " can't be removed from feature " + base.getId() + " as it is not part of that feature.");
                         }
                     }
                     break;

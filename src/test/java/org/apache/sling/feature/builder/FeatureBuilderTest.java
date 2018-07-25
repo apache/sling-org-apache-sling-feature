@@ -20,12 +20,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.felix.utils.resource.CapabilityImpl;
 import org.apache.felix.utils.resource.RequirementImpl;
@@ -33,6 +37,7 @@ import org.apache.sling.feature.Artifact;
 import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Configuration;
 import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.Feature;
 import org.apache.sling.feature.Include;
 import org.junit.Test;
@@ -345,5 +350,205 @@ public class FeatureBuilderTest {
         }), a, b);
         assertEquals(1, features.length);
         assertEquals(idB, features[0].getId());
+    }
+
+    @Test public void testBundleRemoveWithExactVersion() throws Exception {
+        final ArtifactId bundleA1 = ArtifactId.fromMvnId("g:a:1.0.0");
+        final ArtifactId bundleA2 = ArtifactId.fromMvnId("g:a:1.1.0");
+        final ArtifactId bundleB = ArtifactId.fromMvnId("g:b:1.1.0");
+
+        final Feature a = new Feature(ArtifactId.fromMvnId("g:a-base:1"));
+        a.getBundles().add(new Artifact(bundleA1));
+        a.getBundles().add(new Artifact(bundleA2));
+        a.getBundles().add(new Artifact(bundleB));
+        final Feature b = new Feature(ArtifactId.fromMvnId("g:a-include:1"));
+        final Include inc = new Include(a.getId());
+        inc.getBundleRemovals().add(bundleA2);
+        b.getIncludes().add(inc);
+
+        // assemble feature include
+        Feature feature = FeatureBuilder.assemble(b, new BuilderContext(new FeatureProvider() {
+
+            @Override
+            public Feature provide(ArtifactId id) {
+                if ( id.equals(a.getId()) ) {
+                    return a;
+                }
+                return null;
+            }
+        }));
+        final Set<ArtifactId> set = new HashSet<>();
+        for(final Artifact c : feature.getBundles()) {
+            set.add(c.getId());
+        }
+        assertEquals(2, set.size());
+        assertTrue(set.contains(bundleA1));
+        assertTrue(set.contains(bundleB));
+    }
+
+    @Test public void testBundleRemoveWithAnyVersion() throws Exception {
+        final ArtifactId bundleA1 = ArtifactId.fromMvnId("g:a:1.0.0");
+        final ArtifactId bundleA2 = ArtifactId.fromMvnId("g:a:1.1.0");
+        final ArtifactId bundleB = ArtifactId.fromMvnId("g:b:1.1.0");
+
+        final Feature a = new Feature(ArtifactId.fromMvnId("g:a-base:1"));
+        a.getBundles().add(new Artifact(bundleA1));
+        a.getBundles().add(new Artifact(bundleA2));
+        a.getBundles().add(new Artifact(bundleB));
+        final Feature b = new Feature(ArtifactId.fromMvnId("g:a-include:1"));
+        final Include inc = new Include(a.getId());
+        inc.getBundleRemovals().add(ArtifactId.fromMvnId("g:a:0.0.0"));
+        b.getIncludes().add(inc);
+
+        // assemble feature include
+        Feature feature = FeatureBuilder.assemble(b, new BuilderContext(new FeatureProvider() {
+
+            @Override
+            public Feature provide(ArtifactId id) {
+                if ( id.equals(a.getId()) ) {
+                    return a;
+                }
+                return null;
+            }
+        }));
+        final Set<ArtifactId> set = new HashSet<>();
+        for(final Artifact c : feature.getBundles()) {
+            set.add(c.getId());
+        }
+        assertEquals(1, set.size());
+        assertTrue(set.contains(bundleB));
+    }
+
+    @Test public void testBundleRemoveNoMatch() throws Exception {
+        final ArtifactId bundleA1 = ArtifactId.fromMvnId("g:a:1.0.0");
+        final ArtifactId bundleA2 = ArtifactId.fromMvnId("g:a:1.1.0");
+        final ArtifactId bundleB = ArtifactId.fromMvnId("g:b:1.1.0");
+
+        final Feature a = new Feature(ArtifactId.fromMvnId("g:a-base:1"));
+        a.getBundles().add(new Artifact(bundleA1));
+        a.getBundles().add(new Artifact(bundleB));
+        final Feature b = new Feature(ArtifactId.fromMvnId("g:a-include:1"));
+        final Include inc = new Include(a.getId());
+        inc.getBundleRemovals().add(bundleA2);
+        b.getIncludes().add(inc);
+
+        try {
+            FeatureBuilder.assemble(b, new BuilderContext(new FeatureProvider() {
+
+                @Override
+                public Feature provide(ArtifactId id) {
+                    if ( id.equals(a.getId()) ) {
+                        return a;
+                    }
+                    return null;
+                }
+            }));
+            fail();
+        } catch ( final IllegalStateException ise) {
+            // expected
+        }
+    }
+
+    @Test public void testExtensionArtifactRemoveWithExactVersion() throws Exception {
+        final ArtifactId bundleA1 = ArtifactId.fromMvnId("g:a:1.0.0");
+        final ArtifactId bundleA2 = ArtifactId.fromMvnId("g:a:1.1.0");
+        final ArtifactId bundleB = ArtifactId.fromMvnId("g:b:1.1.0");
+
+        final Feature a = new Feature(ArtifactId.fromMvnId("g:a-base:1"));
+        final Extension e = new Extension(ExtensionType.ARTIFACTS, "foo", false);
+        e.getArtifacts().add(new Artifact(bundleA1));
+        e.getArtifacts().add(new Artifact(bundleA2));
+        e.getArtifacts().add(new Artifact(bundleB));
+        a.getExtensions().add(e);
+        final Feature b = new Feature(ArtifactId.fromMvnId("g:a-include:1"));
+        final Include inc = new Include(a.getId());
+        inc.getArtifactExtensionRemovals().put("foo", Arrays.asList(bundleA2));
+        b.getIncludes().add(inc);
+
+        // assemble feature include
+        Feature feature = FeatureBuilder.assemble(b, new BuilderContext(new FeatureProvider() {
+
+            @Override
+            public Feature provide(ArtifactId id) {
+                if ( id.equals(a.getId()) ) {
+                    return a;
+                }
+                return null;
+            }
+        }));
+        final Set<ArtifactId> set = new HashSet<>();
+        for(final Artifact c : feature.getExtensions().getByName("foo").getArtifacts()) {
+            set.add(c.getId());
+        }
+        assertEquals(2, set.size());
+        assertTrue(set.contains(bundleA1));
+        assertTrue(set.contains(bundleB));
+    }
+
+    @Test public void testExtensionArtifactRemoveWithAnyVersion() throws Exception {
+        final ArtifactId bundleA1 = ArtifactId.fromMvnId("g:a:1.0.0");
+        final ArtifactId bundleA2 = ArtifactId.fromMvnId("g:a:1.1.0");
+        final ArtifactId bundleB = ArtifactId.fromMvnId("g:b:1.1.0");
+
+        final Feature a = new Feature(ArtifactId.fromMvnId("g:a-base:1"));
+        final Extension e = new Extension(ExtensionType.ARTIFACTS, "foo", false);
+        e.getArtifacts().add(new Artifact(bundleA1));
+        e.getArtifacts().add(new Artifact(bundleA2));
+        e.getArtifacts().add(new Artifact(bundleB));
+        a.getExtensions().add(e);
+        final Feature b = new Feature(ArtifactId.fromMvnId("g:a-include:1"));
+        final Include inc = new Include(a.getId());
+        inc.getArtifactExtensionRemovals().put("foo", Arrays.asList(ArtifactId.fromMvnId("g:a:0.0.0")));
+        b.getIncludes().add(inc);
+
+        // assemble feature include
+        Feature feature = FeatureBuilder.assemble(b, new BuilderContext(new FeatureProvider() {
+
+            @Override
+            public Feature provide(ArtifactId id) {
+                if ( id.equals(a.getId()) ) {
+                    return a;
+                }
+                return null;
+            }
+        }));
+        final Set<ArtifactId> set = new HashSet<>();
+        for(final Artifact c : feature.getExtensions().getByName("foo").getArtifacts()) {
+            set.add(c.getId());
+        }
+        assertEquals(1, set.size());
+        assertTrue(set.contains(bundleB));
+    }
+
+    @Test public void testExtensionArtifactRemoveNoMatch() throws Exception {
+        final ArtifactId bundleA1 = ArtifactId.fromMvnId("g:a:1.0.0");
+        final ArtifactId bundleA2 = ArtifactId.fromMvnId("g:a:1.1.0");
+        final ArtifactId bundleB = ArtifactId.fromMvnId("g:b:1.1.0");
+
+        final Feature a = new Feature(ArtifactId.fromMvnId("g:a-base:1"));
+        final Extension e = new Extension(ExtensionType.ARTIFACTS, "foo", false);
+        e.getArtifacts().add(new Artifact(bundleA1));
+        e.getArtifacts().add(new Artifact(bundleB));
+        a.getExtensions().add(e);
+        final Feature b = new Feature(ArtifactId.fromMvnId("g:a-include:1"));
+        final Include inc = new Include(a.getId());
+        inc.getArtifactExtensionRemovals().put("foo", Arrays.asList(bundleA2));
+        b.getIncludes().add(inc);
+
+        try {
+            FeatureBuilder.assemble(b, new BuilderContext(new FeatureProvider() {
+
+                @Override
+                public Feature provide(ArtifactId id) {
+                    if ( id.equals(a.getId()) ) {
+                        return a;
+                    }
+                    return null;
+                }
+            }));
+            fail();
+        } catch ( final IllegalStateException ise) {
+            // expected
+        }
     }
 }

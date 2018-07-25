@@ -16,14 +16,14 @@
  */
 package org.apache.sling.feature;
 
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
+
 import org.apache.felix.utils.resource.CapabilityImpl;
 import org.apache.felix.utils.resource.RequirementImpl;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
-
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
 
 /**
  * A feature consists of
@@ -332,7 +332,7 @@ public class Feature implements Comparable<Feature> {
             c.getConfigurationRemovals().addAll(i.getConfigurationRemovals());
             c.getExtensionRemovals().addAll(i.getExtensionRemovals());
             c.getFrameworkPropertiesRemovals().addAll(i.getFrameworkPropertiesRemovals());
-            c.getArtifactExtensionRemovals().putAll(c.getArtifactExtensionRemovals());
+            c.getArtifactExtensionRemovals().putAll(i.getArtifactExtensionRemovals());
 
             result.getIncludes().add(c);
         }
