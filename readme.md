@@ -11,3 +11,4 @@ This project aims to define a common OSGi feature model to build an OSGi applica
 
 * [Prototype](prototype.md)
 * [API Controller Proposal](apicontroller.md)
+* [Application Configuration Proposal](appconf.md)
