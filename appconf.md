@@ -11,37 +11,39 @@ A application configuration for such use cases could look like this:
         "repository" : [
             "org.apache.sling:org.apache.sling.portal:1.0."
         ],
+        "choices" : [
+            [
+                {
+                    "name" : "author",
+                    "features" : [
+                        "org.apache.sling:org.apache.sling.cms:1.0.0"                                    
+                    ],
+                    "variables" : {
+                        "service_id" : "author"
+                    },
+                    options : {
+                        "jsp" : true
+                    }
+                },
+                {
+                    "name" : "publish",
+                    "variables" : {
+                        "service_id" : "publish"
+                    },
+                    "features" : [
+                        "org.apache.sling:org.apache.sling.cache:1.3.6"                                    
+                    ],
+                }
+            ],
+        ]
         "options" : {
            "jsp" : {
                "features" : [
                    "org.apache.sling:org.apache.sling.scripting.jsp:1.0.0"                   
                ]
            },
-           "author" : {
-               "features" : [
-                   "org.apache.sling:org.apache.sling.cms:1.0.0"                                    
-               ],
-               "variables" : {
-                   "service_id" : "author"
-               },
-               "activation" : {
-                   "publish" : false,
-                   "jsp" : true
-               }
-           },
-           "publish" : {
-               "features" : [
-                   "org.apache.sling:org.apache.sling.cache:1.3.6"                                    
-               ],
-               "variables" : {
-                   "service_id" : "publish"
-               },
-               "activation" : {
-                   "author" : false                
-               }
-           },
-           "samples" : {
-               "options" : {
+           "samplecontent" : {
+               "choices" : {
                     "author" : {
                         "features" : [
                             "org.apache.sling:org.apache.sling.samples.author:1.0.0"
@@ -56,7 +58,7 @@ A application configuration for such use cases could look like this:
             }
         },
         "defaults" : {
-            "options": ["author"]
+            "options": []
         },
         "framework" : {
             "id" : "org.apache.felix:org.apache.felix.framework:6.0.0"
