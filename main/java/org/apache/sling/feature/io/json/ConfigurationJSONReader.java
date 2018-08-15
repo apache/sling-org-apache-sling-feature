@@ -16,16 +16,17 @@
  */
 package org.apache.sling.feature.io.json;
 
-import org.apache.felix.configurator.impl.json.JSONUtil;
-import org.apache.sling.feature.Configurations;
-
-import javax.json.Json;
-import javax.json.JsonObject;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.Collections;
 import java.util.Map;
+
+import javax.json.Json;
+import javax.json.JsonObject;
+
+import org.apache.felix.configurator.impl.json.JSONUtil;
+import org.apache.sling.feature.Configurations;
 
 /**
  * JSON Reader for configurations.
@@ -49,6 +50,11 @@ public class ConfigurationJSONReader extends JSONReaderBase {
         } catch (final IllegalStateException | IllegalArgumentException e) {
             throw new IOException(e);
         }
+    }
+
+    @Override
+    protected Object handleResolveVars(final Object val) {
+        return val;
     }
 
     /**

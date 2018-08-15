@@ -31,8 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
@@ -59,8 +57,6 @@ import org.apache.sling.feature.KeyValueMap;
  * Common methods for JSON reading.
  */
 abstract class JSONReaderBase {
-    // The pattern that variables in Feature/Application JSON follow
-    private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\{[a-zA-Z0-9.-_]+\\}");
 
     /** The optional location. */
     protected final String location;
@@ -92,7 +88,8 @@ abstract class JSONReaderBase {
         return contents;
     }
 
-    /** Get the JSON object as a map, removing all comments that start with a '#' character
+    /**
+     * Get the JSON object as a map, removing all comments that start with a '#' character
      * @param json The JSON object to process
      * @return A map representing the JSON object.
      */
@@ -163,7 +160,7 @@ abstract class JSONReaderBase {
                 if (kvMap.get(key) != null) {
                     throw new IOException(this.exceptionPrefix + "Duplicate variable " + key);
                 }
-                String value = "" + entry.getValue();
+                String value = entry.getValue().toString();
                 kvMap.put(key, value);
                 variables.put(key, value);
             }
@@ -193,12 +190,7 @@ abstract class JSONReaderBase {
             for(final Artifact a : list) {
                 Artifact sameFound = container.getSame(a.getId());
                 if ( sameFound != null) {
-                    String str1 = a.getMetadata().get("run-modes");
-                    String str2 = sameFound.getMetadata().get("run-modes");
-
-                    if (str1 == null ? str2 == null : str1.equals(str2)) {
-                        throw new IOException(exceptionPrefix + "Duplicate bundle " + a.getId().toMvnId());
-                    }
+                    throw new IOException(exceptionPrefix + "Duplicate bundle " + a.getId().toMvnId());
                 }
                 try {
                     // check start order
@@ -249,8 +241,7 @@ abstract class JSONReaderBase {
                 }
                 if ( bundleObj.containsKey(JSONConstants.FEATURE_CONFIGURATIONS) ) {
                     checkType(artifactType + " configurations", bundleObj.get(JSONConstants.FEATURE_CONFIGURATIONS), Map.class);
-                    List<Configuration> bundleConfigs = addConfigurations(bundleObj, artifact, container);
-                    artifact.getMetadata().put(JSONConstants.FEATURE_CONFIGURATIONS, bundleConfigs);
+                    addConfigurations(bundleObj, artifact, container);
                 }
             }
             artifacts.add(artifact);
@@ -261,24 +252,11 @@ abstract class JSONReaderBase {
      * These are variables in features, artifacts (such as bundles), requirements
      * and capabilities.
      * @param val The value that may contain a variable.
-     * @return The value with the variable substitiuted.
+     * @return The value with the variable substituted.
      */
-    protected Object handleResolveVars(Object val) {
-        // No variable substitution at this level, but subclasses can add this in
-        return val;
-    }
+    abstract protected Object handleResolveVars(Object val);
 
-    /** Substitutes variables that need to be substituted at launch time.
-     * These are all variables that are not needed by the resolver.
-     * @param val The value that may contain a variable.
-     * @return The value with the variable substitiuted.
-     */
-    protected Object handleLaunchVars(Object val) {
-        // No variable substitution at this level, but subclasses can add this in
-        return val;
-    }
-
-    protected List<Configuration> addConfigurations(final Map<String, Object> map,
+    protected void addConfigurations(final Map<String, Object> map,
             final Artifact artifact,
             final Configurations container) throws IOException {
         final JSONUtil.Report report = new JSONUtil.Report();
@@ -299,7 +277,6 @@ abstract class JSONReaderBase {
             throw new IOException(builder.toString());
         }
 
-        List<Configuration> newConfigs = new ArrayList<>();
         for(final Config c : configs) {
             final int pos = c.getPid().indexOf('~');
             final Configuration config;
@@ -315,13 +292,13 @@ abstract class JSONReaderBase {
                     throw new IOException(exceptionPrefix + "Configuration must not define configurator property " + key);
                 }
                 final Object val = c.getProperties().get(key);
-                config.getProperties().put(key, handleLaunchVars(val));
+                config.getProperties().put(key, val);
             }
-            if ( config.getProperties().get(Configuration.PROP_ARTIFACT) != null ) {
-                throw new IOException(exceptionPrefix + "Configuration must not define property " + Configuration.PROP_ARTIFACT);
+            if ( config.getProperties().get(Configuration.PROP_ARTIFACT_ID) != null ) {
+                throw new IOException(exceptionPrefix + "Configuration must not define property " + Configuration.PROP_ARTIFACT_ID);
             }
             if ( artifact != null ) {
-                config.getProperties().put(Configuration.PROP_ARTIFACT, artifact.getId().toMvnId());
+                config.getProperties().put(Configuration.PROP_ARTIFACT_ID, artifact.getId().toMvnId());
             }
             for(final Configuration current : container) {
                 if ( current.equals(config) ) {
@@ -329,9 +306,7 @@ abstract class JSONReaderBase {
                 }
             }
             container.add(config);
-            newConfigs.add(config);
         }
-        return newConfigs;
     }
 
 
@@ -356,7 +331,7 @@ abstract class JSONReaderBase {
                 if ( container.get(entry.getKey()) != null ) {
                     throw new IOException(this.exceptionPrefix + "Duplicate framework property " + entry.getKey());
                 }
-                container.put(entry.getKey(), handleLaunchVars(entry.getValue()).toString());
+                container.put(entry.getKey(), entry.getValue().toString());
             }
 
         }
@@ -394,9 +369,6 @@ abstract class JSONReaderBase {
                     type = postfix.substring(0, sep);
                     optional = postfix.substring(sep + 1);
                 }
-            }
-            if ( JSONConstants.APP_KNOWN_PROPERTIES.contains(name) ) {
-                throw new IOException(this.exceptionPrefix + "Extension is using reserved name : " + name);
             }
             if ( JSONConstants.FEATURE_KNOWN_PROPERTIES.contains(name) ) {
                 throw new IOException(this.exceptionPrefix + "Extension is using reserved name : " + name);
@@ -517,42 +489,4 @@ abstract class JSONReaderBase {
             throw new IOException(this.exceptionPrefix + "Key " + key + " is not one of the allowed types " + Arrays.toString(types) + " : " + val.getClass());
         }
     }
-
-    /**
-     * Substitute variables in the provided value. The variables must follow the
-     * syntax ${variable_name} and are looked up in the provided variables.
-     * If the provided value contains no variables, it will be returned as-is.
-     * @param value The value that can contain variables
-     * @param variables The variables that can be substituted.
-     * @return The value with the variables substituted.
-     * @throws IllegalStateException when a variable in the value is not present
-     * in the variables map.
-     */
-    protected Object handleVars(Object value, KeyValueMap variables) {
-        if (!(value instanceof String)) {
-            return value;
-        }
-
-        String textWithVars = (String) value;
-
-        Matcher m = VARIABLE_PATTERN.matcher(textWithVars.toString());
-        StringBuffer sb = new StringBuffer();
-        while (m.find()) {
-            String var = m.group();
-
-            int len = var.length();
-            String name = var.substring(2, len - 1);
-            String val = variables.get(name);
-            if (val != null) {
-                m.appendReplacement(sb, Matcher.quoteReplacement(val));
-            } else {
-                throw new IllegalStateException("Undefined variable: " + name);
-            }
-        }
-        m.appendTail(sb);
-
-        return sb.toString();
-    }
 }
-
-

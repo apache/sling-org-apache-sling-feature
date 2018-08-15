@@ -16,14 +16,6 @@
  */
 package org.apache.sling.feature.io.json;
 
-import org.apache.sling.feature.Artifact;
-import org.apache.sling.feature.Bundles;
-import org.apache.sling.feature.Configuration;
-import org.apache.sling.feature.Configurations;
-import org.apache.sling.feature.Extension;
-import org.apache.sling.feature.ExtensionType;
-import org.apache.sling.feature.KeyValueMap;
-
 import java.io.StringReader;
 import java.lang.reflect.Array;
 import java.util.Enumeration;
@@ -36,10 +28,19 @@ import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonStructure;
 
+import org.apache.sling.feature.Artifact;
+import org.apache.sling.feature.Bundles;
+import org.apache.sling.feature.Configuration;
+import org.apache.sling.feature.Configurations;
+import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.ExtensionType;
+import org.apache.sling.feature.KeyValueMap;
+
 /**
  * Common functionality for writing JSON
  */
 abstract class JSONWriterBase {
+
     protected void writeBundles(final JsonObjectBuilder ob,
             final Bundles bundles,
             final Configurations allConfigs) {
@@ -50,16 +51,9 @@ abstract class JSONWriterBase {
             for(final Artifact artifact : bundles) {
                 final Configurations cfgs = new Configurations();
                 for(final Configuration cfg : allConfigs) {
-                    String artifactProp = (String)cfg.getProperties().get(Configuration.PROP_ARTIFACT);
-                    if (artifactProp != null) {
-                        if (artifactProp.startsWith("mvn:")) {
-                            // Change Maven URL to maven GAV syntax
-                            artifactProp = artifactProp.substring("mvn:".length());
-                            artifactProp = artifactProp.replace('/', ':');
-                        }
-                        if (artifact.getId().toMvnId().equals(artifactProp)) {
-                            cfgs.add(cfg);
-                        }
+                    final String artifactProp = (String)cfg.getProperties().get(Configuration.PROP_ARTIFACT_ID);
+                    if ( artifact.getId().toMvnId().equals(artifactProp) ) {
+                        cfgs.add(cfg);
                     }
                 }
                 KeyValueMap md = artifact.getMetadata();
@@ -68,18 +62,6 @@ abstract class JSONWriterBase {
                 } else {
                     JsonObjectBuilder bundleObj = Json.createObjectBuilder();
                     bundleObj.add(JSONConstants.ARTIFACT_ID, artifact.getId().toMvnId());
-
-                    if (md.get("start-level") == null) {
-                        String so = md.get("start-order");
-                        if (so != null) {
-                            md.put("start-level", so);
-                        }
-                    }
-
-                    Object runmodes = md.remove("runmodes");
-                    if (runmodes instanceof String) {
-                        md.put("run-modes", runmodes);
-                    }
 
                     for(final Map.Entry<String, String> me : md) {
                         bundleObj.add(me.getKey(), me.getValue());
@@ -125,7 +107,7 @@ abstract class JSONWriterBase {
             final Enumeration<String> e = cfg.getProperties().keys();
             while ( e.hasMoreElements() ) {
                 final String name = e.nextElement();
-                if ( Configuration.PROP_ARTIFACT.equals(name) ) {
+                if ( Configuration.PROP_ARTIFACT_ID.equals(name) ) {
                     continue;
                 }
 
@@ -232,7 +214,7 @@ abstract class JSONWriterBase {
                 for(final Artifact artifact : ext.getArtifacts()) {
                     final Configurations artifactCfgs = new Configurations();
                     for(final Configuration cfg : allConfigs) {
-                        final String artifactProp = (String)cfg.getProperties().get(Configuration.PROP_ARTIFACT);
+                        final String artifactProp = (String)cfg.getProperties().get(Configuration.PROP_ARTIFACT_ID);
                         if (  artifact.getId().toMvnId().equals(artifactProp) ) {
                             artifactCfgs.add(cfg);
                         }

@@ -16,17 +16,14 @@
  */
 package org.apache.sling.feature.io.json;
 
-import org.apache.sling.feature.Feature;
-import org.apache.sling.feature.io.json.FeatureJSONReader;
-import org.apache.sling.feature.io.json.FeatureJSONWriter;
-import org.apache.sling.feature.io.json.FeatureJSONReader.SubstituteVariables;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Arrays;
 
-import static org.junit.Assert.assertEquals;
+import org.apache.sling.feature.Feature;
+import org.junit.Test;
 
 public class FeatureJSONWriterTest {
 
@@ -36,7 +33,7 @@ public class FeatureJSONWriterTest {
         try ( final StringWriter writer = new StringWriter() ) {
             FeatureJSONWriter.write(writer, f);
             try ( final StringReader reader = new StringReader(writer.toString()) ) {
-                rf = FeatureJSONReader.read(reader, null, SubstituteVariables.RESOLVE);
+                rf = FeatureJSONReader.read(reader, null);
             }
         }
         assertEquals(f.getId(), rf.getId());
@@ -53,7 +50,7 @@ public class FeatureJSONWriterTest {
         try ( final StringWriter writer = new StringWriter() ) {
             FeatureJSONWriter.write(writer, f);
             try ( final StringReader reader = new StringReader(writer.toString()) ) {
-                rf = FeatureJSONReader.read(reader, null, SubstituteVariables.RESOLVE);
+                rf = FeatureJSONReader.read(reader, null);
             }
         }
 

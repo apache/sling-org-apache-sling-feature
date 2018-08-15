@@ -33,6 +33,7 @@ import org.apache.felix.utils.resource.RequirementImpl;
 import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Feature;
 import org.apache.sling.feature.Include;
+import org.apache.sling.feature.builder.FeatureBuilder;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
 
@@ -40,7 +41,6 @@ import org.osgi.resource.Requirement;
  * This class offers a method to read a {@code Feature} using a {@code Reader} instance.
  */
 public class FeatureJSONReader extends JSONReaderBase {
-    public enum SubstituteVariables { NONE, RESOLVE, LAUNCH }
 
     /**
      * Read a new feature from the reader
@@ -48,13 +48,12 @@ public class FeatureJSONReader extends JSONReaderBase {
      *
      * @param reader The reader for the feature
      * @param location Optional location
-     * @param phase If variables need to be substituted, the phase the this should be done for.
      * @return The read feature
      * @throws IOException If an IO errors occurs or the JSON is invalid.
      */
-    public static Feature read(final Reader reader, final String location, final SubstituteVariables phase)
+    public static Feature read(final Reader reader, final String location)
     throws IOException {
-        return read(reader, null, location, phase);
+        return read(reader, null, location);
     }
 
     /**
@@ -64,17 +63,15 @@ public class FeatureJSONReader extends JSONReaderBase {
      * @param reader The reader for the feature
      * @param providedId Optional artifact id
      * @param location Optional location
-     * @param phase If variables need to be substituted, the phase the this should be done for.
      * @return The read feature
      * @throws IOException If an IO errors occurs or the JSON is invalid.
      */
     public static Feature read(final Reader reader,
             final ArtifactId providedId,
-            final String location,
-            final SubstituteVariables phase)
+            final String location)
     throws IOException {
         try {
-            final FeatureJSONReader mr = new FeatureJSONReader(providedId, location, phase);
+            final FeatureJSONReader mr = new FeatureJSONReader(providedId, location);
             return mr.readFeature(reader);
         } catch (final IllegalStateException | IllegalArgumentException e) {
             throw new IOException(e);
@@ -87,18 +84,14 @@ public class FeatureJSONReader extends JSONReaderBase {
     /** The provided id. */
     private final ArtifactId providedId;
 
-    /** The current reading phase. */
-    private final SubstituteVariables phase;
-
     /**
      * Private constructor
      * @param pId Optional id
      * @param location Optional location
      */
-    FeatureJSONReader(final ArtifactId pId, final String location, final SubstituteVariables phase) {
+    FeatureJSONReader(final ArtifactId pId, final String location) {
         super(location);
         this.providedId = pId;
-        this.phase = phase;
     }
 
     /**
@@ -161,20 +154,8 @@ public class FeatureJSONReader extends JSONReaderBase {
     }
 
     @Override
-    protected Object handleResolveVars(Object val) {
-        if (phase == SubstituteVariables.RESOLVE) {
-            return handleVars(val, feature.getVariables());
-        } else {
-            return val;
-        }
-    }
-
-    @Override
-    protected Object handleLaunchVars(Object val) {
-        if (phase == SubstituteVariables.LAUNCH) {
-            return handleVars(val, feature.getVariables());
-        }
-        return val;
+    protected Object handleResolveVars(final Object val) {
+        return FeatureBuilder.replaceVariables(val, null, this.feature);
     }
 
     private void readIncludes(final Map<String, Object> map) throws IOException {

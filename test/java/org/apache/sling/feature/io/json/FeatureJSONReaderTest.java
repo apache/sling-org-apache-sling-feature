@@ -16,6 +16,16 @@
  */
 package org.apache.sling.feature.io.json;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Dictionary;
+import java.util.List;
+
 import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Bundles;
 import org.apache.sling.feature.Configuration;
@@ -25,24 +35,9 @@ import org.apache.sling.feature.Extensions;
 import org.apache.sling.feature.Feature;
 import org.apache.sling.feature.Include;
 import org.apache.sling.feature.KeyValueMap;
-import org.apache.sling.feature.io.json.FeatureJSONReader.SubstituteVariables;
 import org.junit.Test;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
-
-import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Dictionary;
-import java.util.Enumeration;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 public class FeatureJSONReaderTest {
 
@@ -119,63 +114,6 @@ public class FeatureJSONReaderTest {
         assertEquals("c${c_config}c", props.get("c.value"));
     }
 
-    @Test public void testReadWithVariablesLaunch() throws Exception {
-        final Feature feature = U.readFeature("test3", SubstituteVariables.LAUNCH);
-
-        List<Include> includes = feature.getIncludes();
-        assertEquals(1, includes.size());
-        Include include = includes.get(0);
-        assertEquals("Include substitution should not happen at launch time",
-                "${sling.gid}:sling:10", include.getId().toMvnId());
-
-        List<Requirement> reqs = feature.getRequirements();
-        Requirement req = reqs.get(0);
-        assertEquals("Requirement substitution should not happen at launch time",
-                "osgi.${ns}", req.getNamespace());
-        assertEquals("Requirement substitution should not happen at launch time",
-                "(&(osgi.contract=${contract.name})(&(version>=3.0)(!(version>=4.0))))",
-                req.getDirectives().get("filter"));
-        assertEquals("There should be 1 directive, comments should be ignored",
-                1, req.getDirectives().size());
-
-        List<Capability> caps = feature.getCapabilities();
-        Capability cap = null;
-        for (Capability c : caps) {
-            if ("osgi.${svc}".equals(c.getNamespace())) {
-                cap = c;
-                break;
-            }
-        }
-        assertEquals("Capability substitution should not happen at launch time",
-                Collections.singletonList("org.osgi.${svc}.http.runtime.HttpServiceRuntime"),
-                cap.getAttributes().get("objectClass"));
-        assertEquals("There should be 1 attribute, comments should be ignored",
-                1, cap.getAttributes().size());
-
-        KeyValueMap fwProps = feature.getFrameworkProperties();
-        assertEquals("something", fwProps.get("brave"));
-        assertEquals("There should be 3 framework properties, comments not included",
-                3, fwProps.size());
-
-        Configurations configurations = feature.getConfigurations();
-        assertEquals("There should be 2 configurations, comments not included",
-                2, configurations.size());
-
-        Configuration config1 = configurations.getConfiguration("my.pid2");
-        for (Enumeration<?> en = config1.getProperties().elements(); en.hasMoreElements(); ) {
-            assertFalse("The comment should not show up in the configuration",
-                "comment".equals(en.nextElement()));
-        }
-
-        Configuration config2 = configurations.getConfiguration("my.pid2");
-        Dictionary<String, Object> props = config2.getProperties();
-        assertEquals("aaright!", props.get("a.value"));
-        assertEquals("right!bb", props.get("b.value"));
-        assertEquals("creally?c", props.get("c.value"));
-        assertEquals("The variable definition looks like a variable definition, this escaping mechanism should work",
-                "${refvar}", props.get("refvar"));
-    }
-
     @Test public void testReadRepoInitExtension() throws Exception {
         Feature feature = U.readFeature("repoinit");
         Extensions extensions = feature.getExtensions();
@@ -192,36 +130,8 @@ public class FeatureJSONReaderTest {
         assertEquals("[\"some repo init\",\"text\"]", ext.getJSON());
     }
 
-    @Test public void testHandleVars() throws Exception {
-        FeatureJSONReader reader = new FeatureJSONReader(null, null, SubstituteVariables.LAUNCH);
-
-        ArtifactId aid = new ArtifactId("gid", "aid", "1.2.3", null, null);
-        Feature feature = new Feature(aid);
-        KeyValueMap kvMap = feature.getVariables();
-        kvMap.put("var1", "bar");
-        kvMap.put("varvariable", "${myvar}");
-        kvMap.put("var.2", "2");
-        setPrivateField(reader, "feature", feature);
-
-        assertEquals("foobarfoo", reader.handleLaunchVars("foo${var1}foo"));
-        assertEquals("barbarbar", reader.handleLaunchVars("${var1}${var1}${var1}"));
-        assertEquals("${}test${myvar}2", reader.handleLaunchVars("${}test${varvariable}${var.2}"));
-        try {
-            reader.handleLaunchVars("${undefined}");
-            fail("Should throw an exception on the undefined variable");
-        } catch (IllegalStateException ise) {
-            // good
-        }
-    }
-
     @Test public void testReadArtifactsExtensions() throws Exception {
-        final Feature feature = U.readFeature("artifacts-extension", SubstituteVariables.NONE);
+        final Feature feature = U.readFeature("artifacts-extension");
         ArtifactsExtensions.testReadArtifactsExtensions(feature);
-    }
-
-    private void setPrivateField(Object obj, String name, Object value) throws Exception {
-        Field field = obj.getClass().getDeclaredField(name);
-        field.setAccessible(true);
-        field.set(obj, value);
     }
 }

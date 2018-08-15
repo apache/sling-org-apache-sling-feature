@@ -16,40 +16,40 @@
  */
 package org.apache.sling.feature.io.json;
 
-import org.apache.sling.feature.Configuration;
-
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.sling.feature.Configuration;
+
 public abstract class JSONConstants {
 
-    public static final String FEATURE_ID = "id";
+    static final String FEATURE_ID = "id";
 
-    public static final String FEATURE_VARIABLES = "variables";
+    static final String FEATURE_VARIABLES = "variables";
 
-    public static final String FEATURE_BUNDLES = "bundles";
+    static final String FEATURE_BUNDLES = "bundles";
 
-    public static final String FEATURE_FRAMEWORK_PROPERTIES = "framework-properties";
+    static final String FEATURE_FRAMEWORK_PROPERTIES = "framework-properties";
 
-    public static final String FEATURE_CONFIGURATIONS = "configurations";
+    static final String FEATURE_CONFIGURATIONS = "configurations";
 
-    public static final String FEATURE_INCLUDES = "includes";
+    static final String FEATURE_INCLUDES = "includes";
 
-    public static final String FEATURE_REQUIREMENTS = "requirements";
+    static final String FEATURE_REQUIREMENTS = "requirements";
 
-    public static final String FEATURE_CAPABILITIES = "capabilities";
+    static final String FEATURE_CAPABILITIES = "capabilities";
 
-    public static final String FEATURE_TITLE = "title";
+    static final String FEATURE_TITLE = "title";
 
-    public static final String FEATURE_DESCRIPTION = "description";
+    static final String FEATURE_DESCRIPTION = "description";
 
-    public static final String FEATURE_VENDOR = "vendor";
+    static final String FEATURE_VENDOR = "vendor";
 
-    public static final String FEATURE_LICENSE = "license";
+    static final String FEATURE_LICENSE = "license";
 
-    public static final String FEATURE_MODEL_VERSION = "model-version";
+    static final String FEATURE_MODEL_VERSION = "model-version";
 
-    public static final List<String> FEATURE_KNOWN_PROPERTIES = Arrays.asList(FEATURE_ID,
+    static final List<String> FEATURE_KNOWN_PROPERTIES = Arrays.asList(FEATURE_ID,
             FEATURE_MODEL_VERSION,
             FEATURE_VARIABLES,
             FEATURE_BUNDLES,
@@ -63,27 +63,17 @@ public abstract class JSONConstants {
             FEATURE_VENDOR,
             FEATURE_LICENSE);
 
-    public static final String ARTIFACT_ID = "id";
+    static final String ARTIFACT_ID = "id";
 
-    public static final List<String> ARTIFACT_KNOWN_PROPERTIES = Arrays.asList(ARTIFACT_ID,
-            Configuration.PROP_ARTIFACT,
+    static final List<String> ARTIFACT_KNOWN_PROPERTIES = Arrays.asList(ARTIFACT_ID,
+            Configuration.PROP_ARTIFACT_ID,
             FEATURE_CONFIGURATIONS);
 
-    public static final String INCLUDE_REMOVALS = "removals";
+    static final String INCLUDE_REMOVALS = "removals";
 
-    public static final String INCLUDE_EXTENSION_REMOVALS = "extensions";
+    static final String INCLUDE_EXTENSION_REMOVALS = "extensions";
 
-    public static final String REQCAP_NAMESPACE = "namespace";
-    public static final String REQCAP_ATTRIBUTES = "attributes";
-    public static final String REQCAP_DIRECTIVES = "directives";
-
-    public static final String APP_FRAMEWORK = "frameworkId";
-    public static final String APP_FEATURES = "features";
-
-    public static final List<String> APP_KNOWN_PROPERTIES = Arrays.asList(APP_FRAMEWORK,
-            FEATURE_VARIABLES,
-            FEATURE_BUNDLES,
-            FEATURE_FRAMEWORK_PROPERTIES,
-            FEATURE_CONFIGURATIONS,
-            APP_FEATURES);
+    static final String REQCAP_NAMESPACE = "namespace";
+    static final String REQCAP_ATTRIBUTES = "attributes";
+    static final String REQCAP_DIRECTIVES = "directives";
 }

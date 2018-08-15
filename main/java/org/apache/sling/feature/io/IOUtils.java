@@ -16,11 +16,6 @@
  */
 package org.apache.sling.feature.io;
 
-import org.apache.sling.feature.ArtifactId;
-import org.apache.sling.feature.Feature;
-import org.apache.sling.feature.io.json.FeatureJSONReader;
-import org.apache.sling.feature.io.json.FeatureJSONReader.SubstituteVariables;
-
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -29,6 +24,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+
+import org.apache.sling.feature.ArtifactId;
+import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.io.json.FeatureJSONReader;
 
 public class IOUtils {
 
@@ -166,18 +165,16 @@ public class IOUtils {
      *
      * @param url The feature url
      * @param artifactManager The artifact manager to read the feature
-     * @param substituteVariables Variable substitution handling
      * @return The read feature
      * @throws IOException If reading fails
      */
     public static Feature getFeature(final String url,
-            final ArtifactManager artifactManager,
-            final SubstituteVariables substituteVariables)
+            final ArtifactManager artifactManager)
     throws IOException {
         final ArtifactHandler featureArtifact = artifactManager.getArtifactHandler(url);
 
         try (final FileReader r = new FileReader(featureArtifact.getFile())) {
-            final Feature f = FeatureJSONReader.read(r, featureArtifact.getUrl(), substituteVariables);
+            final Feature f = FeatureJSONReader.read(r, featureArtifact.getUrl());
             return f;
         }
     }
@@ -191,7 +188,7 @@ public class IOUtils {
     public static ArtifactId getFelixFrameworkId(final String version) {
         return new ArtifactId("org.apache.felix",
                 "org.apache.felix.framework",
-                version != null ? version : "5.6.10", null, null);
+                version != null ? version : "6.0.0", null, null);
     }
 
     static final Comparator<String> FEATURE_PATH_COMP = new Comparator<String>() {

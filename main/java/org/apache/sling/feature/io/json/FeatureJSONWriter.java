@@ -16,14 +16,6 @@
  */
 package org.apache.sling.feature.io.json;
 
-import org.apache.sling.feature.ArtifactId;
-import org.apache.sling.feature.Configuration;
-import org.apache.sling.feature.Configurations;
-import org.apache.sling.feature.Feature;
-import org.apache.sling.feature.Include;
-import org.osgi.resource.Capability;
-import org.osgi.resource.Requirement;
-
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Collections;
@@ -36,6 +28,14 @@ import javax.json.JsonObjectBuilder;
 import javax.json.JsonWriter;
 import javax.json.JsonWriterFactory;
 import javax.json.stream.JsonGenerator;
+
+import org.apache.sling.feature.ArtifactId;
+import org.apache.sling.feature.Configuration;
+import org.apache.sling.feature.Configurations;
+import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.Include;
+import org.osgi.resource.Capability;
+import org.osgi.resource.Requirement;
 
 /**
  * Simple JSON writer for a feature
@@ -185,7 +185,7 @@ public class FeatureJSONWriter extends JSONWriterBase {
         // configurations
         final Configurations cfgs = new Configurations();
         for(final Configuration cfg : feature.getConfigurations()) {
-            final String artifactProp = (String)cfg.getProperties().get(Configuration.PROP_ARTIFACT);
+            final String artifactProp = (String)cfg.getProperties().get(Configuration.PROP_ARTIFACT_ID);
             if (  artifactProp == null ) {
                 cfgs.add(cfg);
             }

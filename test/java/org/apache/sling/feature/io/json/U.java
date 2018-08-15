@@ -16,18 +16,16 @@
  */
 package org.apache.sling.feature.io.json;
 
-import org.apache.sling.feature.Configuration;
-import org.apache.sling.feature.Feature;
-import org.apache.sling.feature.io.json.FeatureJSONReader;
-import org.apache.sling.feature.io.json.FeatureJSONReader.SubstituteVariables;
-import org.osgi.resource.Capability;
-import org.osgi.resource.Requirement;
+import static org.junit.Assert.fail;
 
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.List;
 
-import static org.junit.Assert.fail;
+import org.apache.sling.feature.Configuration;
+import org.apache.sling.feature.Feature;
+import org.osgi.resource.Capability;
+import org.osgi.resource.Requirement;
 
 /** Test utilities */
 public class U {
@@ -35,13 +33,9 @@ public class U {
     /** Read the feature from the provided resource
      */
     public static Feature readFeature(final String name) throws Exception {
-        return readFeature(name, SubstituteVariables.RESOLVE);
-    }
-
-    public static Feature readFeature(final String name, final SubstituteVariables phase) throws Exception {
         try ( final Reader reader = new InputStreamReader(U.class.getResourceAsStream("/features/" + name + ".json"),
                 "UTF-8") ) {
-            return FeatureJSONReader.read(reader, name, phase);
+            return FeatureJSONReader.read(reader, name);
         }
     }
 
