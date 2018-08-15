@@ -192,7 +192,7 @@ public abstract class FeatureBuilder {
         for(final Feature assembled : assembledFeatures) {
             usedFeatures.add(assembled.getId());
 
-            merge(target, assembled, context);
+            merge(target, assembled, context, BuilderUtil.ArtifactMerge.HIGHEST);
         }
 
         // append feature list in extension
@@ -308,9 +308,9 @@ public abstract class FeatureBuilder {
                 include(af, i);
 
                 // and now merge
-                merge(result, af, context);
+                merge(result, af, context, BuilderUtil.ArtifactMerge.LATEST);
             }
-            merge(result, feature, context);
+            merge(result, feature, context, BuilderUtil.ArtifactMerge.LATEST);
         }
         processedFeatures.remove(feature.getId().toMvnId());
 
@@ -320,16 +320,17 @@ public abstract class FeatureBuilder {
 
     private static void merge(final Feature target,
             final Feature source,
-            final BuilderContext context) {
+            final BuilderContext context,
+            final BuilderUtil.ArtifactMerge mergeAlg) {
         BuilderUtil.mergeVariables(target.getVariables(), source.getVariables());
-        BuilderUtil.mergeBundles(target.getBundles(), source.getBundles(), BuilderUtil.ArtifactMerge.LATEST);
+        BuilderUtil.mergeBundles(target.getBundles(), source.getBundles(), mergeAlg);
         BuilderUtil.mergeConfigurations(target.getConfigurations(), source.getConfigurations());
         BuilderUtil.mergeFrameworkProperties(target.getFrameworkProperties(), source.getFrameworkProperties());
         BuilderUtil.mergeRequirements(target.getRequirements(), source.getRequirements());
         BuilderUtil.mergeCapabilities(target.getCapabilities(), source.getCapabilities());
         BuilderUtil.mergeExtensions(target,
                 source,
-                BuilderUtil.ArtifactMerge.LATEST,
+                mergeAlg,
                 context);
     }
 

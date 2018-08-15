@@ -41,11 +41,4 @@ public abstract class FeatureConstants {
      * optional.
      */
     public static final String EXTENSION_NAME_ASSEMBLED_FEATURES = "assembled-features";
-
-    /**
-     * Extension name containing the framework artifact.
-     * This extension is of type {@link ExtensionType#ARTIFACTS}, contains
-     * exactly a single artifact and is optional.
-     */
-    public static final String EXTENSION_NAME_FRAMEWORK = "framework";
 }
