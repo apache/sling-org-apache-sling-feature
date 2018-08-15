@@ -16,10 +16,36 @@
  */
 package org.apache.sling.feature;
 
-public class FeatureConstants {
-    /** Common extension name to specify the repoinit part for Apache Sling. */
+import org.apache.sling.feature.builder.BuilderContext;
+
+public abstract class FeatureConstants {
+
+    /**
+     * Common extension name to specify the repoinit part for Apache Sling.
+     * This extension is of type {@link ExtensionType#TEXT} and is
+     * required.
+     */
     public static final String EXTENSION_NAME_REPOINIT = "repoinit";
 
-    /** Common extension name to specify the content packages for Apache Sling. */
+    /**
+     * Common extension name to specify the content packages for Apache Sling.
+     * This extension is of type {@link ExtensionType#ARTIFACTS} and is
+     * required.
+     */
     public static final String EXTENSION_NAME_CONTENT_PACKAGES = "content-packages";
+
+    /**
+     * Extension name containing the assembled features as produced
+     * by {@link #assemble(ArtifactId, BuilderContext, Feature...)}.
+     * This extension is of type {@link ExtensionType#ARTIFACTS} and is
+     * optional.
+     */
+    public static final String EXTENSION_NAME_ASSEMBLED_FEATURES = "assembled-features";
+
+    /**
+     * Extension name containing the framework artifact.
+     * This extension is of type {@link ExtensionType#ARTIFACTS}, contains
+     * exactly a single artifact and is optional.
+     */
+    public static final String EXTENSION_NAME_FRAMEWORK = "framework";
 }

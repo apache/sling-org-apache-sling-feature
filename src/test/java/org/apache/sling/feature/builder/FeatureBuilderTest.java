@@ -39,7 +39,9 @@ import org.apache.sling.feature.Configuration;
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.FeatureConstants;
 import org.apache.sling.feature.Include;
+import org.apache.sling.feature.KeyValueMap;
 import org.junit.Test;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
@@ -551,4 +553,49 @@ public class FeatureBuilderTest {
             // expected
         }
     }
+
+    @Test public void testIncludedFeatureProvided() throws Exception {
+        final ArtifactId idA = ArtifactId.fromMvnId("g:a:1.0.0");
+        final ArtifactId idB = ArtifactId.fromMvnId("g:b:1.0.0");
+
+        final Feature a = new Feature(idA);
+        final Feature b = new Feature(idB);
+        // feature b includes feature a
+        final Include inc = new Include(idA);
+        b.getIncludes().add(inc);
+
+        // assemble feature, it should only contain feature b as a is included by b
+        final Feature target = FeatureBuilder.assemble(ArtifactId.fromMvnId("g:F:1.0.0"), new BuilderContext(new FeatureProvider() {
+
+            @Override
+            public Feature provide(ArtifactId id) {
+                return null;
+            }
+        }), a, b);
+        final Extension list = target.getExtensions().getByName(FeatureConstants.EXTENSION_NAME_ASSEMBLED_FEATURES);
+        assertNotNull(list);
+        assertEquals(1, list.getArtifacts().size());
+        assertEquals(idB, list.getArtifacts().get(0).getId());
+    }
+
+    @Test public void testHandleVars() throws Exception {
+        ArtifactId aid = new ArtifactId("gid", "aid", "1.2.3", null, null);
+        Feature feature = new Feature(aid);
+        KeyValueMap kvMap = feature.getVariables();
+        kvMap.put("var1", "bar");
+        kvMap.put("varvariable", "${myvar}");
+        kvMap.put("var.2", "2");
+
+
+        assertEquals("foobarfoo", FeatureBuilder.replaceVariables("foo${var1}foo", null, feature));
+        assertEquals("barbarbar", FeatureBuilder.replaceVariables("${var1}${var1}${var1}", null, feature));
+        assertEquals("${}test${myvar}2", FeatureBuilder.replaceVariables("${}test${varvariable}${var.2}", null, feature ));
+        try {
+            FeatureBuilder.replaceVariables("${undefined}", null, feature);
+            fail("Should throw an exception on the undefined variable");
+        } catch (IllegalStateException ise) {
+            // good
+        }
+    }
+
 }

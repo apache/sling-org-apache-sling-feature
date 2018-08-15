@@ -31,7 +31,11 @@ import java.util.Hashtable;
 public class Configuration
     implements Comparable<Configuration> {
 
-    public static final String PROP_ARTIFACT = "service.bundleLocation";
+    /**
+     * This optional configuration property stores the artifact id (mvn id) of the bundle
+     * this configuration belongs to.
+     */
+    public static final String PROP_ARTIFACT_ID = "service.bundleLocation";
 
     /** The pid or name for factory pids. */
     private final String pid;

@@ -17,21 +17,30 @@
 package org.apache.sling.feature.builder;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.sling.feature.Artifact;
 import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Configuration;
 import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.FeatureConstants;
 import org.apache.sling.feature.Include;
+import org.apache.sling.feature.KeyValueMap;
 import org.osgi.framework.Version;
 
-public class FeatureBuilder {
+public abstract class FeatureBuilder {
+
+    /** Pattern for using variables. */
+    private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\{[a-zA-Z0-9.-_]+\\}");
 
     /**
      * Assemble the full feature by processing all includes.
@@ -151,6 +160,115 @@ public class FeatureBuilder {
         return assembledFeatures.toArray(new Feature[assembledFeatures.size()]);
     }
 
+    /**
+     * Assemble a feature based on the provided features.
+     *
+     * The features are processed in the order they are provided.
+     * If the same feature is included more than once only the feature with
+     * the highest version is used. The others are ignored.
+     *
+     * @param featureId The feature id to use.
+     * @param context The builder context
+     * @param features The features
+     * @return The application
+     * throws IllegalArgumentException If featureId, context or featureIds is {@code null}
+     * throws IllegalStateException If a feature can't be provided
+     */
+    public static Feature assemble(
+            final ArtifactId featureId,
+            final BuilderContext context,
+            final Feature... features) {
+        if ( featureId == null || features == null || context == null ) {
+            throw new IllegalArgumentException("Features and/or context must not be null");
+        }
+
+        final Feature target = new Feature(featureId);
+
+        final Feature[] assembledFeatures = FeatureBuilder.deduplicate(context, features);
+
+        final Set<ArtifactId> usedFeatures = new HashSet<>();
+
+        // assemble feature
+        for(final Feature assembled : assembledFeatures) {
+            usedFeatures.add(assembled.getId());
+
+            merge(target, assembled, context);
+        }
+
+        // append feature list in extension
+        final Extension list = new Extension(ExtensionType.ARTIFACTS, FeatureConstants.EXTENSION_NAME_ASSEMBLED_FEATURES, false);
+        for(final ArtifactId id : usedFeatures) {
+            list.getArtifacts().add(new Artifact(id));
+        }
+        target.getExtensions().add(list);
+
+        return target;
+    }
+
+    /**
+     * Resolve variables in the feature.
+     * Variables are allowed in the values of framework properties and in the values of
+     * configuration properties.
+     * @param feature The feature
+     * @param additionalVariables Optional additional variables
+     */
+    public static void resolveVariables(final Feature feature, final KeyValueMap additionalVariables) {
+        for(final Configuration cfg : feature.getConfigurations()) {
+            final Set<String> keys = new HashSet<>(Collections.list(cfg.getProperties().keys()));
+            for(final String key : keys) {
+                final Object value = cfg.getProperties().get(key);
+                cfg.getProperties().put(key, replaceVariables(value, additionalVariables, feature));
+            }
+        }
+        for(final Map.Entry<String, String> entry : feature.getFrameworkProperties()) {
+            // the  value is always a string
+            entry.setValue((String)replaceVariables(entry.getValue(), additionalVariables, feature));
+        }
+    }
+
+    /**
+     * Substitute variables in the provided value. The variables must follow the
+     * syntax ${variable_name} and are looked up in the provided variables and in
+     * the feature variables. The provided variables are looked up first, potentially
+     * overwriting variables defined in the feature.
+     * If the provided value contains no variables, it will be returned as-is.
+     *
+     * @param value The value that can contain variables
+     * @param additionalVariables The optional variables that can be substituted (might be {@code null})
+     * @param feature The feature containing variables
+     * @return The value with the variables substituted.
+     * @throws IllegalStateException when a variable in the value is not present.
+     */
+    public static Object replaceVariables(final Object value, final KeyValueMap additionalVariables, final Feature feature) {
+        if (!(value instanceof String)) {
+            return value;
+        }
+
+        final String textWithVars = (String) value;
+
+        final Matcher m = VARIABLE_PATTERN.matcher(textWithVars.toString());
+        final StringBuffer sb = new StringBuffer();
+        while (m.find()) {
+            final String var = m.group();
+
+            final int len = var.length();
+            final String name = var.substring(2, len - 1);
+            String val = (additionalVariables != null ? additionalVariables.get(name) : null);
+            if (val == null ) {
+                val = feature.getVariables().get(name);
+            }
+
+            if (val != null) {
+                m.appendReplacement(sb, Matcher.quoteReplacement(val));
+            } else {
+                throw new IllegalStateException("Undefined variable: " + name);
+            }
+        }
+        m.appendTail(sb);
+
+        return sb.toString();
+    }
+
     private static Feature internalAssemble(final List<String> processedFeatures,
             final Feature feature,
             final BuilderContext context) {
@@ -237,7 +355,7 @@ public class FeatureBuilder {
             final Iterator<Configuration> iter = base.getConfigurations().iterator();
             while ( iter.hasNext() ) {
                 final Configuration cfg = iter.next();
-                final String bundleId = (String)cfg.getProperties().get(Configuration.PROP_ARTIFACT);
+                final String bundleId = (String)cfg.getProperties().get(Configuration.PROP_ARTIFACT_ID);
                 final ArtifactId bundleArtifactId = ArtifactId.fromMvnId(bundleId);
                 boolean remove = false;
                 if ( ignoreVersion ) {

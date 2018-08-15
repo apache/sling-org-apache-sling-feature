@@ -16,17 +16,6 @@
  */
 package org.apache.sling.feature.builder;
 
-import org.apache.sling.feature.Application;
-import org.apache.sling.feature.Artifact;
-import org.apache.sling.feature.Bundles;
-import org.apache.sling.feature.Configuration;
-import org.apache.sling.feature.Configurations;
-import org.apache.sling.feature.Extension;
-import org.apache.sling.feature.Feature;
-import org.apache.sling.feature.KeyValueMap;
-import org.osgi.resource.Capability;
-import org.osgi.resource.Requirement;
-
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Enumeration;
@@ -42,6 +31,16 @@ import javax.json.JsonStructure;
 import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
 import javax.json.JsonWriter;
+
+import org.apache.sling.feature.Artifact;
+import org.apache.sling.feature.Bundles;
+import org.apache.sling.feature.Configuration;
+import org.apache.sling.feature.Configurations;
+import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.KeyValueMap;
+import org.osgi.resource.Capability;
+import org.osgi.resource.Requirement;
 
 /**
  * Utility methods for the builders
@@ -231,28 +230,6 @@ class BuilderUtil {
         for(final Extension ext : target.getExtensions()) {
             for(final FeatureExtensionHandler fem : context.getFeatureExtensionHandlers()) {
                 fem.postProcess(target, ext.getName());
-            }
-        }
-    }
-
-    static void mergeExtensions(final Application target,
-        final Feature source,
-        final ArtifactMerge artifactMergeAlg) {
-        for(final Extension ext : source.getExtensions()) {
-            boolean found = false;
-            for(final Extension current : target.getExtensions()) {
-                if ( current.getName().equals(ext.getName()) ) {
-                    found = true;
-                    if ( current.getType() != ext.getType() ) {
-                        throw new IllegalStateException("Found different types for extension " + current.getName()
-                            + " : " + current.getType() + " and " + ext.getType());
-                    }
-                    // default merge
-                    mergeExtensions(current, ext, artifactMergeAlg);
-                }
-            }
-            if ( !found ) {
-                target.getExtensions().add(ext);
             }
         }
     }
