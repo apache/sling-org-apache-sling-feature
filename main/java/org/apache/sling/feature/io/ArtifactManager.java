@@ -32,6 +32,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.Files;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -320,6 +321,10 @@ public class ArtifactManager {
                     cacheFile.getParentFile().mkdirs();
                     final URL u = new URL(url);
                     final URLConnection con = u.openConnection();
+                    final String userInfo = u.getUserInfo();
+                    if (userInfo != null) {
+                        con.addRequestProperty("Authorization", "Basic " + Base64.getEncoder().encodeToString(u.toURI().getUserInfo().getBytes("UTF-8")));
+                    }
                     con.connect();
 
                     final InputStream readIS = con.getInputStream();
