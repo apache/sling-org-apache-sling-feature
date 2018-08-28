@@ -210,8 +210,8 @@ class BuilderUtil {
                     }
                     boolean handled = false;
                     for(final FeatureExtensionHandler fem : context.getFeatureExtensionHandlers()) {
-                        if ( fem.canMerge(current.getName()) ) {
-                            fem.merge(target, source, current.getName());
+                        if ( fem.canMerge(current) ) {
+                            fem.merge(target, source, current);
                             handled = true;
                             break;
                         }
@@ -229,7 +229,7 @@ class BuilderUtil {
         // post processing
         for(final Extension ext : target.getExtensions()) {
             for(final FeatureExtensionHandler fem : context.getFeatureExtensionHandlers()) {
-                fem.postProcess(target, ext.getName());
+                fem.postProcess(target, ext);
             }
         }
     }

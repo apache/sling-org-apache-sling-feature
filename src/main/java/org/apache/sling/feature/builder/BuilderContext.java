@@ -16,12 +16,12 @@
  */
 package org.apache.sling.feature.builder;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * Builder context holds services used by {@link ApplicationBuilder}
- * and {@link FeatureBuilder}.
+ * Builder context holds services used by  {@link FeatureBuilder}.
  */
 public class BuilderContext {
 
@@ -43,12 +43,12 @@ public class BuilderContext {
     }
 
     /**
-     * Add a feature extension handler
-     * @param handler A handler
+     * Add a feature extension handlers
+     * @param handlers Handler(s) to add
      * @return This instance
      */
-    public BuilderContext add(final FeatureExtensionHandler handler) {
-        featureExtensionHandlers.add(handler);
+    public BuilderContext add(final FeatureExtensionHandler... handlers) {
+        featureExtensionHandlers.addAll(Arrays.asList(handlers));
         return this;
     }
 

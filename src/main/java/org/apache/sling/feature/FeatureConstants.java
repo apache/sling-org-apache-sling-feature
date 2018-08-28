@@ -36,7 +36,7 @@ public abstract class FeatureConstants {
 
     /**
      * Extension name containing the assembled features as produced
-     * by {@link #assemble(ArtifactId, BuilderContext, Feature...)}.
+     * by {@link org.apache.sling.feature.builder.FeatureBuilder#assemble(ArtifactId, BuilderContext, Feature...)}.
      * This extension is of type {@link ExtensionType#ARTIFACTS} and is
      * optional.
      */

@@ -21,8 +21,7 @@ import org.apache.sling.feature.Feature;
 import org.osgi.annotation.versioning.ConsumerType;
 
 /**
- * The feature provider is used to find features while assembling using either
- * {@link ApplicationBuilder} or {@link FeatureBuilder}.
+ * The feature provider is used to find features while assembling using {@link FeatureBuilder}.
  */
 @ConsumerType
 public interface FeatureProvider {
