@@ -42,7 +42,7 @@ import java.util.ServiceLoader;
  * It uses {@link ArtifactProvider}s to get artifacts. The
  * providers are loaded using the service loader.
  */
-public class ArtifactManager {
+public class ArtifactManager implements AutoCloseable {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -101,6 +101,12 @@ public class ArtifactManager {
             provider.shutdown();
         }
         this.providers.clear();
+    }
+
+    @Override
+    public void close()
+    {
+        shutdown();
     }
 
     private final File getArtifactFromProviders(final String url, final String relativeCachePath) throws IOException {
