@@ -188,7 +188,7 @@ public class IOUtils {
     public static ArtifactId getFelixFrameworkId(final String version) {
         return new ArtifactId("org.apache.felix",
                 "org.apache.felix.framework",
-                version != null ? version : "6.0.0", null, null);
+                version != null ? version : "6.0.1", null, null);
     }
 
     static final Comparator<String> FEATURE_PATH_COMP = new Comparator<String>() {
