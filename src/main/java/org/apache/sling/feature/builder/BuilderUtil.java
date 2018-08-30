@@ -236,7 +236,10 @@ class BuilderUtil {
     }
 
     private static JsonObject merge(final JsonObject obj1, final JsonObject obj2) {
-        JsonObjectBuilder builder = Json.createObjectBuilder(obj1);
+        JsonObjectBuilder builder = Json.createObjectBuilder();
+        for (final Map.Entry<String, JsonValue> entry : obj1.entrySet()) {
+            builder.add(entry.getKey(), entry.getValue());
+        }
         for(final Map.Entry<String, JsonValue> entry : obj2.entrySet()) {
             if ( !obj1.containsKey(entry.getKey()) ) {
                 builder.add(entry.getKey(), entry.getValue());
@@ -253,7 +256,7 @@ class BuilderUtil {
                         ((JsonArray)entry.getValue()).stream()
                     ).forEachOrdered(arrayBuilder::add);
 
-                    builder.add(entry.getKey(), builder.build());
+                    builder.add(entry.getKey(), arrayBuilder.build());
                 } else if ( oldValue.getValueType() == ValueType.OBJECT ) {
                     builder.add(entry.getKey(), merge((JsonObject)oldValue, (JsonObject)entry.getValue()));
                 } else {
