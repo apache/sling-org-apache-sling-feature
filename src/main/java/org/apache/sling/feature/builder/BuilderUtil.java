@@ -27,6 +27,7 @@ import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.json.JsonStructure;
 import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
@@ -156,7 +157,7 @@ class BuilderUtil {
                     struct1 = builder.build();
                 } else {
                     // object is merge
-                    merge((JsonObject)struct1, (JsonObject)struct2);
+                    struct1 = merge((JsonObject)struct1, (JsonObject)struct2);
                 }
                 StringWriter buffer = new StringWriter();
                 try (JsonWriter writer = Json.createWriter(buffer))
@@ -234,30 +235,32 @@ class BuilderUtil {
         }
     }
 
-    private static void merge(final JsonObject obj1, final JsonObject obj2) {
+    private static JsonObject merge(final JsonObject obj1, final JsonObject obj2) {
+        JsonObjectBuilder builder = Json.createObjectBuilder(obj1);
         for(final Map.Entry<String, JsonValue> entry : obj2.entrySet()) {
             if ( !obj1.containsKey(entry.getKey()) ) {
-                obj1.put(entry.getKey(), entry.getValue());
+                builder.add(entry.getKey(), entry.getValue());
             } else {
                 final JsonValue oldValue = obj1.get(entry.getKey());
                 if ( oldValue.getValueType() != entry.getValue().getValueType() ) {
                     // new type wins
-                    obj1.put(entry.getKey(), entry.getValue());
+                    builder.add(entry.getKey(), entry.getValue());
                 } else if ( oldValue.getValueType() == ValueType.ARRAY ) {
-                    final JsonArrayBuilder builder = Json.createArrayBuilder();
+                    final JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
 
                     Stream.concat(
                         ((JsonArray) oldValue).stream(),
                         ((JsonArray)entry.getValue()).stream()
-                    ).forEachOrdered(builder::add);
+                    ).forEachOrdered(arrayBuilder::add);
 
-                    obj1.put(entry.getKey(), builder.build());
+                    builder.add(entry.getKey(), builder.build());
                 } else if ( oldValue.getValueType() == ValueType.OBJECT ) {
-                    merge((JsonObject)oldValue, (JsonObject)entry.getValue());
+                    builder.add(entry.getKey(), merge((JsonObject)oldValue, (JsonObject)entry.getValue()));
                 } else {
-                    obj1.put(entry.getKey(), entry.getValue());
+                    builder.add(entry.getKey(), entry.getValue());
                 }
             }
         }
+        return builder.build();
     }
 }
