@@ -268,6 +268,7 @@ public class FeatureBuilderTest {
                 attrs);
         base.getCapabilities().add(c1);
 
+        i1.getFrameworkPropertiesRemovals().add("foo");
         base.getFrameworkProperties().put("foo", "1");
         base.getFrameworkProperties().put("brave", "something");
         base.getFrameworkProperties().put("org.apache.felix.scr.directory", "launchpad/scr");
@@ -590,12 +591,94 @@ public class FeatureBuilderTest {
         assertEquals("foobarfoo", FeatureBuilder.replaceVariables("foo${var1}foo", null, feature));
         assertEquals("barbarbar", FeatureBuilder.replaceVariables("${var1}${var1}${var1}", null, feature));
         assertEquals("${}test${myvar}2", FeatureBuilder.replaceVariables("${}test${varvariable}${var.2}", null, feature ));
+        assertEquals("${undefined}",FeatureBuilder.replaceVariables("${undefined}", null, feature));
+    }
+
+    @Test public void testHandleVarsWithConflict() throws Exception {
+        ArtifactId aid = new ArtifactId("gid", "aid", "1.2.3", null, null);
+        ArtifactId bid = new ArtifactId("gid", "bid", "2.0.0", null, null);
+
+        Feature aFeature = new Feature(aid);
+        Feature bFeature = new Feature(bid);
+
+        KeyValueMap kvMapA = aFeature.getVariables();
+        kvMapA.put("var1", "val1");
+        kvMapA.put("var2", "val2");
+
+        KeyValueMap kvMapB = bFeature.getVariables();
+        kvMapB.put("var1", "val1");
+        kvMapB.put("var2", "val2");
+        kvMapB.put("var3", "val3");
+
+        KeyValueMap override = new KeyValueMap();
+        override.put("var3", "valo");
+        override.put("val4", "notused");
+
+        Feature cFeature = FeatureBuilder.assemble(new ArtifactId("gid", "cid", "3.0.0", null, null), new BuilderContext(new FeatureProvider()
+        {
+            @Override
+            public Feature provide(ArtifactId id)
+            {
+                return null;
+            }
+        },override, null), aFeature, bFeature);
+
+        KeyValueMap vars = new KeyValueMap();
+        vars.putAll(kvMapA);
+        vars.putAll(kvMapB);
+
+        assertFalse(cFeature.getVariables().equals(vars));
+        vars.put("var3", "valo");
+
+        assertTrue(cFeature.getVariables().equals(vars));
+
+        kvMapB.put("var2", "valm");
+
         try {
-            FeatureBuilder.replaceVariables("${undefined}", null, feature);
-            fail("Should throw an exception on the undefined variable");
-        } catch (IllegalStateException ise) {
-            // good
-        }
+            FeatureBuilder.assemble(new ArtifactId("gid", "cid", "3.0.0", null, null), new BuilderContext(new FeatureProvider()
+            {
+                @Override
+                public Feature provide(ArtifactId id)
+                {
+                    return null;
+                }
+            }, override, null), aFeature, bFeature);
+            fail("Excepted merge exception");
+        } catch (IllegalStateException expected) {}
+
+        override.put("var2", "valo");
+
+        cFeature = FeatureBuilder.assemble(new ArtifactId("gid", "cid", "3.0.0", null, null), new BuilderContext(new FeatureProvider()
+        {
+            @Override
+            public Feature provide(ArtifactId id)
+            {
+                return null;
+            }
+        }, override, null), aFeature, bFeature);
+
+        vars = new KeyValueMap();
+        vars.putAll(kvMapA);
+        vars.putAll(kvMapB);
+        vars.put("var2", "valo");
+        vars.put("var3", "valo");
+
+        assertTrue(cFeature.getVariables().equals(vars));
+
+        override.put("var2", null);
+
+        cFeature = FeatureBuilder.assemble(new ArtifactId("gid", "cid", "3.0.0", null, null), new BuilderContext(new FeatureProvider()
+        {
+            @Override
+            public Feature provide(ArtifactId id)
+            {
+                return null;
+            }
+        }, override, null), aFeature, bFeature);
+
+        vars.put("var2", null);
+        assertTrue(cFeature.getVariables().equals(vars));
+
     }
 
 }
