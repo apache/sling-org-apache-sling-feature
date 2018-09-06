@@ -220,7 +220,7 @@ abstract class JSONReaderBase {
                 if ( entry.toString().startsWith("#") ) {
                     continue;
                 }
-                artifact = new Artifact(ArtifactId.parse(handleResolveVars(entry).toString()));
+                artifact = new Artifact(ArtifactId.parse((String) entry));
             } else {
                 @SuppressWarnings("unchecked")
                 final Map<String, Object> bundleObj = (Map<String, Object>) entry;
@@ -228,7 +228,7 @@ abstract class JSONReaderBase {
                     throw new IOException(exceptionPrefix + " " + artifactType + " is missing required artifact id");
                 }
                 checkType(artifactType + " " + JSONConstants.ARTIFACT_ID, bundleObj.get(JSONConstants.ARTIFACT_ID), String.class);
-                final ArtifactId id = ArtifactId.parse(handleResolveVars(bundleObj.get(JSONConstants.ARTIFACT_ID)).toString());
+                final ArtifactId id = ArtifactId.parse(bundleObj.get(JSONConstants.ARTIFACT_ID).toString());
 
                 artifact = new Artifact(id);
                 for(final Map.Entry<String, Object> metadataEntry : bundleObj.entrySet()) {
@@ -247,14 +247,6 @@ abstract class JSONReaderBase {
             artifacts.add(artifact);
         }
     }
-
-    /** Substitutes variables that need to be specified before the resolver executes.
-     * These are variables in features, artifacts (such as bundles), requirements
-     * and capabilities.
-     * @param val The value that may contain a variable.
-     * @return The value with the variable substituted.
-     */
-    abstract protected Object handleResolveVars(Object val);
 
     protected void addConfigurations(final Map<String, Object> map,
             final Artifact artifact,

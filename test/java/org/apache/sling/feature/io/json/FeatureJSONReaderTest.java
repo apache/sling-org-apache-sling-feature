@@ -65,55 +65,6 @@ public class FeatureJSONReaderTest {
 
     }
 
-    @Test public void testReadWithVariablesResolve() throws Exception {
-        final Feature feature = U.readFeature("test2");
-
-        List<Include> includes = feature.getIncludes();
-        assertEquals(1, includes.size());
-        Include include = includes.get(0);
-        assertEquals("org.apache.sling:sling:9", include.getId().toMvnId());
-
-        List<Requirement> reqs = feature.getRequirements();
-        Requirement req = reqs.get(0);
-        assertEquals("osgi.contract", req.getNamespace());
-        assertEquals("(&(osgi.contract=JavaServlet)(&(version>=3.0)(!(version>=4.0))))",
-                req.getDirectives().get("filter"));
-
-        List<Capability> caps = feature.getCapabilities();
-        Capability cap = null;
-        for (Capability c : caps) {
-            if ("osgi.service".equals(c.getNamespace())) {
-                cap = c;
-                break;
-            }
-        }
-        assertEquals(Collections.singletonList("org.osgi.service.http.runtime.HttpServiceRuntime"),
-                cap.getAttributes().get("objectClass"));
-        assertEquals("org.osgi.service.http.runtime",
-                cap.getDirectives().get("uses"));
-        // TODO this seems quite broken: fix!
-        // assertEquals("org.osgi.service.http.runtime,org.osgi.service.http.runtime.dto",
-        //        cap.getDirectives().get("uses"));
-
-        KeyValueMap fwProps = feature.getFrameworkProperties();
-        assertEquals("Framework property substitution should not happen at resolve time",
-                "${something}", fwProps.get("brave"));
-
-        Bundles bundles = feature.getBundles();
-        ArtifactId id = new ArtifactId("org.apache.sling", "foo-xyz", "1.2.3", null, null);
-        assertTrue(bundles.containsExact(id));
-        ArtifactId id2 = new ArtifactId("org.apache.sling", "bar-xyz", "1.2.3", null, null);
-        assertTrue(bundles.containsExact(id2));
-
-        Configurations configurations = feature.getConfigurations();
-        Configuration config = configurations.getConfiguration("my.pid2");
-        Dictionary<String, Object> props = config.getProperties();
-        assertEquals("Configuration substitution should not happen at resolve time",
-                "aa${ab_config}", props.get("a.value"));
-        assertEquals("${ab_config}bb", props.get("b.value"));
-        assertEquals("c${c_config}c", props.get("c.value"));
-    }
-
     @Test public void testReadRepoInitExtension() throws Exception {
         Feature feature = U.readFeature("repoinit");
         Extensions extensions = feature.getExtensions();

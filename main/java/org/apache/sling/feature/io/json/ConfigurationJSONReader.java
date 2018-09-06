@@ -52,11 +52,6 @@ public class ConfigurationJSONReader extends JSONReaderBase {
         }
     }
 
-    @Override
-    protected Object handleResolveVars(final Object val) {
-        return val;
-    }
-
     /**
      * Private constructor
      * @param location Optional location
