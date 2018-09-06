@@ -53,9 +53,62 @@ class BuilderUtil {
         HIGHEST
     };
 
+    static boolean contains(String key, Iterable<Map.Entry<String, String>> iterable) {
+        if (iterable != null) {
+            for (Map.Entry<String, String> entry : iterable) {
+                if (key.equals(entry.getKey())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    static String get(String key, Iterable<Map.Entry<String, String>> iterable) {
+        if (iterable != null) {
+            for (Map.Entry<String, String> entry : iterable) {
+                if (key.equals(entry.getKey())) {
+                    return entry.getValue();
+                }
+            }
+        }
+        return null;
+    }
+
+    private static void mergeWithContextOverwrite(String type, KeyValueMap target, KeyValueMap source, Iterable<Map.Entry<String,String>> context) {
+        KeyValueMap result = new KeyValueMap();
+        for (Map.Entry<String, String> entry : target) {
+            result.put(entry.getKey(), contains(entry.getKey(), context) ? get(entry.getKey(), context) : entry.getValue());
+        }
+        for (Map.Entry<String, String> entry : source) {
+            if (contains(entry.getKey(), context)) {
+                result.put(entry.getKey(), get(entry.getKey(), context));
+            }
+            else {
+                String value = source.get(entry.getKey());
+                if (value != null) {
+                    String targetValue = target.get(entry.getKey());
+                    if (targetValue != null) {
+                        if (!value.equals(targetValue)) {
+                            throw new IllegalStateException(String.format("Can't merge %s '%s' defined twice (as '%s' v.s. '%s') and not overwritten.", type, entry.getKey(), value, targetValue));
+                        }
+                    }
+                    else {
+                        result.put(entry.getKey(), value);
+                    }
+                }
+                else if (!contains(entry.getKey(), target)) {
+                    result.put(entry.getKey(), value);
+                }
+            }
+        }
+        target.clear();
+        target.putAll(result);
+    }
+
     // variables
-    public static void mergeVariables(KeyValueMap target, KeyValueMap source) {
-        target.putAll(source);
+    static void mergeVariables(KeyValueMap target, KeyValueMap source, BuilderContext context) {
+        mergeWithContextOverwrite("Variable", target, source, (null != context) ? context.getVariables() : null);
     }
 
     // bundles
@@ -103,8 +156,8 @@ class BuilderUtil {
     }
 
     // framework properties (add/merge)
-    static void mergeFrameworkProperties(final KeyValueMap target, final KeyValueMap source) {
-        target.putAll(source);
+    static void mergeFrameworkProperties(final KeyValueMap target, final KeyValueMap source, BuilderContext context) {
+        mergeWithContextOverwrite("Property", target, source, context != null ? context.getProperties().entrySet() : null);
     }
 
     // requirements (add)

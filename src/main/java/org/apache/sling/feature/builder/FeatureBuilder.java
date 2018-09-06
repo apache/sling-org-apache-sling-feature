@@ -237,9 +237,8 @@ public abstract class FeatureBuilder {
      * @param additionalVariables The optional variables that can be substituted (might be {@code null})
      * @param feature The feature containing variables
      * @return The value with the variables substituted.
-     * @throws IllegalStateException when a variable in the value is not present.
      */
-    public static Object replaceVariables(final Object value, final KeyValueMap additionalVariables, final Feature feature) {
+    static Object replaceVariables(final Object value, final KeyValueMap additionalVariables, final Feature feature) {
         if (!(value instanceof String)) {
             return value;
         }
@@ -253,15 +252,18 @@ public abstract class FeatureBuilder {
 
             final int len = var.length();
             final String name = var.substring(2, len - 1);
-            String val = (additionalVariables != null ? additionalVariables.get(name) : null);
-            if (val == null ) {
-                val = feature.getVariables().get(name);
-            }
+            if (BuilderUtil.contains(name, feature.getVariables())) {
+                String val = BuilderUtil.get(name, additionalVariables);
+                if (val == null) {
+                    val = feature.getVariables().get(name);
+                }
 
-            if (val != null) {
-                m.appendReplacement(sb, Matcher.quoteReplacement(val));
-            } else {
-                throw new IllegalStateException("Undefined variable: " + name);
+                if (val != null) {
+                    m.appendReplacement(sb, Matcher.quoteReplacement(val));
+                }
+                else {
+                    throw new IllegalStateException("Undefined variable: " + name);
+                }
             }
         }
         m.appendTail(sb);
@@ -322,10 +324,10 @@ public abstract class FeatureBuilder {
             final Feature source,
             final BuilderContext context,
             final BuilderUtil.ArtifactMerge mergeAlg) {
-        BuilderUtil.mergeVariables(target.getVariables(), source.getVariables());
+        BuilderUtil.mergeVariables(target.getVariables(), source.getVariables(), context);
         BuilderUtil.mergeBundles(target.getBundles(), source.getBundles(), mergeAlg);
         BuilderUtil.mergeConfigurations(target.getConfigurations(), source.getConfigurations());
-        BuilderUtil.mergeFrameworkProperties(target.getFrameworkProperties(), source.getFrameworkProperties());
+        BuilderUtil.mergeFrameworkProperties(target.getFrameworkProperties(), source.getFrameworkProperties(), context);
         BuilderUtil.mergeRequirements(target.getRequirements(), source.getRequirements());
         BuilderUtil.mergeCapabilities(target.getCapabilities(), source.getCapabilities());
         BuilderUtil.mergeExtensions(target,

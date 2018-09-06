@@ -17,8 +17,12 @@
 package org.apache.sling.feature.builder;
 
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import org.apache.sling.feature.KeyValueMap;
 
 /**
  * Builder context holds services used by  {@link FeatureBuilder}.
@@ -28,6 +32,8 @@ public class BuilderContext {
     private final FeatureProvider provider;
 
     private final List<FeatureExtensionHandler> featureExtensionHandlers = new CopyOnWriteArrayList<>();
+    private final KeyValueMap variables = new KeyValueMap();
+    private final Map<String, String> properties = new LinkedHashMap<>();
 
     /**
      * Create a new context
@@ -36,6 +42,24 @@ public class BuilderContext {
      * @throws IllegalArgumentException If feature provider is {@code null}
      */
     public BuilderContext(final FeatureProvider provider) {
+        this(provider, null, null);
+    }
+
+    /**
+     * Create a new context
+     *
+     * @param provider A provider providing the included features
+     * @param variables A map of variables to override on feature merge
+     * @param properties A map of framework properties to override on feature merge
+     * @throws IllegalArgumentException If feature provider is {@code null}
+     */
+    public BuilderContext(final FeatureProvider provider, KeyValueMap variables, Map<String, String> properties) {
+        if (variables != null) {
+            this.variables.putAll(variables);
+        }
+        if (properties != null) {
+            this.properties.putAll(properties);
+        }
         if ( provider == null ) {
             throw new IllegalArgumentException("Provider must not be null");
         }
@@ -52,6 +76,13 @@ public class BuilderContext {
         return this;
     }
 
+    KeyValueMap getVariables() {
+        return  this.variables;
+    }
+
+    Map<String, String> getProperties() {
+        return this.properties;
+    }
     /**
      * Get the feature provider.
      * @return The feature provider
@@ -74,7 +105,7 @@ public class BuilderContext {
      * @return Cloned context
      */
     BuilderContext clone(final FeatureProvider featureProvider) {
-        final BuilderContext ctx = new BuilderContext(featureProvider);
+        final BuilderContext ctx = new BuilderContext(featureProvider, this.variables, this.properties);
         ctx.featureExtensionHandlers.addAll(featureExtensionHandlers);
         return ctx;
     }

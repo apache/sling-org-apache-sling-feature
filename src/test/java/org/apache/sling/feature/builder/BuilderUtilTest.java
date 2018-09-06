@@ -175,7 +175,7 @@ public class BuilderUtilTest {
         KeyValueMap source = new KeyValueMap();
         source.put("a", "b");
 
-        BuilderUtil.mergeVariables(target, source);
+        BuilderUtil.mergeVariables(target, source, null);
         assertEquals(1, source.size());
         assertEquals("b", source.get("a"));
 
