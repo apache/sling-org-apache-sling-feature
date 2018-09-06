@@ -16,18 +16,18 @@
  */
 package org.apache.sling.feature.io.json;
 
-import static org.junit.Assert.assertEquals;
+import org.apache.sling.feature.Feature;
+import org.junit.Test;
 
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Arrays;
 
-import org.apache.sling.feature.Feature;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 public class FeatureJSONWriterTest {
 
-    @Test public void testRead() throws Exception {
+    @Test public void testWrite() throws Exception {
         final Feature f = U.readFeature("test");
         final Feature rf;
         try ( final StringWriter writer = new StringWriter() ) {
@@ -42,6 +42,20 @@ public class FeatureJSONWriterTest {
 
         assertEquals(Arrays.asList("org.osgi.service.http.runtime.HttpServiceRuntime"),
                 U.findCapability(rf.getCapabilities(), "osgi.service").getAttributes().get("objectClass"));
+    }
+
+    @Test public void testWrite2() throws Exception {
+        final Feature f = U.readFeature("test2");
+
+        final Feature rf;
+        try ( final StringWriter writer = new StringWriter() ) {
+            FeatureJSONWriter.write(writer, f);
+            try ( final StringReader reader = new StringReader(writer.toString()) ) {
+                rf = FeatureJSONReader.read(reader, null);
+            }
+        }
+
+        assertEquals(f.getVariables(), rf.getVariables());
     }
 
     @Test public void testExtensionsWriteRead() throws Exception {

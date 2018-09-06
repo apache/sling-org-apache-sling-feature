@@ -179,7 +179,11 @@ abstract class JSONWriterBase {
         if ( !vars.isEmpty()) {
             JsonObjectBuilder varsObj = Json.createObjectBuilder();
             for (final Map.Entry<String, String> entry : vars) {
-                varsObj.add(entry.getKey(), entry.getValue());
+                String val = entry.getValue();
+                if (val != null)
+                    varsObj.add(entry.getKey(), val);
+                else
+                    varsObj.addNull(entry.getKey());
             }
             ob.add(JSONConstants.FEATURE_VARIABLES, varsObj.build());
         }

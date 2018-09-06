@@ -16,6 +16,20 @@
  */
 package org.apache.sling.feature.io.json;
 
+import org.apache.felix.configurator.impl.json.JSMin;
+import org.apache.felix.configurator.impl.json.JSONUtil;
+import org.apache.felix.configurator.impl.json.TypeConverter;
+import org.apache.felix.configurator.impl.model.Config;
+import org.apache.sling.feature.Artifact;
+import org.apache.sling.feature.ArtifactId;
+import org.apache.sling.feature.Bundles;
+import org.apache.sling.feature.Configuration;
+import org.apache.sling.feature.Configurations;
+import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.ExtensionType;
+import org.apache.sling.feature.Extensions;
+import org.apache.sling.feature.KeyValueMap;
+
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringWriter;
@@ -38,20 +52,6 @@ import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonStructure;
 import javax.json.JsonWriter;
-
-import org.apache.felix.configurator.impl.json.JSMin;
-import org.apache.felix.configurator.impl.json.JSONUtil;
-import org.apache.felix.configurator.impl.json.TypeConverter;
-import org.apache.felix.configurator.impl.model.Config;
-import org.apache.sling.feature.Artifact;
-import org.apache.sling.feature.ArtifactId;
-import org.apache.sling.feature.Bundles;
-import org.apache.sling.feature.Configuration;
-import org.apache.sling.feature.Configurations;
-import org.apache.sling.feature.Extension;
-import org.apache.sling.feature.ExtensionType;
-import org.apache.sling.feature.Extensions;
-import org.apache.sling.feature.KeyValueMap;
 
 /**
  * Common methods for JSON reading.
@@ -154,13 +154,16 @@ abstract class JSONReaderBase {
             @SuppressWarnings("unchecked")
             final Map<String, Object> vars = (Map<String, Object>) variablesObj;
             for (final Map.Entry<String, Object> entry : vars.entrySet()) {
-                checkType("variable value", entry.getValue(), String.class, Boolean.class, Number.class);
+                Object val = entry.getValue();
+                checkType("variable value", val, String.class, Boolean.class, Number.class, null);
 
                 String key = entry.getKey();
                 if (kvMap.get(key) != null) {
                     throw new IOException(this.exceptionPrefix + "Duplicate variable " + key);
                 }
-                String value = entry.getValue().toString();
+
+                String value = val == null ? null : val.toString();
+
                 kvMap.put(key, value);
                 variables.put(key, value);
             }
@@ -466,12 +469,16 @@ abstract class JSONReaderBase {
      * Check if the value is one of the provided types
      * @param key A key for the error message
      * @param val The value to check
-     * @param types The allowed types
+     * @param types The allowed types, can also include {@code null} if null is an allowed value.
      * @throws IOException If the val is not of the specified types
      */
     protected void checkType(final String key, final Object val, Class<?>...types) throws IOException {
         boolean valid = false;
         for(final Class<?> c : types) {
+            if ( c == null && val == null) {
+                valid = true;
+                break;
+            }
             if ( c.isInstance(val) ) {
                 valid = true;
                 break;
