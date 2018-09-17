@@ -24,6 +24,7 @@ import java.io.StringWriter;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class FeatureJSONWriterTest {
 
@@ -69,6 +70,20 @@ public class FeatureJSONWriterTest {
         }
 
         ArtifactsExtensions.testReadArtifactsExtensions(rf);
+    }
+
+    @Test public void testIncludeWriteRead() throws Exception {
+        final Feature f = U.readFeature("test");
+        assertNotNull(f.getInclude());
+
+        final Feature rf;
+        try ( final StringWriter writer = new StringWriter() ) {
+            FeatureJSONWriter.write(writer, f);
+            try ( final StringReader reader = new StringReader(writer.toString()) ) {
+                rf = FeatureJSONReader.read(reader, null);
+            }
+        }
+        assertEquals(f.getInclude().getId(), rf.getInclude().getId());
     }
 
 }

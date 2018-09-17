@@ -2,7 +2,7 @@
     "id" : "org.apache.sling/test-feature/1.1",
     "description": "The feature description",
 
-    "includes" : [
+    "include" :
          {
              "id" : "org.apache.sling/sling/9",
              "removals" : {
@@ -14,7 +14,7 @@
                  ]
              }
          }
-    ],
+    ,
     "requirements" : [
           {
               "namespace" : "osgi.contract",

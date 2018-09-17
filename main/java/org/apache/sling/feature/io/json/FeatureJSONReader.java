@@ -33,7 +33,6 @@ import org.apache.felix.utils.resource.RequirementImpl;
 import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Feature;
 import org.apache.sling.feature.Include;
-import org.apache.sling.feature.builder.FeatureBuilder;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
 
@@ -154,104 +153,95 @@ public class FeatureJSONReader extends JSONReaderBase {
     }
 
     private void readIncludes(final Map<String, Object> map) throws IOException {
-        if ( map.containsKey(JSONConstants.FEATURE_INCLUDES)) {
-            final Object includesObj = map.get(JSONConstants.FEATURE_INCLUDES);
-            checkType(JSONConstants.FEATURE_INCLUDES, includesObj, List.class);
+        if ( map.containsKey(JSONConstants.FEATURE_INCLUDE)) {
+            final Object includeObj = map.get(JSONConstants.FEATURE_INCLUDE);
+            checkType(JSONConstants.FEATURE_INCLUDE, includeObj, Map.class, String.class);
 
             @SuppressWarnings("unchecked")
-            final List<Object> includes = (List<Object>)includesObj;
-            for(final Object inc : includes) {
-                checkType("Include", inc, Map.class, String.class);
-                final Include include;
-                if ( inc instanceof String ) {
-                    final ArtifactId id = ArtifactId.parse(inc.toString());
-                    include = new Include(id);
-                } else {
-                    @SuppressWarnings("unchecked")
-                    final Map<String, Object> obj = (Map<String, Object>) inc;
-                    if ( !obj.containsKey(JSONConstants.ARTIFACT_ID) ) {
-                        throw new IOException(exceptionPrefix + " include is missing required artifact id");
-                    }
-                    checkType("Include " + JSONConstants.ARTIFACT_ID, obj.get(JSONConstants.ARTIFACT_ID), String.class);
-                    final ArtifactId id = ArtifactId.parse(obj.get(JSONConstants.ARTIFACT_ID).toString());
-                    include = new Include(id);
+            final Include include;
+            if ( includeObj instanceof String ) {
+                final ArtifactId id = ArtifactId.parse(includeObj.toString());
+                include = new Include(id);
+            } else {
+                @SuppressWarnings("unchecked")
+                final Map<String, Object> obj = (Map<String, Object>) includeObj;
+                if ( !obj.containsKey(JSONConstants.ARTIFACT_ID) ) {
+                    throw new IOException(exceptionPrefix + " include is missing required artifact id");
+                }
+                checkType("Include " + JSONConstants.ARTIFACT_ID, obj.get(JSONConstants.ARTIFACT_ID), String.class);
+                final ArtifactId id = ArtifactId.parse(obj.get(JSONConstants.ARTIFACT_ID).toString());
+                include = new Include(id);
 
-                    if ( obj.containsKey(JSONConstants.INCLUDE_REMOVALS) ) {
-                        checkType("Include removals", obj.get(JSONConstants.INCLUDE_REMOVALS), Map.class);
+                if ( obj.containsKey(JSONConstants.INCLUDE_REMOVALS) ) {
+                    checkType("Include removals", obj.get(JSONConstants.INCLUDE_REMOVALS), Map.class);
+                    @SuppressWarnings("unchecked")
+                    final Map<String, Object> removalObj = (Map<String, Object>) obj.get(JSONConstants.INCLUDE_REMOVALS);
+                    if ( removalObj.containsKey(JSONConstants.FEATURE_BUNDLES) ) {
+                        checkType("Include removal bundles", removalObj.get(JSONConstants.FEATURE_BUNDLES), List.class);
                         @SuppressWarnings("unchecked")
-                        final Map<String, Object> removalObj = (Map<String, Object>) obj.get(JSONConstants.INCLUDE_REMOVALS);
-                        if ( removalObj.containsKey(JSONConstants.FEATURE_BUNDLES) ) {
-                            checkType("Include removal bundles", removalObj.get(JSONConstants.FEATURE_BUNDLES), List.class);
-                            @SuppressWarnings("unchecked")
-                            final List<Object> list = (List<Object>)removalObj.get(JSONConstants.FEATURE_BUNDLES);
-                            for(final Object val : list) {
-                                checkType("Include removal bundles", val, String.class);
+                        final List<Object> list = (List<Object>)removalObj.get(JSONConstants.FEATURE_BUNDLES);
+                        for(final Object val : list) {
+                            checkType("Include removal bundles", val, String.class);
+                            if ( val.toString().startsWith("#")) {
+                                continue;
+                            }
+                            include.getBundleRemovals().add(ArtifactId.parse(val.toString()));
+                        }
+                    }
+                    if ( removalObj.containsKey(JSONConstants.FEATURE_CONFIGURATIONS) ) {
+                        checkType("Include removal configuration", removalObj.get(JSONConstants.FEATURE_CONFIGURATIONS), List.class);
+                        @SuppressWarnings("unchecked")
+                        final List<Object> list = (List<Object>)removalObj.get(JSONConstants.FEATURE_CONFIGURATIONS);
+                        for(final Object val : list) {
+                            checkType("Include removal configuration", val, String.class);
+                            include.getConfigurationRemovals().add(val.toString());
+                        }
+                    }
+                    if ( removalObj.containsKey(JSONConstants.FEATURE_FRAMEWORK_PROPERTIES) ) {
+                        checkType("Include removal framework properties", removalObj.get(JSONConstants.FEATURE_FRAMEWORK_PROPERTIES), List.class);
+                        @SuppressWarnings("unchecked")
+                        final List<Object> list = (List<Object>)removalObj.get(JSONConstants.FEATURE_FRAMEWORK_PROPERTIES);
+                        for(final Object val : list) {
+                            checkType("Include removal framework properties", val, String.class);
+                            include.getFrameworkPropertiesRemovals().add(val.toString());
+                        }
+                    }
+                    if ( removalObj.containsKey(JSONConstants.INCLUDE_EXTENSION_REMOVALS) ) {
+                        checkType("Include removal extensions", removalObj.get(JSONConstants.INCLUDE_EXTENSION_REMOVALS), List.class);
+                        @SuppressWarnings("unchecked")
+                        final List<Object> list = (List<Object>)removalObj.get(JSONConstants.INCLUDE_EXTENSION_REMOVALS);
+                        for(final Object val : list) {
+                            checkType("Include removal extension", val, String.class, Map.class);
+                            if ( val instanceof String ) {
                                 if ( val.toString().startsWith("#")) {
                                     continue;
                                 }
-                                include.getBundleRemovals().add(ArtifactId.parse(val.toString()));
-                            }
-                        }
-                        if ( removalObj.containsKey(JSONConstants.FEATURE_CONFIGURATIONS) ) {
-                            checkType("Include removal configuration", removalObj.get(JSONConstants.FEATURE_CONFIGURATIONS), List.class);
-                            @SuppressWarnings("unchecked")
-                            final List<Object> list = (List<Object>)removalObj.get(JSONConstants.FEATURE_CONFIGURATIONS);
-                            for(final Object val : list) {
-                                checkType("Include removal configuration", val, String.class);
-                                include.getConfigurationRemovals().add(val.toString());
-                            }
-                        }
-                        if ( removalObj.containsKey(JSONConstants.FEATURE_FRAMEWORK_PROPERTIES) ) {
-                            checkType("Include removal framework properties", removalObj.get(JSONConstants.FEATURE_FRAMEWORK_PROPERTIES), List.class);
-                            @SuppressWarnings("unchecked")
-                            final List<Object> list = (List<Object>)removalObj.get(JSONConstants.FEATURE_FRAMEWORK_PROPERTIES);
-                            for(final Object val : list) {
-                                checkType("Include removal framework properties", val, String.class);
-                                include.getFrameworkPropertiesRemovals().add(val.toString());
-                            }
-                        }
-                        if ( removalObj.containsKey(JSONConstants.INCLUDE_EXTENSION_REMOVALS) ) {
-                            checkType("Include removal extensions", removalObj.get(JSONConstants.INCLUDE_EXTENSION_REMOVALS), List.class);
-                            @SuppressWarnings("unchecked")
-                            final List<Object> list = (List<Object>)removalObj.get(JSONConstants.INCLUDE_EXTENSION_REMOVALS);
-                            for(final Object val : list) {
-                                checkType("Include removal extension", val, String.class, Map.class);
-                                if ( val instanceof String ) {
-                                    if ( val.toString().startsWith("#")) {
-                                        continue;
-                                    }
-                                    include.getExtensionRemovals().add(val.toString());
-                                } else {
+                                include.getExtensionRemovals().add(val.toString());
+                            } else {
+                                @SuppressWarnings("unchecked")
+                                final Map<String, Object> removalMap = (Map<String, Object>)val;
+                                final Object nameObj = removalMap.get("name");
+                                checkType("Include removal extension", nameObj, String.class);
+                                if ( removalMap.containsKey("artifacts") ) {
+                                    checkType("Include removal extension artifacts", removalMap.get("artifacts"), List.class);
                                     @SuppressWarnings("unchecked")
-                                    final Map<String, Object> removalMap = (Map<String, Object>)val;
-                                    final Object nameObj = removalMap.get("name");
-                                    checkType("Include removal extension", nameObj, String.class);
-                                    if ( removalMap.containsKey("artifacts") ) {
-                                        checkType("Include removal extension artifacts", removalMap.get("artifacts"), List.class);
-                                        @SuppressWarnings("unchecked")
-                                        final List<Object> artifactList = (List<Object>)removalMap.get("artifacts");
-                                        final List<ArtifactId> ids = new ArrayList<>();
-                                        for(final Object aid : artifactList) {
-                                            checkType("Include removal extension artifact", aid, String.class);
-                                            ids.add(ArtifactId.parse(aid.toString()));
-                                        }
-                                        include.getArtifactExtensionRemovals().put(nameObj.toString(), ids);
-                                    } else {
-                                        include.getExtensionRemovals().add(nameObj.toString());
+                                    final List<Object> artifactList = (List<Object>)removalMap.get("artifacts");
+                                    final List<ArtifactId> ids = new ArrayList<>();
+                                    for(final Object aid : artifactList) {
+                                        checkType("Include removal extension artifact", aid, String.class);
+                                        ids.add(ArtifactId.parse(aid.toString()));
                                     }
+                                    include.getArtifactExtensionRemovals().put(nameObj.toString(), ids);
+                                } else {
+                                    include.getExtensionRemovals().add(nameObj.toString());
                                 }
                             }
                         }
+                    }
 
-                    }
                 }
-                for(final Include i : feature.getIncludes()) {
-                    if ( i.getId().equals(include.getId()) ) {
-                        throw new IOException(exceptionPrefix + "Duplicate include of " + include.getId());
-                    }
-                }
-                feature.getIncludes().add(include);
             }
+            feature.setInclude(include);
         }
     }
 
