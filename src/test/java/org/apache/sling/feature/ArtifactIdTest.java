@@ -146,4 +146,38 @@ public class ArtifactIdTest {
         final ArtifactId id = new ArtifactId("group.a", "artifact.b", "1.0", "foo", "zip");
         assertEquals("group.a:artifact.b:zip:foo:1.0", id.toMvnId());
     }
+    
+    // --
+
+    @Test public void testCoordinatesGAVfromUrl() {
+        final ArtifactId id = ArtifactId.fromMvnUrl("mvn:group.a/artifact.b/1.0");
+        assertEquals("group.a", id.getGroupId());
+        assertEquals("artifact.b", id.getArtifactId());
+        assertEquals("1.0", id.getVersion());
+        assertEquals("jar", id.getType());
+        assertNull(id.getClassifier());
+    }
+
+    @Test public void testCoordinatesGAVPfromUrl() {
+        final ArtifactId id = ArtifactId.fromMvnUrl("mvn:group.a/artifact.b/1.0/zip");
+        assertEquals("group.a", id.getGroupId());
+        assertEquals("artifact.b", id.getArtifactId());
+        assertEquals("1.0", id.getVersion());
+        assertEquals("zip", id.getType());
+        assertNull(id.getClassifier());
+    }
+
+    @Test public void testCoordinatesGAVPCfromUrl() {
+        final ArtifactId id = ArtifactId.fromMvnUrl("mvn:group.a/artifact.b/1.0/zip/foo");
+        assertEquals("group.a", id.getGroupId());
+        assertEquals("artifact.b", id.getArtifactId());
+        assertEquals("1.0", id.getVersion());
+        assertEquals("zip", id.getType());
+        assertEquals("foo", id.getClassifier());
+    }
+
+    @Test public void testClassifierAndTypeToMvnUlr() {
+        final ArtifactId id = new ArtifactId("group.a", "artifact.b", "1.0", "foo", "zip");
+        assertEquals("mvn:group.a/artifact.b/1.0/zip/foo", id.toMvnUrl());
+    }
 }

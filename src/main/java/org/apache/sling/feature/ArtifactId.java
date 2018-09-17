@@ -16,11 +16,13 @@
  */
 package org.apache.sling.feature;
 
-import org.osgi.framework.Version;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.osgi.framework.Version;
 
 /**
  * An artifact identifier.
@@ -30,6 +32,10 @@ import java.util.List;
  * If no type is specified, {@code jar} is assumed.
  */
 public class ArtifactId implements Comparable<ArtifactId> {
+
+    private static final Pattern mvnIdPattern = Pattern.compile("([^: ]+):([^: ]+)(:([^: ]*)(:([^: ]+))?)?:([^: ]+)");
+
+    private static final Pattern mvnUrlPattern = Pattern.compile("(mvn:)?([^/ ]+)/([^/ ]+)(/([^/ ]+))?(/([^/ ]*)(/([^/ ]+))?)?");
 
     /** The required group id. */
     private final String groupId;
@@ -111,43 +117,20 @@ public class ArtifactId implements Comparable<ArtifactId> {
         if ( url.indexOf('!') != -1 ) {
             throw new IllegalArgumentException("Repository url is not supported for Maven artifacts at the moment.");
         }
-        final String coordinates = url.startsWith("mvn:") ? url.substring(4) : url;
-        String gId = null;
-        String aId = null;
-        String version = null;
-        String type = null;
-        String classifier = null;
-        int part = 0;
-        String value = coordinates;
-        while ( value != null ) {
-            final int pos = value.indexOf('/');
-            final String current;
-            if ( pos == -1 ) {
-                current = value;
-                value = null;
-            } else {
-                if ( pos == 0 ) {
-                    current = null;
-                } else {
-                    current = value.substring(0, pos);
-                }
-                value = value.substring(pos + 1);
-            }
-            if ( current != null ) {
-                if ( part == 0 ) {
-                    gId = current;
-                } else if ( part == 1 ) {
-                    aId = current;
-                } else if ( part == 2 ) {
-                    version = current;
-                } else if ( part == 3 ) {
-                    type = current;
-                } else if ( part == 4 ) {
-                    classifier = current;
-                }
-            }
-            part++;
+
+        Matcher mvnUrlMatcher = mvnUrlPattern.matcher(url);
+        if (!mvnUrlMatcher.matches()) {
+            throw new IllegalArgumentException("Invalid mvn url: "
+                    + url
+                    + ", expected format is mvn:group-id/artifact-id[/version[/type[/classifier]]]");
         }
+
+        String gId = mvnUrlMatcher.group(2);
+        String aId = mvnUrlMatcher.group(3);
+        String version = mvnUrlMatcher.group(5);
+        String type = mvnUrlMatcher.group(7);
+        String classifier = mvnUrlMatcher.group(9);
+
         return new ArtifactId(gId, aId, version, classifier, type);
     }
 
@@ -159,15 +142,18 @@ public class ArtifactId implements Comparable<ArtifactId> {
      * @throws IllegalArgumentException If the id is not valid
      */
     public static ArtifactId fromMvnId(final String coordinates) {
-        final String[] parts = coordinates.split(":");
-        if ( parts.length < 3 || parts.length > 5) {
-            throw new IllegalArgumentException("Invalid mvn coordinates: " + coordinates);
+        Matcher mvnIdMatcher = mvnIdPattern.matcher(coordinates);
+        if (!mvnIdMatcher.matches()) {
+            throw new IllegalArgumentException("Invalid mvn coordinates: "
+                    + coordinates
+                    + ", expected format is groupId:artifactId[:packaging[:classifier]]:version");
         }
-        final String gId = parts[0];
-        final String aId = parts[1];
-        final String version = parts[parts.length - 1];
-        final String type = parts.length > 3 ? parts[2] : null;
-        final String classifier = parts.length > 4 ? parts[3] : null;
+
+        final String gId = mvnIdMatcher.group(1);
+        final String aId = mvnIdMatcher.group(2);
+        final String version = mvnIdMatcher.group(7);
+        final String type = mvnIdMatcher.group(4);
+        final String classifier = mvnIdMatcher.group(6);
 
         return new ArtifactId(gId, aId, version, classifier, type);
     }
