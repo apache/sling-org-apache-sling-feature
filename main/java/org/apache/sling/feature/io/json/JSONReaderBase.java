@@ -475,11 +475,12 @@ abstract class JSONReaderBase {
     protected void checkType(final String key, final Object val, Class<?>...types) throws IOException {
         boolean valid = false;
         for(final Class<?> c : types) {
-            if ( c == null && val == null) {
-                valid = true;
-                break;
-            }
-            if ( c.isInstance(val) ) {
+            if (c == null) {
+                if ( val == null) {
+                    valid = true;
+                    break;
+                }
+            } else if ( c.isInstance(val) ) {
                 valid = true;
                 break;
             }
