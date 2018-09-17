@@ -51,8 +51,6 @@ public class Feature implements Comparable<Feature> {
 
     private final List<Capability> capabilities = new ArrayList<>();
 
-    private final List<Include> includes = new ArrayList<>();
-
     private final Extensions extensions = new Extensions();
 
     private final KeyValueMap variables = new KeyValueMap();
@@ -74,6 +72,10 @@ public class Feature implements Comparable<Feature> {
 
     /** Flag indicating whether this is an assembled feature */
     private volatile boolean assembled = false;
+
+
+    /** The optional include. */
+    private volatile Include include;
 
     /**
      * Construct a new feature.
@@ -158,12 +160,19 @@ public class Feature implements Comparable<Feature> {
     }
 
     /**
-     * Get the list of includes.
-     * The returned object is modifiable.
-     * @return The list of includes
+     * Get the optionally included feature.
+     * @return The included feature or {@code null} if none.
      */
-    public List<Include> getIncludes() {
-        return includes;
+    public Include getInclude() {
+        return include;
+    }
+
+    /**
+     * Set the optionally included feature.
+     * @param include The included feature or {@code null} if none.
+     */
+    public void setInclude(Include include) {
+        this.include = include;
     }
 
     /**
@@ -324,8 +333,9 @@ public class Feature implements Comparable<Feature> {
             result.getCapabilities().add(c);
         }
 
-        // includes
-        for(final Include i : this.getIncludes()) {
+        // include
+        final Include i = this.getInclude();
+        if (i != null) {
             final Include c = new Include(i.getId());
 
             c.getBundleRemovals().addAll(i.getBundleRemovals());
@@ -334,7 +344,7 @@ public class Feature implements Comparable<Feature> {
             c.getFrameworkPropertiesRemovals().addAll(i.getFrameworkPropertiesRemovals());
             c.getArtifactExtensionRemovals().putAll(i.getArtifactExtensionRemovals());
 
-            result.getIncludes().add(c);
+            result.setInclude(c);
         }
 
         // extensions
