@@ -16,28 +16,18 @@
  */
 package org.apache.sling.feature.io.json;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Dictionary;
-import java.util.List;
-
-import org.apache.sling.feature.ArtifactId;
-import org.apache.sling.feature.Bundles;
 import org.apache.sling.feature.Configuration;
-import org.apache.sling.feature.Configurations;
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.Extensions;
 import org.apache.sling.feature.Feature;
-import org.apache.sling.feature.Include;
-import org.apache.sling.feature.KeyValueMap;
 import org.junit.Test;
 import org.osgi.resource.Capability;
-import org.osgi.resource.Requirement;
+
+import java.util.Arrays;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 public class FeatureJSONReaderTest {
 
@@ -78,7 +68,7 @@ public class FeatureJSONReaderTest {
         Extensions extensions = feature.getExtensions();
         assertEquals(1, extensions.size());
         Extension ext = extensions.iterator().next();
-        assertEquals("[\"some repo init\",\"text\"]", ext.getJSON());
+        assertEquals("some repo init\ntext\n", ext.getText());
     }
 
     @Test public void testReadArtifactsExtensions() throws Exception {

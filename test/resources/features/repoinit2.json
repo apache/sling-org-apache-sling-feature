@@ -1,6 +1,6 @@
 {
     "id": "test/repoinit2/1.0.0",
-    "repoinit:JSON|false": [
+    "repoinit:TEXT|false": [
         "some repo init",
         "text"
     ]
