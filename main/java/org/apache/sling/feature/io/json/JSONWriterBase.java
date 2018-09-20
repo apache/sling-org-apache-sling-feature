@@ -63,6 +63,12 @@ abstract class JSONWriterBase {
                     JsonObjectBuilder bundleObj = Json.createObjectBuilder();
                     bundleObj.add(JSONConstants.ARTIFACT_ID, artifact.getId().toMvnId());
 
+
+                    Object runmodes = md.remove("runmodes");
+                    if (runmodes instanceof String) {
+                        md.put("run-modes", (String) runmodes);
+                    }
+
                     for(final Map.Entry<String, String> me : md) {
                         bundleObj.add(me.getKey(), me.getValue());
                     }
