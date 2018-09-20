@@ -76,63 +76,61 @@ public class FeatureJSONWriter extends JSONWriterBase {
         // variables
         writeVariables(ob, feature.getVariables());
 
-        // includes
-        if ( !feature.getIncludes().isEmpty() ) {
-            JsonArrayBuilder incArray = Json.createArrayBuilder();
-            for(final Include inc : feature.getIncludes()) {
-                if ( inc.getArtifactExtensionRemovals().isEmpty()
-                     && inc.getBundleRemovals().isEmpty()
-                     && inc.getConfigurationRemovals().isEmpty()
-                     && inc.getFrameworkPropertiesRemovals().isEmpty() ) {
-                    incArray.add(inc.getId().toMvnId());
-                } else {
-                    JsonObjectBuilder includeObj = Json.createObjectBuilder();
-                    includeObj.add(JSONConstants.ARTIFACT_ID, inc.getId().toMvnId());
+        // include
+        if ( feature.getInclude() != null ) {
+            final Include inc = feature.getInclude();
+            if ( inc.getArtifactExtensionRemovals().isEmpty()
+                 && inc.getBundleRemovals().isEmpty()
+                 && inc.getConfigurationRemovals().isEmpty()
+                 && inc.getFrameworkPropertiesRemovals().isEmpty() ) {
 
-                    JsonObjectBuilder removalsObj = Json.createObjectBuilder();
-                    if ( !inc.getArtifactExtensionRemovals().isEmpty()
-                         || inc.getExtensionRemovals().isEmpty() ) {
-                        JsonArrayBuilder extRemovals = Json.createArrayBuilder();
-                        for(final String id : inc.getExtensionRemovals()) {
-                            extRemovals.add(id);
-                        }
-                        for(final Map.Entry<String, List<ArtifactId>> entry : inc.getArtifactExtensionRemovals().entrySet()) {
-                            JsonArrayBuilder ab = Json.createArrayBuilder();
-                            for(final ArtifactId id : entry.getValue()) {
-                                ab.add(id.toMvnId());
-                            }
-                            extRemovals.add(Json.createObjectBuilder().add(entry.getKey(),
-                                    ab.build()).build());
-                        }
-                        removalsObj.add(JSONConstants.INCLUDE_EXTENSION_REMOVALS, extRemovals.build());
-                    }
-                    if ( !inc.getConfigurationRemovals().isEmpty() ) {
-                        JsonArrayBuilder cfgRemovals = Json.createArrayBuilder();
-                        for(final String val : inc.getConfigurationRemovals()) {
-                            cfgRemovals.add(val);
-                        }
-                        removalsObj.add(JSONConstants.FEATURE_CONFIGURATIONS, cfgRemovals.build());
-                    }
-                    if ( !inc.getBundleRemovals().isEmpty() ) {
-                        JsonArrayBuilder bundleRemovals = Json.createArrayBuilder();
-                        for(final ArtifactId val : inc.getBundleRemovals()) {
-                            bundleRemovals.add(val.toMvnId());
-                        }
-                        removalsObj.add(JSONConstants.FEATURE_BUNDLES, bundleRemovals.build());
-                    }
-                    if ( !inc.getFrameworkPropertiesRemovals().isEmpty() ) {
-                        JsonArrayBuilder propRemovals = Json.createArrayBuilder();
-                        for(final String val : inc.getFrameworkPropertiesRemovals()) {
-                            propRemovals.add(val);
-                        }
-                        removalsObj.add(JSONConstants.FEATURE_FRAMEWORK_PROPERTIES, propRemovals.build());
-                    }
-                    includeObj.add(JSONConstants.INCLUDE_REMOVALS, removalsObj.build());
+                ob.add(JSONConstants.FEATURE_INCLUDE, inc.getId().toMvnId());
+            } else {
+                JsonObjectBuilder includeObj = Json.createObjectBuilder();
+                includeObj.add(JSONConstants.ARTIFACT_ID, inc.getId().toMvnId());
 
-                    incArray.add(includeObj.build());
+                JsonObjectBuilder removalsObj = Json.createObjectBuilder();
+                if ( !inc.getArtifactExtensionRemovals().isEmpty()
+                     || inc.getExtensionRemovals().isEmpty() ) {
+                    JsonArrayBuilder extRemovals = Json.createArrayBuilder();
+                    for(final String id : inc.getExtensionRemovals()) {
+                        extRemovals.add(id);
+                    }
+                    for(final Map.Entry<String, List<ArtifactId>> entry : inc.getArtifactExtensionRemovals().entrySet()) {
+                        JsonArrayBuilder ab = Json.createArrayBuilder();
+                        for(final ArtifactId id : entry.getValue()) {
+                            ab.add(id.toMvnId());
+                        }
+                        extRemovals.add(Json.createObjectBuilder().add(entry.getKey(),
+                                ab.build()).build());
+                    }
+                    removalsObj.add(JSONConstants.INCLUDE_EXTENSION_REMOVALS, extRemovals.build());
                 }
+                if ( !inc.getConfigurationRemovals().isEmpty() ) {
+                    JsonArrayBuilder cfgRemovals = Json.createArrayBuilder();
+                    for(final String val : inc.getConfigurationRemovals()) {
+                        cfgRemovals.add(val);
+                    }
+                    removalsObj.add(JSONConstants.FEATURE_CONFIGURATIONS, cfgRemovals.build());
+                }
+                if ( !inc.getBundleRemovals().isEmpty() ) {
+                    JsonArrayBuilder bundleRemovals = Json.createArrayBuilder();
+                    for(final ArtifactId val : inc.getBundleRemovals()) {
+                        bundleRemovals.add(val.toMvnId());
+                    }
+                    removalsObj.add(JSONConstants.FEATURE_BUNDLES, bundleRemovals.build());
+                }
+                if ( !inc.getFrameworkPropertiesRemovals().isEmpty() ) {
+                    JsonArrayBuilder propRemovals = Json.createArrayBuilder();
+                    for(final String val : inc.getFrameworkPropertiesRemovals()) {
+                        propRemovals.add(val);
+                    }
+                    removalsObj.add(JSONConstants.FEATURE_FRAMEWORK_PROPERTIES, propRemovals.build());
+                }
+                includeObj.add(JSONConstants.INCLUDE_REMOVALS, removalsObj.build());
+
+
             }
-            ob.add(JSONConstants.FEATURE_INCLUDES, incArray.build());
         }
 
         // requirements

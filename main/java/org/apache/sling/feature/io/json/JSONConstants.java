@@ -33,7 +33,7 @@ public abstract class JSONConstants {
 
     static final String FEATURE_CONFIGURATIONS = "configurations";
 
-    static final String FEATURE_INCLUDES = "includes";
+    static final String FEATURE_INCLUDE = "include";
 
     static final String FEATURE_REQUIREMENTS = "requirements";
 
@@ -55,7 +55,7 @@ public abstract class JSONConstants {
             FEATURE_BUNDLES,
             FEATURE_FRAMEWORK_PROPERTIES,
             FEATURE_CONFIGURATIONS,
-            FEATURE_INCLUDES,
+        FEATURE_INCLUDE,
             FEATURE_REQUIREMENTS,
             FEATURE_CAPABILITIES,
             FEATURE_TITLE,
