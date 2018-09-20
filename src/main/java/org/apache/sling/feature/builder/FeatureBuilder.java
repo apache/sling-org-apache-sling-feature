@@ -285,10 +285,7 @@ public abstract class FeatureBuilder {
         // we copy the feature as we set the assembled flag on the result
         final Feature result = feature.copy();
 
-        if ( !result.getIncludes().isEmpty() ) {
-
-            final List<Include> includes = new ArrayList<>(result.getIncludes());
-
+        if ( result.getInclude() != null) {
             // clear everything in the result, will be added in the process
             result.getVariables().clear();
             result.getBundles().clear();
@@ -296,22 +293,23 @@ public abstract class FeatureBuilder {
             result.getConfigurations().clear();
             result.getRequirements().clear();
             result.getCapabilities().clear();
-            result.getIncludes().clear();
+            result.setInclude(null);
             result.getExtensions().clear();
 
-            for(final Include i : includes) {
-                final Feature f = context.getFeatureProvider().provide(i.getId());
-                if ( f == null ) {
-                    throw new IllegalStateException("Unable to find included feature " + i.getId());
-                }
-                final Feature af = internalAssemble(processedFeatures, f, context);
+            final Include i = feature.getInclude();
 
-                // process include instructions
-                include(af, i);
-
-                // and now merge
-                merge(result, af, context, BuilderUtil.ArtifactMerge.LATEST);
+            final Feature f = context.getFeatureProvider().provide(i.getId());
+            if ( f == null ) {
+                throw new IllegalStateException("Unable to find included feature " + i.getId());
             }
+            final Feature af = internalAssemble(processedFeatures, f, context);
+
+            // process include instructions
+            include(af, i);
+
+            // and now merge
+            merge(result, af, context, BuilderUtil.ArtifactMerge.LATEST);
+
             merge(result, feature, context, BuilderUtil.ArtifactMerge.LATEST);
         }
         processedFeatures.remove(feature.getId().toMvnId());
