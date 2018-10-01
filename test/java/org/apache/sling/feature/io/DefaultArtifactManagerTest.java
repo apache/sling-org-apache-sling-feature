@@ -16,23 +16,20 @@
  */
 package org.apache.sling.feature.io;
 
-import org.apache.sling.feature.io.ArtifactHandler;
-import org.apache.sling.feature.io.ArtifactManager;
-import org.apache.sling.feature.io.ArtifactManagerConfig;
-import org.apache.sling.feature.io.spi.ArtifactProvider;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import org.apache.sling.feature.io.spi.ArtifactProvider;
+import org.junit.Test;
 
-public class ArtifactManagerTest {
+public class DefaultArtifactManagerTest {
 
     private static final String METADATA = "<metadata modelVersion=\"1.1.0\">\n" +
             "<groupId>org.apache.sling.samples</groupId>\n" +
@@ -59,13 +56,13 @@ public class ArtifactManagerTest {
             "</versioning></metadata>";
 
     @Test public void testMetadataParsing() {
-        final String version = ArtifactManager.getLatestSnapshot(METADATA);
+        final String version = DefaultArtifactManager.getLatestSnapshot(METADATA);
         assertEquals("20160321.103951-1", version);
     }
 
     @Test public void testSnapshotHandling() throws IOException {
         final String REPO = "http://org.apache.sling";
-        final ArtifactManagerConfig config = mock(ArtifactManagerConfig.class);
+        final DefaultArtifactManagerConfig config = mock(DefaultArtifactManagerConfig.class);
         when(config.getRepositoryUrls()).thenReturn(new String[] {REPO});
 
         final File metadataFile = mock(File.class);
@@ -83,7 +80,7 @@ public class ArtifactManagerTest {
         final Map<String, ArtifactProvider> providers = new HashMap<>();
         providers.put("*", provider);
 
-        final ArtifactManager mgr = new ArtifactManager(config, providers) {
+        final ArtifactManager mgr = new DefaultArtifactManager(config, providers) {
 
             @Override
             protected String getFileContents(final ArtifactHandler handler) throws IOException {

@@ -25,7 +25,7 @@ import org.apache.sling.feature.io.spi.ArtifactProviderContext;
 /**
  * This class holds the configuration of artifact manager.
  */
-public class ArtifactManagerConfig implements ArtifactProviderContext {
+public class DefaultArtifactManagerConfig implements ArtifactProviderContext {
 
     /** The repository urls. */
     private volatile String[] repositoryUrls;
@@ -43,7 +43,7 @@ public class ArtifactManagerConfig implements ArtifactProviderContext {
      * Create a new configuration object.
      * Set the default values
      */
-    public ArtifactManagerConfig() {
+    public DefaultArtifactManagerConfig() {
         // set defaults
         this.repositoryUrls = new String[] {
                 "file://" + System.getProperty("user.home") + "/.m2/repository",
