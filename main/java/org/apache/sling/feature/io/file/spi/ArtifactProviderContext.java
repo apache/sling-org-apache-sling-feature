@@ -14,27 +14,33 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.sling.feature.io;
+package org.apache.sling.feature.io.file.spi;
 
-import java.io.IOException;
-
-import org.apache.sling.feature.io.spi.ArtifactProvider;
+import java.io.File;
 
 /**
- * The artifact manager is the central service to get artifacts.
- * It uses {@link ArtifactProvider}s to get artifacts. The
- * providers are loaded using the service loader.
+ * This is the context for the artifact providers
  */
-public interface ArtifactManager extends AutoCloseable {
+public interface ArtifactProviderContext {
 
     /**
-     * Get the full artifact url and file for an artifact.
-     * @param url Artifact url or relative path.
-     * @return Absolute url and file in the form of a handler.
-     * @throws IOException If something goes wrong.
+     * Get the cache directory
+     * @return The cache directory.
      */
-    ArtifactHandler getArtifactHandler(final String url) throws IOException;
+    File getCacheDirectory();
 
-    @Override
-    void close();
+    /**
+     * Inform about an artifact found in the cache.
+     */
+    void incCachedArtifacts();
+
+    /**
+     * Inform about an artifact being downloaded
+     */
+    void incDownloadedArtifacts();
+
+    /**
+     * Inform about an artifact found locally.
+     */
+    void incLocalArtifacts();
 }

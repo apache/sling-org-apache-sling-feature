@@ -14,18 +14,18 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.sling.feature.io;
+package org.apache.sling.feature.io.file;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
-import org.apache.sling.feature.io.spi.ArtifactProviderContext;
+import org.apache.sling.feature.io.file.spi.ArtifactProviderContext;
 
 /**
  * This class holds the configuration of artifact manager.
  */
-public class DefaultArtifactManagerConfig implements ArtifactProviderContext {
+public class ArtifactManagerConfig implements ArtifactProviderContext {
 
     /** The repository urls. */
     private volatile String[] repositoryUrls;
@@ -43,7 +43,7 @@ public class DefaultArtifactManagerConfig implements ArtifactProviderContext {
      * Create a new configuration object.
      * Set the default values
      */
-    public DefaultArtifactManagerConfig() {
+    public ArtifactManagerConfig() {
         // set defaults
         this.repositoryUrls = new String[] {
                 "file://" + System.getProperty("user.home") + "/.m2/repository",

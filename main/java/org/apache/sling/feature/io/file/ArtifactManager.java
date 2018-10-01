@@ -14,7 +14,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.sling.feature.io;
+package org.apache.sling.feature.io.file;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -32,8 +32,8 @@ import java.util.Map;
 import java.util.ServiceLoader;
 
 import org.apache.sling.feature.ArtifactId;
-import org.apache.sling.feature.io.spi.ArtifactProvider;
-import org.apache.sling.feature.io.spi.ArtifactProviderContext;
+import org.apache.sling.feature.io.file.spi.ArtifactProvider;
+import org.apache.sling.feature.io.file.spi.ArtifactProviderContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
  * It uses {@link ArtifactProvider}s to get artifacts. The
  * providers are loaded using the service loader.
  */
-public class DefaultArtifactManager implements AutoCloseable, ArtifactManager {
+public class ArtifactManager implements AutoCloseable {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -50,7 +50,7 @@ public class DefaultArtifactManager implements AutoCloseable, ArtifactManager {
     private final Map<String, ArtifactProvider> providers;
 
     /** The configuration */
-    private final DefaultArtifactManagerConfig config;
+    private final ArtifactManagerConfig config;
 
     /**
      * Get an artifact manager based on the configuration
@@ -58,7 +58,7 @@ public class DefaultArtifactManager implements AutoCloseable, ArtifactManager {
      * @return The artifact manager
      * @throws IOException If the manager can't be initialized
      */
-    public static ArtifactManager getArtifactManager(final DefaultArtifactManagerConfig config) throws IOException {
+    public static ArtifactManager getArtifactManager(final ArtifactManagerConfig config) throws IOException {
         final ServiceLoader<ArtifactProvider> loader = ServiceLoader.load(ArtifactProvider.class);
         final Map<String, ArtifactProvider> providers = new HashMap<>();
         for(final ArtifactProvider provider : loader) {
@@ -76,10 +76,10 @@ public class DefaultArtifactManager implements AutoCloseable, ArtifactManager {
             providers.put("*", new DefaultArtifactHandler());
         }
 
-        return new DefaultArtifactManager(config, providers);
+        return new ArtifactManager(config, providers);
     }
 
-    DefaultArtifactManager(final DefaultArtifactManagerConfig config, final Map<String, ArtifactProvider> providers)
+    ArtifactManager(final ArtifactManagerConfig config, final Map<String, ArtifactProvider> providers)
     throws IOException {
         this.config = config;
         this.providers = providers;
@@ -129,7 +129,6 @@ public class DefaultArtifactManager implements AutoCloseable, ArtifactManager {
      * @return Absolute url and file in the form of a handler.
      * @throws IOException If something goes wrong.
      */
-    @Override
     public ArtifactHandler getArtifactHandler(final String url) throws IOException {
         logger.debug("Trying to get artifact for {}", url);
 

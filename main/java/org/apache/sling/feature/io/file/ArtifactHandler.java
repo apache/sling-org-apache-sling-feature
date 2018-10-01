@@ -14,7 +14,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.sling.feature.io;
+package org.apache.sling.feature.io.file;
 
 import java.io.File;
 
