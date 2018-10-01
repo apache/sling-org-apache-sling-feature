@@ -52,25 +52,8 @@ public class FeatureJSONReader extends JSONReaderBase {
      */
     public static Feature read(final Reader reader, final String location)
     throws IOException {
-        return read(reader, null, location);
-    }
-
-    /**
-     * Read a new feature from the reader
-     * The reader is not closed. It is up to the caller to close the reader.
-     *
-     * @param reader The reader for the feature
-     * @param providedId Optional artifact id
-     * @param location Optional location
-     * @return The read feature
-     * @throws IOException If an IO errors occurs or the JSON is invalid.
-     */
-    public static Feature read(final Reader reader,
-            final ArtifactId providedId,
-            final String location)
-    throws IOException {
         try {
-            final FeatureJSONReader mr = new FeatureJSONReader(providedId, location);
+            final FeatureJSONReader mr = new FeatureJSONReader(location);
             return mr.readFeature(reader);
         } catch (final IllegalStateException | IllegalArgumentException e) {
             throw new IOException(e);
@@ -80,17 +63,12 @@ public class FeatureJSONReader extends JSONReaderBase {
     /** The read feature. */
     private Feature feature;
 
-    /** The provided id. */
-    private final ArtifactId providedId;
-
     /**
      * Private constructor
-     * @param pId Optional id
      * @param location Optional location
      */
-    FeatureJSONReader(final ArtifactId pId, final String location) {
+    FeatureJSONReader(final String location) {
         super(location);
-        this.providedId = pId;
     }
 
     /**
@@ -106,18 +84,12 @@ public class FeatureJSONReader extends JSONReaderBase {
 
         checkModelVersion(map);
 
-        final ArtifactId fId;
         if ( !map.containsKey(JSONConstants.FEATURE_ID) ) {
-            if ( this.providedId == null ) {
-                throw new IOException(this.exceptionPrefix + "Feature id is missing");
-            }
-            fId = this.providedId;
-        } else {
-            final Object idObj = map.get(JSONConstants.FEATURE_ID);
-            checkType(JSONConstants.FEATURE_ID, idObj, String.class);
-            fId = ArtifactId.parse(idObj.toString());
+            throw new IOException(this.exceptionPrefix + "Feature id is missing");
         }
-        this.feature = new Feature(fId);
+        final Object idObj = map.get(JSONConstants.FEATURE_ID);
+        checkType(JSONConstants.FEATURE_ID, idObj, String.class);
+        this.feature = new Feature(ArtifactId.parse(idObj.toString()));
         this.feature.setLocation(this.location);
 
         // title, description, vendor and license
