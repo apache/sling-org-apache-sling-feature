@@ -29,6 +29,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -166,6 +167,28 @@ public class BuilderUtilTest {
         assertContains(result, 1, ArtifactId.parse("g/d/1.1"));
         assertContains(result, 2, ArtifactId.parse("g/e/1.9"));
         assertContains(result, 3, ArtifactId.parse("g/f/2.5"));
+    }
+
+    @Test public void testMultipleTimes() {
+        final Bundles target = new Bundles();
+        target.add(createBundle("g/a/1.0", 1));
+
+        final Bundles source = new Bundles();
+        source.add(createBundle("g/b/1.0", 1));
+
+        final Feature orgFeat = new Feature(new ArtifactId("gid", "aid", "123", "c1", "slingfeature"));
+        BuilderUtil.mergeBundles(target, source, orgFeat, ArtifactMerge.LATEST);
+
+        final Bundles target2 = new Bundles();
+        final Feature orgFeat2 = new Feature(new ArtifactId("g", "a", "1", null, null));
+        BuilderUtil.mergeBundles(target2, target, orgFeat2, ArtifactMerge.LATEST);
+
+        List<Entry<Integer, Artifact>> result = getBundles(target2);
+        assertEquals(2, result.size());
+        int i1 = assertContains(result, 1, ArtifactId.parse("g/a/1.0"));
+        assertEquals("g:a:1", result.get(i1).getValue().getMetadata().get("org-feature"));
+        int i2 = assertContains(result, 1, ArtifactId.parse("g/b/1.0"));
+        assertEquals("gid:aid:slingfeature:c1:123", result.get(i2).getValue().getMetadata().get("org-feature"));
     }
 
     @Test public void testMergeExtensions() {
