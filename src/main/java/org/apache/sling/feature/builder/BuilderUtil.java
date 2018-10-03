@@ -39,6 +39,7 @@ import org.apache.sling.feature.Configuration;
 import org.apache.sling.feature.Configurations;
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.FeatureConstants;
 import org.apache.sling.feature.KeyValueMap;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
@@ -114,9 +115,13 @@ class BuilderUtil {
     // bundles
     static void mergeBundles(final Bundles target,
         final Bundles source,
+        final Feature originatingFeature,
         final ArtifactMerge artifactMergeAlg) {
         for(final Map.Entry<Integer, List<Artifact>> entry : source.getBundlesByStartOrder().entrySet()) {
             for(final Artifact a : entry.getValue()) {
+                // Record the original feature of the bundle
+                a.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, originatingFeature.getId().toMvnId());
+
                 // version handling - use provided algorithm
                 boolean replace = true;
                 if ( artifactMergeAlg == ArtifactMerge.HIGHEST ) {

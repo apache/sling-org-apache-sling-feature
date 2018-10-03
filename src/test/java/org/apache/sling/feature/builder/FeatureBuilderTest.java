@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -277,14 +278,16 @@ public class FeatureBuilderTest {
         final Artifact a1 = new Artifact(ArtifactId.parse("org.apache.sling/oak-server/1.0.0"));
         a1.getMetadata().put(Artifact.KEY_START_ORDER, "1");
         a1.getMetadata().put("hash", "4632463464363646436");
+        a1.getMetadata().put("org-feature", "org.apache.sling:test-feature:1.1");
         base.getBundles().add(a1);
-        base.getBundles().add(BuilderUtilTest.createBundle("org.apache.sling/application-bundle/2.0.0", 1));
-        base.getBundles().add(BuilderUtilTest.createBundle("org.apache.sling/another-bundle/2.1.0", 1));
-        base.getBundles().add(BuilderUtilTest.createBundle("org.apache.sling/foo-xyz/1.2.3", 2));
-        base.getBundles().add(BuilderUtilTest.createBundle("group/testnewversion_low/1", 5));
-        base.getBundles().add(BuilderUtilTest.createBundle("group/testnewversion_high/5", 5));
-        base.getBundles().add(BuilderUtilTest.createBundle("group/testnewstartlevel/1", 10));
-        base.getBundles().add(BuilderUtilTest.createBundle("group/testnewstartlevelandversion/2", 10));
+        Map.Entry<String, String> md = new AbstractMap.SimpleEntry<String, String>("org-feature", "org.apache.sling:test-feature:1.1");
+        base.getBundles().add(BuilderUtilTest.createBundle("org.apache.sling/application-bundle/2.0.0", 1, md));
+        base.getBundles().add(BuilderUtilTest.createBundle("org.apache.sling/another-bundle/2.1.0", 1, md));
+        base.getBundles().add(BuilderUtilTest.createBundle("org.apache.sling/foo-xyz/1.2.3", 2, md));
+        base.getBundles().add(BuilderUtilTest.createBundle("group/testnewversion_low/1", 5, md));
+        base.getBundles().add(BuilderUtilTest.createBundle("group/testnewversion_high/5", 5, md));
+        base.getBundles().add(BuilderUtilTest.createBundle("group/testnewstartlevel/1", 10, md));
+        base.getBundles().add(BuilderUtilTest.createBundle("group/testnewstartlevelandversion/2", 10, md));
 
         final Configuration co1 = new Configuration("my.pid");
         co1.getProperties().put("foo", 5L);
@@ -303,7 +306,8 @@ public class FeatureBuilderTest {
         result.getVariables().put("varx", "myvalx");
         result.setInclude(null);
         result.getFrameworkProperties().put("bar", "X");
-        result.getBundles().add(BuilderUtilTest.createBundle("org.apache.sling/foo-bar/4.5.6", 3));
+        Map.Entry<String, String> md2 = new AbstractMap.SimpleEntry<String, String>("org-feature", "g:a:1");
+        result.getBundles().add(BuilderUtilTest.createBundle("org.apache.sling/foo-bar/4.5.6", 3, md2));
         final Configuration co3 = new Configuration("org.apache.sling.foo");
         co3.getProperties().put("prop", "value");
         result.getConfigurations().add(co3);

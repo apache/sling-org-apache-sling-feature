@@ -21,6 +21,7 @@ import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Bundles;
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.ExtensionType;
+import org.apache.sling.feature.Feature;
 import org.apache.sling.feature.KeyValueMap;
 import org.apache.sling.feature.builder.BuilderUtil.ArtifactMerge;
 import org.junit.Test;
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 public class BuilderUtilTest {
@@ -61,15 +63,17 @@ public class BuilderUtilTest {
         return result;
     }
 
-    private void assertContains(final List<Map.Entry<Integer, Artifact>> bundles,
+    private int assertContains(final List<Map.Entry<Integer, Artifact>> bundles,
             final int level, final ArtifactId id) {
-        for(final Map.Entry<Integer, Artifact> entry : bundles) {
+        for(int i=0; i < bundles.size(); i++) {
+            Map.Entry<Integer, Artifact> entry = bundles.get(i);
             if ( entry.getKey().intValue() == level
                  && entry.getValue().getId().equals(id) ) {
-                return;
+                return i;
             }
         }
         fail(id.toMvnId());
+        return -1;
     }
 
     @Test public void testMergeBundlesWithAlgHighest() {
@@ -84,12 +88,19 @@ public class BuilderUtilTest {
         source.add(createBundle("g/b/1.9", 2));
         source.add(createBundle("g/c/2.5", 3));
 
-        BuilderUtil.mergeBundles(target, source, ArtifactMerge.HIGHEST);
+        final Feature orgFeat = new Feature(new ArtifactId("gid", "aid", "123", null, null));
+
+        BuilderUtil.mergeBundles(target, source, orgFeat, ArtifactMerge.HIGHEST);
 
         final List<Map.Entry<Integer, Artifact>> result = getBundles(target);
         assertEquals(3, result.size());
-        assertContains(result, 1, ArtifactId.parse("g/a/1.1"));
-        assertContains(result, 2, ArtifactId.parse("g/b/2.0"));
+        int i = assertContains(result, 1, ArtifactId.parse("g/a/1.1"));
+        Map.Entry<Integer, Artifact> a1 = result.get(i);
+        assertEquals("gid:aid:123", a1.getValue().getMetadata().get("org-feature"));
+
+        int i2 = assertContains(result, 2, ArtifactId.parse("g/b/2.0"));
+        Map.Entry<Integer, Artifact> a2 = result.get(i2);
+        assertNull(a2.getValue().getMetadata().get("org-feature"));
         assertContains(result, 3, ArtifactId.parse("g/c/2.5"));
     }
 
@@ -105,7 +116,9 @@ public class BuilderUtilTest {
         source.add(createBundle("g/b/1.9", 2));
         source.add(createBundle("g/c/2.5", 3));
 
-        BuilderUtil.mergeBundles(target, source, ArtifactMerge.LATEST);
+        final Feature orgFeat = new Feature(new ArtifactId("gid", "aid", "123", null, null));
+
+        BuilderUtil.mergeBundles(target, source, orgFeat, ArtifactMerge.LATEST);
 
         final List<Map.Entry<Integer, Artifact>> result = getBundles(target);
         assertEquals(3, result.size());
@@ -122,7 +135,8 @@ public class BuilderUtilTest {
         final Bundles source = new Bundles();
         source.add(createBundle("g/a/1.1", 2));
 
-        BuilderUtil.mergeBundles(target, source, ArtifactMerge.LATEST);
+        final Feature orgFeat = new Feature(new ArtifactId("gid", "aid", "123", null, null));
+        BuilderUtil.mergeBundles(target, source, orgFeat, ArtifactMerge.LATEST);
 
         final List<Map.Entry<Integer, Artifact>> result = getBundles(target);
         assertEquals(1, result.size());
@@ -141,7 +155,8 @@ public class BuilderUtilTest {
         source.add(createBundle("g/e/1.9", 2));
         source.add(createBundle("g/f/2.5", 3));
 
-        BuilderUtil.mergeBundles(target, source, ArtifactMerge.LATEST);
+        final Feature orgFeat = new Feature(new ArtifactId("gid", "aid", "123", null, null));
+        BuilderUtil.mergeBundles(target, source, orgFeat, ArtifactMerge.LATEST);
 
         final List<Map.Entry<Integer, Artifact>> result = getBundles(target);
         assertEquals(6, result.size());
@@ -184,9 +199,14 @@ public class BuilderUtilTest {
         assertEquals("327", target.get("x"));
     }
 
-    public static Artifact createBundle(final String id, final int startOrder) {
+    @SafeVarargs
+    public static Artifact createBundle(final String id, final int startOrder, Map.Entry<String, String> ... metadata) {
         final Artifact a = new Artifact(ArtifactId.parse(id));
         a.getMetadata().put(Artifact.KEY_START_ORDER, String.valueOf(startOrder));
+
+        for (Map.Entry<String, String> md : metadata) {
+            a.getMetadata().put(md.getKey(), md.getValue());
+        }
 
         return a;
     }

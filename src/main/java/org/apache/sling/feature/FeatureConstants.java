@@ -41,4 +41,10 @@ public abstract class FeatureConstants {
      * optional.
      */
     public static final String EXTENSION_NAME_ASSEMBLED_FEATURES = "assembled-features";
+
+    /**
+     * When an artifact is merged, the original feature that contained the artifact is recorded
+     * in this attribute.
+     */
+    public static final String ARTIFACT_ATTR_ORIGINAL_FEATURE = "org-feature";
 }

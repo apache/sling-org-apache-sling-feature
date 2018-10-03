@@ -323,7 +323,7 @@ public abstract class FeatureBuilder {
             final BuilderContext context,
             final BuilderUtil.ArtifactMerge mergeAlg) {
         BuilderUtil.mergeVariables(target.getVariables(), source.getVariables(), context);
-        BuilderUtil.mergeBundles(target.getBundles(), source.getBundles(), mergeAlg);
+        BuilderUtil.mergeBundles(target.getBundles(), source.getBundles(), source, mergeAlg);
         BuilderUtil.mergeConfigurations(target.getConfigurations(), source.getConfigurations());
         BuilderUtil.mergeFrameworkProperties(target.getFrameworkProperties(), source.getFrameworkProperties(), context);
         BuilderUtil.mergeRequirements(target.getRequirements(), source.getRequirements());
