@@ -64,6 +64,7 @@
                 <configuration>
                     <excludes>
                         <exclude>*.md</exclude>
+                        <exclude>schema/Feature-1.0.0.schema.json</exclude>
                     </excludes>
                 </configuration>
             </plugin>
