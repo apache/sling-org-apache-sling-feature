@@ -27,6 +27,7 @@ import java.util.function.BiConsumer;
 
 import javax.json.Json;
 import javax.json.JsonObject;
+import javax.json.stream.JsonParsingException;
 
 import org.apache.felix.utils.resource.CapabilityImpl;
 import org.apache.felix.utils.resource.RequirementImpl;
@@ -55,7 +56,7 @@ public class FeatureJSONReader extends JSONReaderBase {
         try {
             final FeatureJSONReader mr = new FeatureJSONReader(location);
             return mr.readFeature(reader);
-        } catch (final IllegalStateException | IllegalArgumentException e) {
+        } catch (final IllegalStateException | IllegalArgumentException | JsonParsingException e) {
             throw new IOException(e);
         }
     }
