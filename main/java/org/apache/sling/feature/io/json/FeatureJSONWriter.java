@@ -105,7 +105,7 @@ public class FeatureJSONWriter extends JSONWriterBase {
             writeList(generator, JSONConstants.FEATURE_BUNDLES, inc.getBundleRemovals());
             writeList(generator, JSONConstants.FEATURE_FRAMEWORK_PROPERTIES, inc.getFrameworkPropertiesRemovals());
 
-            generator.writeEnd();
+            generator.writeEnd().writeEnd();
         }
     }
 
