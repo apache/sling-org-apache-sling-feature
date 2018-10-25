@@ -16,20 +16,16 @@
  */
 package org.apache.sling.feature.builder;
 
-import org.apache.sling.feature.ArtifactId;
-import org.apache.sling.feature.Feature;
-import org.osgi.annotation.versioning.ConsumerType;
+import java.io.File;
 
-/**
- * The feature provider is used to find features while assembling using {@link FeatureBuilder}.
- */
-@ConsumerType
-public interface FeatureProvider {
+import org.apache.sling.feature.ArtifactId;
+
+public interface ArtifactProvider {
 
     /**
-     * Provide the feature with the given id.
-     * @param id The feature id
-     * @return The feature or {@code null}
+     * Provide the artifact with the given id.
+     * @param id The artifact id
+     * @return The file or {@code null}
      */
-    Feature provide(ArtifactId id);
+    File provide(ArtifactId id);
 }

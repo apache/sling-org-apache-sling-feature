@@ -21,6 +21,7 @@ package org.apache.sling.feature;
  * <ul>
  *   <li>An id
  *   <li>metadata
+ *   <li>an optional start order property (which is part of the metadata)
  * </ul>
  */
 public class Artifact implements Comparable<Artifact> {

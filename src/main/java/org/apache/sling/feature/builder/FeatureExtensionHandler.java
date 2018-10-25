@@ -16,6 +16,7 @@
  */
 package org.apache.sling.feature.builder;
 
+import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.Feature;
 import org.osgi.annotation.versioning.ConsumerType;
 
@@ -28,32 +29,32 @@ public interface FeatureExtensionHandler {
 
     /**
      * Checks whether this merger can merge extensions with that name
-     * @param extensionName The extension name
+     * @param extension The extension
      * @return {@code true} if merger can handle this
      */
-    boolean canMerge(String extensionName);
+    boolean canMerge(Extension extension);
 
     /**
      * Merge the source extension into the target extension.
      *
      * The caller of this method already ensured that both
      * extensions share the same name and type and that
-     * {@link #canMerge(String)} returned {@code true}.
+     * {@link #canMerge(Extension)} returned {@code true}.
      *
      * @param target The target feature
      * @param source The source feature
-     * @param extensionName The extension name
+     * @param extension The extension
      * @throws IllegalStateException If the extensions can't be merged
      */
-    void merge(Feature target, Feature source, String extensionName);
+    void merge(Feature target, Feature source, Extension extension);
 
     /**
      * Post process the feature with respect to the extension.
      * Post processing is invoked after all extensions have been merged.
-     * This method is called regardless whether {@link #canMerge(String)} returned {@code true} or not.
+     * This method is called regardless whether {@link #canMerge(Extension)} returned {@code true} or not.
      * @param feature The feature
-     * @param extensionName The extension name
+     * @param extension The extension
      * @throws IllegalStateException If post processing failed
      */
-    void postProcess(Feature feature, String extensionName);
+    void postProcess(Feature feature, Extension extension);
 }

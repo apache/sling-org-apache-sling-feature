@@ -218,36 +218,7 @@ To avoid this, a feature might contain an additional section, named "reqscaps" (
         }
 
 
-# Appendix A : Provisioning Applications
-
-An application jar can contain a set of features (including the listed artifacts).
-
-An optional application configuration further defines the possibilites:
-
-    {
-         "features" : [
-             "org.apache.sling:org.apache.sling.launchpad:10"
-         ],
-         "options" : [
-             "org.apache.sling:org.apache.sling.scripting.jsp:1.0.0",
-             {
-                 "id" : "org.apache.sling:org.apache.sling.scripting.htl:1.0.0",
-                 "tag": "htl"
-             }
-         ],
-         "defaults" : {
-             "auto-add-options": true,
-             "tags" : ["htl"]
-         },
-         "framework" : {
-             "id" : "org.apache.felix:org.apache.felix.framework:5.6.4"
-         }
-    }
-
-Such a configuration is required for an application, at least one feature needs to be listed in either the features or the options section.
-All features listed in the features section will be added to the application, the ones listed in options are optional and depending on the settings and user input will either be added or left out. In addition all available features of an application will be used to make the application runnable (resolvable).
-
-# Appendix B : Apache Sling's Provisioning Model
+# Appendix A : Apache Sling's Provisioning Model
 
 The documentation for Apache Sling's provisioning model can be found here: https://sling.apache.org/documentation/development/slingstart.html
 

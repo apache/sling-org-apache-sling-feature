@@ -22,7 +22,7 @@
     </parent>
 
     <artifactId>org.apache.sling.feature</artifactId>
-    <version>0.1.1-SNAPSHOT</version>
+    <version>0.1.3-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Feature</name>
@@ -47,6 +47,16 @@
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Conditional-Package>
+                            org.apache.felix.utils.*,
+                        </Conditional-Package>
+                    </instructions>
+
+                    <!--  Skip baselining for 0.x version -->
+                    <skip>true</skip>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.rat</groupId>
@@ -54,6 +64,7 @@
                 <configuration>
                     <excludes>
                         <exclude>*.md</exclude>
+                        <exclude>schema/Feature-1.0.0.schema.json</exclude>
                     </excludes>
                 </configuration>
             </plugin>
@@ -63,19 +74,17 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.annotation.versioning</artifactId>
-            <version>1.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>osgi.core</artifactId>
-            <version>6.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.geronimo.specs</groupId>
-            <artifactId>geronimo-json_1.0_spec</artifactId>
-            <version>1.0-alpha-1</version>
+            <artifactId>geronimo-json_1.1_spec</artifactId>
+            <version>1.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

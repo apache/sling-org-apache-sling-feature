@@ -16,6 +16,17 @@
  */
 package org.apache.sling.feature.builder;
 
+import org.apache.sling.feature.Artifact;
+import org.apache.sling.feature.Bundles;
+import org.apache.sling.feature.Configuration;
+import org.apache.sling.feature.Configurations;
+import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.FeatureConstants;
+import org.apache.sling.feature.KeyValueMap;
+import org.osgi.resource.Capability;
+import org.osgi.resource.Requirement;
+
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Enumeration;
@@ -28,22 +39,11 @@ import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.json.JsonStructure;
 import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
 import javax.json.JsonWriter;
-
-import jdk.nashorn.internal.ir.debug.JSONWriter;
-import org.apache.sling.feature.Application;
-import org.apache.sling.feature.Artifact;
-import org.apache.sling.feature.Bundles;
-import org.apache.sling.feature.Configuration;
-import org.apache.sling.feature.Configurations;
-import org.apache.sling.feature.Extension;
-import org.apache.sling.feature.Feature;
-import org.apache.sling.feature.KeyValueMap;
-import org.osgi.resource.Capability;
-import org.osgi.resource.Requirement;
 
 /**
  * Utility methods for the builders
@@ -55,12 +55,76 @@ class BuilderUtil {
         HIGHEST
     };
 
+    static boolean contains(String key, Iterable<Map.Entry<String, String>> iterable) {
+        if (iterable != null) {
+            for (Map.Entry<String, String> entry : iterable) {
+                if (key.equals(entry.getKey())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    static String get(String key, Iterable<Map.Entry<String, String>> iterable) {
+        if (iterable != null) {
+            for (Map.Entry<String, String> entry : iterable) {
+                if (key.equals(entry.getKey())) {
+                    return entry.getValue();
+                }
+            }
+        }
+        return null;
+    }
+
+    private static void mergeWithContextOverwrite(String type, KeyValueMap target, KeyValueMap source, Iterable<Map.Entry<String,String>> context) {
+        KeyValueMap result = new KeyValueMap();
+        for (Map.Entry<String, String> entry : target) {
+            result.put(entry.getKey(), contains(entry.getKey(), context) ? get(entry.getKey(), context) : entry.getValue());
+        }
+        for (Map.Entry<String, String> entry : source) {
+            if (contains(entry.getKey(), context)) {
+                result.put(entry.getKey(), get(entry.getKey(), context));
+            }
+            else {
+                String value = source.get(entry.getKey());
+                if (value != null) {
+                    String targetValue = target.get(entry.getKey());
+                    if (targetValue != null) {
+                        if (!value.equals(targetValue)) {
+                            throw new IllegalStateException(String.format("Can't merge %s '%s' defined twice (as '%s' v.s. '%s') and not overwritten.", type, entry.getKey(), value, targetValue));
+                        }
+                    }
+                    else {
+                        result.put(entry.getKey(), value);
+                    }
+                }
+                else if (!contains(entry.getKey(), target)) {
+                    result.put(entry.getKey(), value);
+                }
+            }
+        }
+        target.clear();
+        target.putAll(result);
+    }
+
+    // variables
+    static void mergeVariables(KeyValueMap target, KeyValueMap source, BuilderContext context) {
+        mergeWithContextOverwrite("Variable", target, source, (null != context) ? context.getVariables() : null);
+    }
+
     // bundles
     static void mergeBundles(final Bundles target,
         final Bundles source,
+        final Feature originatingFeature,
         final ArtifactMerge artifactMergeAlg) {
         for(final Map.Entry<Integer, List<Artifact>> entry : source.getBundlesByStartOrder().entrySet()) {
             for(final Artifact a : entry.getValue()) {
+                // Record the original feature of the bundle
+                if (a.getMetadata().get(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE) == null) {
+                    a.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, originatingFeature.getId().toMvnId());
+                }
+
                 // version handling - use provided algorithm
                 boolean replace = true;
                 if ( artifactMergeAlg == ArtifactMerge.HIGHEST ) {
@@ -100,8 +164,8 @@ class BuilderUtil {
     }
 
     // framework properties (add/merge)
-    static void mergeFrameworkProperties(final KeyValueMap target, final KeyValueMap source) {
-        target.putAll(source);
+    static void mergeFrameworkProperties(final KeyValueMap target, final KeyValueMap source, BuilderContext context) {
+        mergeWithContextOverwrite("Property", target, source, context != null ? context.getProperties().entrySet() : null);
     }
 
     // requirements (add)
@@ -154,7 +218,7 @@ class BuilderUtil {
                     struct1 = builder.build();
                 } else {
                     // object is merge
-                    merge((JsonObject)struct1, (JsonObject)struct2);
+                    struct1 = merge((JsonObject)struct1, (JsonObject)struct2);
                 }
                 StringWriter buffer = new StringWriter();
                 try (JsonWriter writer = Json.createWriter(buffer))
@@ -208,8 +272,8 @@ class BuilderUtil {
                     }
                     boolean handled = false;
                     for(final FeatureExtensionHandler fem : context.getFeatureExtensionHandlers()) {
-                        if ( fem.canMerge(current.getName()) ) {
-                            fem.merge(target, source, current.getName());
+                        if ( fem.canMerge(current) ) {
+                            fem.merge(target, source, current);
                             handled = true;
                             break;
                         }
@@ -227,57 +291,40 @@ class BuilderUtil {
         // post processing
         for(final Extension ext : target.getExtensions()) {
             for(final FeatureExtensionHandler fem : context.getFeatureExtensionHandlers()) {
-                fem.postProcess(target, ext.getName());
+                fem.postProcess(target, ext);
             }
         }
     }
 
-    static void mergeExtensions(final Application target,
-        final Feature source,
-        final ArtifactMerge artifactMergeAlg) {
-        for(final Extension ext : source.getExtensions()) {
-            boolean found = false;
-            for(final Extension current : target.getExtensions()) {
-                if ( current.getName().equals(ext.getName()) ) {
-                    found = true;
-                    if ( current.getType() != ext.getType() ) {
-                        throw new IllegalStateException("Found different types for extension " + current.getName()
-                            + " : " + current.getType() + " and " + ext.getType());
-                    }
-                    // default merge
-                    mergeExtensions(current, ext, artifactMergeAlg);
-                }
-            }
-            if ( !found ) {
-                target.getExtensions().add(ext);
-            }
+    private static JsonObject merge(final JsonObject obj1, final JsonObject obj2) {
+        JsonObjectBuilder builder = Json.createObjectBuilder();
+        for (final Map.Entry<String, JsonValue> entry : obj1.entrySet()) {
+            builder.add(entry.getKey(), entry.getValue());
         }
-    }
-
-    private static void merge(final JsonObject obj1, final JsonObject obj2) {
         for(final Map.Entry<String, JsonValue> entry : obj2.entrySet()) {
             if ( !obj1.containsKey(entry.getKey()) ) {
-                obj1.put(entry.getKey(), entry.getValue());
+                builder.add(entry.getKey(), entry.getValue());
             } else {
                 final JsonValue oldValue = obj1.get(entry.getKey());
                 if ( oldValue.getValueType() != entry.getValue().getValueType() ) {
                     // new type wins
-                    obj1.put(entry.getKey(), entry.getValue());
+                    builder.add(entry.getKey(), entry.getValue());
                 } else if ( oldValue.getValueType() == ValueType.ARRAY ) {
-                    final JsonArrayBuilder builder = Json.createArrayBuilder();
+                    final JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
 
                     Stream.concat(
                         ((JsonArray) oldValue).stream(),
                         ((JsonArray)entry.getValue()).stream()
-                    ).forEachOrdered(builder::add);
+                    ).forEachOrdered(arrayBuilder::add);
 
-                    obj1.put(entry.getKey(), builder.build());
+                    builder.add(entry.getKey(), arrayBuilder.build());
                 } else if ( oldValue.getValueType() == ValueType.OBJECT ) {
-                    merge((JsonObject)oldValue, (JsonObject)entry.getValue());
+                    builder.add(entry.getKey(), merge((JsonObject)oldValue, (JsonObject)entry.getValue()));
                 } else {
-                    obj1.put(entry.getKey(), entry.getValue());
+                    builder.add(entry.getKey(), entry.getValue());
                 }
             }
         }
+        return builder.build();
     }
 }
