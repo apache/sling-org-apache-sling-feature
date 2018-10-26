@@ -16,8 +16,8 @@
  */
 package org.apache.sling.feature;
 
-import java.util.Dictionary;
-import java.util.Hashtable;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 
 /**
@@ -44,7 +44,7 @@ public class Configuration
     private final String factoryPid;
 
     /** The properties. */
-    private final Dictionary<String, Object> properties = new Hashtable<>();
+    private final Map<String, Object> properties = new LinkedHashMap<>();
 
     /**
      * Create a new configuration
@@ -139,7 +139,7 @@ public class Configuration
      * Get all properties of the configuration.
      * @return The properties
      */
-    public Dictionary<String, Object> getProperties() {
+    public Map<String, Object> getProperties() {
         return this.properties;
     }
 
