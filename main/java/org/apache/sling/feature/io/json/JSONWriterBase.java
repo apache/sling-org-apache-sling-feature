@@ -222,7 +222,11 @@ abstract class JSONWriterBase {
                 }
                 generator.write(key, struct);
             } else if ( ext.getType() == ExtensionType.TEXT ) {
-                generator.write(key, ext.getText());
+                generator.writeStartArray(key);
+                for(String line : ext.getText().split("\n")) {
+                    generator.write(line);
+                }
+                generator.writeEnd();
             } else {
                 generator.writeStartArray(key);
                 for(final Artifact artifact : ext.getArtifacts()) {
