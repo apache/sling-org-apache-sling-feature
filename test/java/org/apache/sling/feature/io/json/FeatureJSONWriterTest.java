@@ -17,10 +17,13 @@
 package org.apache.sling.feature.io.json;
 
 import org.apache.sling.feature.Feature;
+import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.StringReader;
-import java.io.StringWriter;
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import java.io.*;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
@@ -86,4 +89,18 @@ public class FeatureJSONWriterTest {
         assertEquals(f.getInclude().getId(), rf.getInclude().getId());
     }
 
+    @Test public void testRepoInitWrite() throws Exception {
+        final Feature f = U.readFeature("repoinit2");
+        try ( final StringWriter writer = new StringWriter() ) {
+            FeatureJSONWriter.write(writer, f);
+            final JsonObject refJson = Json.createReader(
+                    new InputStreamReader(U.class.getResourceAsStream("/features/repoinit2.json"))
+                ).readObject();
+            final JsonObject resultJson = Json.createReader(new StringReader(writer.toString())).readObject();
+
+            JsonArray refJsonArray = refJson.getJsonArray("repoinit:TEXT|false");
+            JsonArray resultJsonArray = resultJson.getJsonArray("repoinit:TEXT|false");
+            Assert.assertEquals(refJsonArray, resultJsonArray);
+        }
+    }
 }
