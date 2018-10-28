@@ -20,6 +20,8 @@ import org.apache.felix.configurator.impl.json.JSMin;
 import org.apache.felix.configurator.impl.json.JSONUtil;
 import org.apache.felix.configurator.impl.json.TypeConverter;
 import org.apache.felix.configurator.impl.model.Config;
+import org.apache.felix.utils.resource.CapabilityImpl;
+import org.apache.felix.utils.resource.RequirementImpl;
 import org.apache.sling.feature.Artifact;
 import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Bundles;
@@ -28,7 +30,10 @@ import org.apache.sling.feature.Configurations;
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.Extensions;
+import org.apache.sling.feature.Include;
 import org.apache.sling.feature.KeyValueMap;
+import org.osgi.resource.Capability;
+import org.osgi.resource.Requirement;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -44,6 +49,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.BiConsumer;
 import java.util.Set;
 
 import javax.json.Json;
@@ -488,5 +494,196 @@ abstract class JSONReaderBase {
         if ( !valid ) {
             throw new IOException(this.exceptionPrefix + "Key " + key + " is not one of the allowed types " + Arrays.toString(types) + " : " + val.getClass());
         }
+    }
+
+    protected Include readInclude(final Map<String, Object> map) throws IOException {
+        if ( map.containsKey(JSONConstants.FEATURE_INCLUDE)) {
+            final Object includeObj = map.get(JSONConstants.FEATURE_INCLUDE);
+            checkType(JSONConstants.FEATURE_INCLUDE, includeObj, Map.class, String.class);
+
+            final Include include;
+            if ( includeObj instanceof String ) {
+                final ArtifactId id = ArtifactId.parse(includeObj.toString());
+                include = new Include(id);
+            } else {
+                @SuppressWarnings("unchecked")
+                final Map<String, Object> obj = (Map<String, Object>) includeObj;
+                if ( !obj.containsKey(JSONConstants.ARTIFACT_ID) ) {
+                    throw new IOException(exceptionPrefix + " include is missing required artifact id");
+                }
+                checkType("Include " + JSONConstants.ARTIFACT_ID, obj.get(JSONConstants.ARTIFACT_ID), String.class);
+                final ArtifactId id = ArtifactId.parse(obj.get(JSONConstants.ARTIFACT_ID).toString());
+                include = new Include(id);
+
+                if ( obj.containsKey(JSONConstants.INCLUDE_REMOVALS) ) {
+                    checkType("Include removals", obj.get(JSONConstants.INCLUDE_REMOVALS), Map.class);
+                    @SuppressWarnings("unchecked")
+                    final Map<String, Object> removalObj = (Map<String, Object>) obj.get(JSONConstants.INCLUDE_REMOVALS);
+                    if ( removalObj.containsKey(JSONConstants.FEATURE_BUNDLES) ) {
+                        checkType("Include removal bundles", removalObj.get(JSONConstants.FEATURE_BUNDLES), List.class);
+                        @SuppressWarnings("unchecked")
+                        final List<Object> list = (List<Object>)removalObj.get(JSONConstants.FEATURE_BUNDLES);
+                        for(final Object val : list) {
+                            checkType("Include removal bundles", val, String.class);
+                            if ( val.toString().startsWith("#")) {
+                                continue;
+                            }
+                            include.getBundleRemovals().add(ArtifactId.parse(val.toString()));
+                        }
+                    }
+                    if ( removalObj.containsKey(JSONConstants.FEATURE_CONFIGURATIONS) ) {
+                        checkType("Include removal configuration", removalObj.get(JSONConstants.FEATURE_CONFIGURATIONS), List.class);
+                        @SuppressWarnings("unchecked")
+                        final List<Object> list = (List<Object>)removalObj.get(JSONConstants.FEATURE_CONFIGURATIONS);
+                        for(final Object val : list) {
+                            checkType("Include removal configuration", val, String.class);
+                            include.getConfigurationRemovals().add(val.toString());
+                        }
+                    }
+                    if ( removalObj.containsKey(JSONConstants.FEATURE_FRAMEWORK_PROPERTIES) ) {
+                        checkType("Include removal framework properties", removalObj.get(JSONConstants.FEATURE_FRAMEWORK_PROPERTIES), List.class);
+                        @SuppressWarnings("unchecked")
+                        final List<Object> list = (List<Object>)removalObj.get(JSONConstants.FEATURE_FRAMEWORK_PROPERTIES);
+                        for(final Object val : list) {
+                            checkType("Include removal framework properties", val, String.class);
+                            include.getFrameworkPropertiesRemovals().add(val.toString());
+                        }
+                    }
+                    if ( removalObj.containsKey(JSONConstants.INCLUDE_EXTENSION_REMOVALS) ) {
+                        checkType("Include removal extensions", removalObj.get(JSONConstants.INCLUDE_EXTENSION_REMOVALS), List.class);
+                        @SuppressWarnings("unchecked")
+                        final List<Object> list = (List<Object>)removalObj.get(JSONConstants.INCLUDE_EXTENSION_REMOVALS);
+                        for(final Object val : list) {
+                            checkType("Include removal extension", val, String.class, Map.class);
+                            if ( val instanceof String ) {
+                                if ( val.toString().startsWith("#")) {
+                                    continue;
+                                }
+                                include.getExtensionRemovals().add(val.toString());
+                            } else {
+                                @SuppressWarnings("unchecked")
+                                final Map<String, Object> removalMap = (Map<String, Object>)val;
+                                final Object nameObj = removalMap.get("name");
+                                checkType("Include removal extension", nameObj, String.class);
+                                if ( removalMap.containsKey("artifacts") ) {
+                                    checkType("Include removal extension artifacts", removalMap.get("artifacts"), List.class);
+                                    @SuppressWarnings("unchecked")
+                                    final List<Object> artifactList = (List<Object>)removalMap.get("artifacts");
+                                    final List<ArtifactId> ids = new ArrayList<>();
+                                    for(final Object aid : artifactList) {
+                                        checkType("Include removal extension artifact", aid, String.class);
+                                        ids.add(ArtifactId.parse(aid.toString()));
+                                    }
+                                    include.getArtifactExtensionRemovals().put(nameObj.toString(), ids);
+                                } else {
+                                    include.getExtensionRemovals().add(nameObj.toString());
+                                }
+                            }
+                        }
+                    }
+
+                }
+            }
+            return include;
+        }
+        return null;
+    }
+
+    protected void readRequirements(Map<String, Object> map, final List<Requirement> container) throws IOException {
+        if ( map.containsKey(JSONConstants.FEATURE_REQUIREMENTS)) {
+            final Object reqObj = map.get(JSONConstants.FEATURE_REQUIREMENTS);
+            checkType(JSONConstants.FEATURE_REQUIREMENTS, reqObj, List.class);
+
+            @SuppressWarnings("unchecked")
+            final List<Object> requirements = (List<Object>)reqObj;
+            for(final Object req : requirements) {
+                checkType("Requirement", req, Map.class);
+                @SuppressWarnings("unchecked")
+                final Map<String, Object> obj = (Map<String, Object>) req;
+
+                if ( !obj.containsKey(JSONConstants.REQCAP_NAMESPACE) ) {
+                    throw new IOException(this.exceptionPrefix + "Namespace is missing for requirement");
+                }
+                checkType("Requirement namespace", obj.get(JSONConstants.REQCAP_NAMESPACE), String.class);
+
+                Map<String, Object> attrMap = new HashMap<>();
+                if ( obj.containsKey(JSONConstants.REQCAP_ATTRIBUTES) ) {
+                    checkType("Requirement attributes", obj.get(JSONConstants.REQCAP_ATTRIBUTES), Map.class);
+                    @SuppressWarnings("unchecked")
+                    final Map<String, Object> attrs = (Map<String, Object>)obj.get(JSONConstants.REQCAP_ATTRIBUTES);
+                    attrs.forEach(rethrowBiConsumer((key, value) -> ManifestUtils.unmarshalAttribute(key, value, attrMap::put)));
+                }
+
+                Map<String, String> dirMap = new HashMap<>();
+                if ( obj.containsKey(JSONConstants.REQCAP_DIRECTIVES) ) {
+                    checkType("Requirement directives", obj.get(JSONConstants.REQCAP_DIRECTIVES), Map.class);
+                    @SuppressWarnings("unchecked")
+                    final Map<String, Object> dirs = (Map<String, Object>)obj.get(JSONConstants.REQCAP_DIRECTIVES);
+                    dirs.forEach(rethrowBiConsumer((key, value) -> ManifestUtils.unmarshalDirective(key, value, dirMap::put)));
+                }
+
+                final Requirement r = new RequirementImpl(null, obj.get(JSONConstants.REQCAP_NAMESPACE).toString(), dirMap, attrMap);
+                container.add(r);
+            }
+        }
+    }
+
+    protected void readCapabilities(Map<String, Object> map, final List<Capability> container) throws IOException {
+        if ( map.containsKey(JSONConstants.FEATURE_CAPABILITIES)) {
+            final Object capObj = map.get(JSONConstants.FEATURE_CAPABILITIES);
+            checkType(JSONConstants.FEATURE_CAPABILITIES, capObj, List.class);
+
+            @SuppressWarnings("unchecked")
+            final List<Object> capabilities = (List<Object>)capObj;
+            for(final Object cap : capabilities) {
+                checkType("Capability", cap, Map.class);
+                @SuppressWarnings("unchecked")
+                final Map<String, Object> obj = (Map<String, Object>) cap;
+
+                if ( !obj.containsKey(JSONConstants.REQCAP_NAMESPACE) ) {
+                    throw new IOException(this.exceptionPrefix + "Namespace is missing for capability");
+                }
+                checkType("Capability namespace", obj.get(JSONConstants.REQCAP_NAMESPACE), String.class);
+
+                Map<String, Object> attrMap = new HashMap<>();
+                if ( obj.containsKey(JSONConstants.REQCAP_ATTRIBUTES) ) {
+                    checkType("Capability attributes", obj.get(JSONConstants.REQCAP_ATTRIBUTES), Map.class);
+                    @SuppressWarnings("unchecked")
+                    final Map<String, Object> attrs = (Map<String, Object>)obj.get(JSONConstants.REQCAP_ATTRIBUTES);
+                    attrs.forEach(rethrowBiConsumer((key, value) -> ManifestUtils.unmarshalAttribute(key, value, attrMap::put)));
+                }
+
+                Map<String, String> dirMap = new HashMap<>();
+                if ( obj.containsKey(JSONConstants.REQCAP_DIRECTIVES) ) {
+                    checkType("Capability directives", obj.get(JSONConstants.REQCAP_DIRECTIVES), Map.class);
+                    @SuppressWarnings("unchecked")
+                    final Map<String, Object> dirs = (Map<String, Object>) obj.get(JSONConstants.REQCAP_DIRECTIVES);
+                    dirs.forEach(rethrowBiConsumer((key, value) -> ManifestUtils.unmarshalDirective(key, value, dirMap::put)));
+                }
+
+                final Capability c = new CapabilityImpl(null, obj.get(JSONConstants.REQCAP_NAMESPACE).toString(), dirMap, attrMap);
+                container.add(c);
+            }
+        }
+    }
+
+    @FunctionalInterface
+    private interface BiConsumer_WithExceptions<T, V, E extends Exception> {
+        void accept(T t, V u) throws E;
+    }
+
+    private static <T, V, E extends Exception> BiConsumer<T, V> rethrowBiConsumer(BiConsumer_WithExceptions<T, V, E> biConsumer) {
+        return (t, u) -> {
+            try {
+                biConsumer.accept(t, u);
+            } catch (Exception exception) {
+                throwAsUnchecked(exception);
+            }
+        };
+    }
+
+    @SuppressWarnings ("unchecked")
+    private static <E extends Throwable> void throwAsUnchecked(Exception exception) throws E {
+        throw (E) exception;
     }
 }
