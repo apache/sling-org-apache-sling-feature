@@ -214,8 +214,8 @@ public abstract class FeatureBuilder {
      */
     public static void resolveVariables(final Feature feature, final KeyValueMap additionalVariables) {
         for(final Configuration cfg : feature.getConfigurations()) {
-            final Set<String> keys = new HashSet<>(cfg.getProperties().keySet());
-            for(final String key : keys) {
+        	final Set<String> keys = new HashSet<>(Collections.list(cfg.getProperties().keys()));
+        	for(final String key : keys) {
                 final Object value = cfg.getProperties().get(key);
                 cfg.getProperties().put(key, replaceVariables(value, additionalVariables, feature));
             }

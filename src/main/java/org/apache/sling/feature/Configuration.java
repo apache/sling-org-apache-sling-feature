@@ -16,6 +16,9 @@
  */
 package org.apache.sling.feature;
 
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -44,7 +47,7 @@ public class Configuration
     private final String factoryPid;
 
     /** The properties. */
-    private final Map<String, Object> properties = new LinkedHashMap<>();
+    private final Dictionary<String, Object> properties = new OrderedDictionary();
 
     /**
      * Create a new configuration
@@ -139,7 +142,7 @@ public class Configuration
      * Get all properties of the configuration.
      * @return The properties
      */
-    public Map<String, Object> getProperties() {
+    public Dictionary<String, Object> getProperties() {
         return this.properties;
     }
 
@@ -154,5 +157,81 @@ public class Configuration
         return "Configuration [pid=" + pid
                 + ", properties=" + properties
                 + "]";
+    }
+
+    public static class OrderedDictionary extends Dictionary<String, Object> {
+
+        private static class EnumarationImpl<E> implements Enumeration<E> {
+            private final Iterator<E> iterator;
+
+            public EnumarationImpl(Iterator<E> iterator) {
+                this.iterator = iterator;
+            }
+
+            @Override
+            public boolean hasMoreElements() {
+                return iterator.hasNext();
+            }
+
+            @Override
+            public E nextElement() {
+                return iterator.next();
+            }
+        }
+
+        private final Map<String, Object> map = new LinkedHashMap<String, Object>();
+
+        @Override
+        public int size() {
+            return map.size();
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return map.isEmpty();
+        }
+
+        @Override
+        public Enumeration<String> keys() {
+            return new EnumarationImpl<>(map.keySet().iterator());
+        }
+
+        @Override
+        public Enumeration<Object> elements() {
+            return new EnumarationImpl<>(map.values().iterator());
+        }
+
+        @Override
+        public Object get(Object key) {
+            return map.get(key);
+        }
+
+        @Override
+        public Object put(String key, Object value) {
+            // Make sure the value is not null
+            if (value == null) {
+                throw new NullPointerException();
+            }
+
+            return map.put(key, value);
+        }
+
+        @Override
+        public Object remove(Object key) {
+            return map.remove(key);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+        	if ( !(o instanceof OrderedDictionary) ) {
+        		return false;
+        	}
+            return map.equals(((OrderedDictionary)o).map);
+        }
+
+        @Override
+        public int hashCode() {
+            return map.hashCode();
+        }
     }
 }

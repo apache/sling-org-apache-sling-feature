@@ -16,21 +16,9 @@
  */
 package org.apache.sling.feature.builder;
 
-import org.apache.sling.feature.Artifact;
-import org.apache.sling.feature.Bundles;
-import org.apache.sling.feature.Configuration;
-import org.apache.sling.feature.Configurations;
-import org.apache.sling.feature.Extension;
-import org.apache.sling.feature.Feature;
-import org.apache.sling.feature.FeatureConstants;
-import org.apache.sling.feature.KeyValueMap;
-import org.osgi.resource.Capability;
-import org.osgi.resource.Requirement;
-
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Enumeration;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -45,6 +33,17 @@ import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
 import javax.json.JsonWriter;
 
+import org.apache.sling.feature.Artifact;
+import org.apache.sling.feature.Bundles;
+import org.apache.sling.feature.Configuration;
+import org.apache.sling.feature.Configurations;
+import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.FeatureConstants;
+import org.apache.sling.feature.KeyValueMap;
+import org.osgi.resource.Capability;
+import org.osgi.resource.Requirement;
+
 /**
  * Utility methods for the builders
  */
@@ -53,7 +52,7 @@ class BuilderUtil {
     enum ArtifactMerge {
         LATEST,
         HIGHEST
-    };
+    }
 
     static boolean contains(String key, Iterable<Map.Entry<String, String>> iterable) {
         if (iterable != null) {
@@ -149,9 +148,9 @@ class BuilderUtil {
                 if ( current.compareTo(cfg) == 0 ) {
                     found = true;
                     // merge / override properties
-                    final Iterator<String> i = cfg.getProperties().keySet().iterator();
-                    while ( i.hasNext() ) {
-                        final String key = i.next();
+                    final Enumeration<String> i = cfg.getProperties().keys();
+                    while ( i.hasMoreElements() ) {
+                        final String key = i.nextElement();
                         current.getProperties().put(key, cfg.getProperties().get(key));
                     }
                     break;
