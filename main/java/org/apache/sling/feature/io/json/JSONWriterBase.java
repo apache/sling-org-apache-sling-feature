@@ -21,6 +21,7 @@ import java.io.Writer;
 import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 
@@ -113,13 +114,14 @@ abstract class JSONWriterBase {
 
             generator.writeStartObject(key);
 
-            for(final Map.Entry<String, Object> prop : cfg.getProperties().entrySet()) {
-                final String name = prop.getKey();
+            final Enumeration<String> e = cfg.getProperties().keys();
+            while ( e.hasMoreElements() ) {
+                final String name = e.nextElement();
                 if ( Configuration.PROP_ARTIFACT_ID.equals(name) ) {
                     continue;
                 }
 
-                final Object val = prop.getValue();
+                final Object val = cfg.getProperties().get(name);
 
                 String typePostFix = null;
                 final Object typeCheck;
