@@ -16,11 +16,13 @@
  */
 package org.apache.sling.feature;
 
+import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -159,7 +161,7 @@ public class Configuration
                 + "]";
     }
 
-    public static class OrderedDictionary extends Dictionary<String, Object> {
+    public static class OrderedDictionary extends Dictionary<String, Object> implements Map<String, Object> {
 
         private static class EnumarationImpl<E> implements Enumeration<E> {
             private final Iterator<E> iterator;
@@ -222,8 +224,65 @@ public class Configuration
         }
 
         @Override
+		public boolean containsKey(Object key) {
+			return this.map.containsKey(key);
+		}
+
+		@Override
+		public boolean containsValue(Object value) {
+			return this.map.containsValue(value);
+		}
+
+		@Override
+		public void putAll(Map<? extends String, ? extends Object> m) {
+			this.map.putAll(m);
+		}
+
+		@Override
+		public void clear() {
+			this.map.clear();
+		}
+
+		@Override
+		public Set<String> keySet() {
+			return this.map.keySet();
+		}
+
+		@Override
+		public Collection<Object> values() {
+			return this.map.values();
+		}
+
+		@Override
+		public Set<Entry<String, Object>> entrySet() {
+			return this.map.entrySet();
+		}
+
+		@Override
         public boolean equals(Object o) {
         	if ( !(o instanceof OrderedDictionary) ) {
+        		if ( o instanceof Dictionary ) {
+        			@SuppressWarnings("rawtypes")
+					final Dictionary other = (Dictionary)o;
+        			if (other.size() == this.size() ) {
+        				final Enumeration<String> iter = this.keys();
+        				while ( iter.hasMoreElements() ) {
+        					final String key = iter.nextElement();
+        					final Object ov = other.get(key);
+        					if ( ov == null ) {
+        						return false;
+        					}
+        					final Object tv = this.get(key);
+        					if ( !tv.equals(ov) ) {
+        						return false;
+        					}
+        				}
+        				return true;
+        			}
+        		}
+        		if ( o instanceof Map ) {
+        			return map.equals(o);
+        		}
         		return false;
         	}
             return map.equals(((OrderedDictionary)o).map);
@@ -233,5 +292,10 @@ public class Configuration
         public int hashCode() {
             return map.hashCode();
         }
+
+		@Override
+		public String toString() {
+			return map.toString();
+		}
     }
 }
