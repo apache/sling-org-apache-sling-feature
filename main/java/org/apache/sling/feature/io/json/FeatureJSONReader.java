@@ -53,13 +53,13 @@ public class FeatureJSONReader extends JSONReaderBase {
     }
 
     /** The read feature. */
-    private Feature feature;
+    protected Feature feature;
 
     /**
      * Private constructor
      * @param location Optional location
      */
-    FeatureJSONReader(final String location) {
+    protected FeatureJSONReader(final String location) {
         super(location);
     }
 
@@ -69,19 +69,15 @@ public class FeatureJSONReader extends JSONReaderBase {
      * @return The feature object
      * @throws IOException If an IO error occurs or the JSON is not valid.
      */
-    private Feature readFeature(final Reader reader)
+    protected Feature readFeature(final Reader reader)
     throws IOException {
         final JsonObject json = Json.createReader(new StringReader(minify(reader))).readObject();
         final Map<String, Object> map = getJsonMap(json);
 
         checkModelVersion(map);
 
-        if ( !map.containsKey(JSONConstants.FEATURE_ID) ) {
-            throw new IOException(this.exceptionPrefix + "Feature id is missing");
-        }
-        final Object idObj = map.get(JSONConstants.FEATURE_ID);
-        checkType(JSONConstants.FEATURE_ID, idObj, String.class);
-        this.feature = new Feature(ArtifactId.parse(idObj.toString()));
+        final ArtifactId featureId = this.getFeatureId(map);
+        this.feature = new Feature(featureId);
         this.feature.setLocation(this.location);
 
         // title, description, vendor and license
@@ -114,6 +110,15 @@ public class FeatureJSONReader extends JSONReaderBase {
         if (!"1".equals(modelVersion)) {
             throw new IOException("Unsupported model version: " + modelVersion);
         }
+    }
+
+    protected ArtifactId getFeatureId(final Map<String, Object> map) throws IOException {
+        if ( !map.containsKey(JSONConstants.FEATURE_ID) ) {
+            throw new IOException(this.exceptionPrefix + "Feature id is missing");
+        }
+        final Object idObj = map.get(JSONConstants.FEATURE_ID);
+        checkType(JSONConstants.FEATURE_ID, idObj, String.class);
+        return ArtifactId.parse(idObj.toString());
     }
 }
 

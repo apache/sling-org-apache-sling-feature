@@ -29,7 +29,6 @@ import org.apache.sling.feature.Feature;
  * Simple JSON writer for a feature
  */
 public class FeatureJSONWriter extends JSONWriterBase {
-    private FeatureJSONWriter() {}
 
     /**
      * Writes the feature to the writer.
@@ -44,12 +43,16 @@ public class FeatureJSONWriter extends JSONWriterBase {
         w.writeFeature(writer, feature);
     }
 
-    private void writeFeature(final Writer writer, final Feature feature)
+    protected FeatureJSONWriter() {
+    	// protected constructor for subclassing
+    }
+
+    protected void writeFeature(final Writer writer, final Feature feature)
     throws IOException {
         JsonGenerator generator = newGenerator(writer);
         generator.writeStartObject();
 
-        writeProperty(generator, JSONConstants.FEATURE_ID, feature.getId().toMvnId());
+        writeFeatureId(generator, feature);
 
         // title, description, vendor, license
         writeProperty(generator, JSONConstants.FEATURE_TITLE, feature.getTitle());
@@ -89,5 +92,10 @@ public class FeatureJSONWriter extends JSONWriterBase {
         writeExtensions(generator, feature.getExtensions(), feature.getConfigurations());
 
         generator.writeEnd().close();
+    }
+
+    protected void writeFeatureId(final JsonGenerator generator,
+    		final Feature feature) {
+        writeProperty(generator, JSONConstants.FEATURE_ID, feature.getId().toMvnId());
     }
 }
