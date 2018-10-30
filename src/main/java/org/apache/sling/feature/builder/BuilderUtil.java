@@ -228,29 +228,19 @@ class BuilderUtil {
                 break;
 
             case ARTIFACTS : for(final Artifact a : source.getArtifacts()) {
-                // use artifactMergeAlg
-                boolean add = true;
-                for(final Artifact targetArtifact : target.getArtifacts()) {
-                    if ( targetArtifact.getId().isSame(a.getId()) ) {
-                        if ( artifactMergeAlg == ArtifactMerge.HIGHEST ) {
-                            if ( targetArtifact.getId().getOSGiVersion().compareTo(a.getId().getOSGiVersion()) > 0 ) {
-                                add = false;
-                            } else {
-                                target.getArtifacts().remove(targetArtifact);
-                            }
-                        } else { // latest
-
-                            target.getArtifacts().remove(targetArtifact);
-                        }
-                        break;
+                    // use artifactMergeAlg
+                    boolean replace = true;
+                    if ( artifactMergeAlg == ArtifactMerge.HIGHEST ) {
+                         final Artifact existing = target.getArtifacts().getSame(a.getId());
+                         if ( existing != null && existing.getId().getOSGiVersion().compareTo(a.getId().getOSGiVersion()) > 0 ) {
+                            replace = false;
+                         }
                     }
-                }
-
-                if ( add ) {
+                    if ( replace ) {
+                    target.getArtifacts().removeSame(a.getId());
                     target.getArtifacts().add(a);
                 }
-
-            }
+                }
                 break;
         }
     }

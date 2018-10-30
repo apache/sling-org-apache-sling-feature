@@ -28,10 +28,12 @@ import java.util.Set;
 /**
  * A configuration has either
  * <ul>
- *   <li>a pid
- *   <li>or a factory pid and a name
+ * <li>a pid
+ * <li>or a factory pid and a name
  * </ul>
  * and properties.
+ *
+ * This class is not thread-safe.
  */
 public class Configuration
     implements Comparable<Configuration> {

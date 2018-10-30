@@ -19,19 +19,17 @@ package org.apache.sling.feature;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * Bundles groups a list of bundles {@code Artifact} and provides a means
- * to sort them based on start order.
+ * Groups a list of bundles {@code Artifact} and provides a means to sort them
+ * based on start order. This class is not thread-safe.
  */
-public class Bundles implements Iterable<Artifact> {
+public class Bundles extends Artifacts {
 
-    /** The list of bundles. */
-    private final List<Artifact> bundles = new ArrayList<>();
+    private static final long serialVersionUID = 5134067638024826299L;
 
     /**
      * Get the map of all bundles sorted by start order. The map is sorted
@@ -57,7 +55,7 @@ public class Bundles implements Iterable<Artifact> {
             }
         });
 
-        for(final Artifact bundle : this.bundles) {
+        for (final Artifact bundle : this) {
             final int startOrder = bundle.getStartOrder();
             List<Artifact> list = startOrderMap.get(startOrder);
             if ( list == null ) {
@@ -67,115 +65,5 @@ public class Bundles implements Iterable<Artifact> {
             list.add(bundle);
         }
         return Collections.unmodifiableMap(startOrderMap);
-    }
-
-    /**
-     * Add an artifact as a bundle.
-     * @param bundle The bundle
-     */
-    public void add(final Artifact bundle) {
-        this.bundles.add(bundle);
-    }
-
-    /**
-     * Remove the exact artifact.
-     * All start orders are searched for such an artifact. The first one found is removed.
-     * @param id The artifact id
-     * @return {@code true} if the artifact has been removed
-     */
-    public boolean removeExact(final ArtifactId id) {
-        for(final Artifact artifact : this.bundles) {
-            if ( artifact.getId().equals(id)) {
-                this.bundles.remove(artifact);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Remove the same artifact, neglecting the version.
-     * All start orders are searched for such an artifact. The first one found is removed.
-     * @param id The artifact id
-     * @return {@code true} if the artifact has been removed
-     */
-    public boolean removeSame(final ArtifactId id) {
-        for(final Artifact artifact : this.bundles) {
-            if ( artifact.getId().isSame(id)) {
-                this.bundles.remove(artifact);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Clear the bundles list.
-     */
-    public void clear() {
-        this.bundles.clear();
-    }
-
-    /**
-     * Get the artifact for the given id, neglecting the version
-     * @param id The artifact id
-     * @return A map entry with start order and artifact, {@code null} otherwise
-     */
-    public Artifact getSame(final ArtifactId id) {
-        for(final Artifact bundle : this.bundles) {
-            if ( bundle.getId().isSame(id)) {
-                return bundle;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Checks whether the exact artifact is available
-     * @param id The artifact id.
-     * @return {@code true} if the artifact exists
-     */
-    public boolean containsExact(final ArtifactId id) {
-        for(final Artifact entry : this.bundles) {
-            if ( entry.getId().equals(id)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Checks whether the same artifact is available, neglecting the version
-     * @param id The artifact id.
-     * @return {@code true} if the artifact exists
-     */
-    public boolean containsSame(final ArtifactId id) {
-        for(final Artifact entry : this.bundles) {
-            if ( entry.getId().isSame(id)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Iterate over all bundles
-     */
-    @Override
-    public Iterator<Artifact> iterator() {
-        return Collections.unmodifiableList(this.bundles).iterator();
-    }
-
-    /**
-     * Check whether this container has bundles
-     * @return {@code true} if there are no bundles.
-     */
-    public boolean isEmpty() {
-        return this.bundles.isEmpty();
-    }
-
-    @Override
-    public String toString() {
-        return "Bundles " + this.bundles;
     }
 }

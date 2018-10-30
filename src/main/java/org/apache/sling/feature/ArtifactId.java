@@ -16,18 +16,20 @@
  */
 package org.apache.sling.feature;
 
-import org.osgi.framework.Version;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.osgi.framework.Version;
+
 /**
  * An artifact identifier.
  *
- * An artifact is described by it's Apache Maven coordinates consisting of group id,
- * artifact id, and version. In addition, the classifier and type can be specified.
- * If no type is specified, {@code jar} is assumed.
+ * An artifact is described by it's Apache Maven coordinates consisting of group
+ * id, artifact id, and version. In addition, the classifier and type can be
+ * specified. If no type is specified, {@code jar} is assumed.
+ *
+ * This class is not thread-safe.
  */
 public class ArtifactId implements Comparable<ArtifactId> {
 

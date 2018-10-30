@@ -20,6 +20,8 @@ import java.util.ArrayList;
 
 /**
  * A container for extensions
+ *
+ * This class is not thread-safe.
  */
 public class Extensions extends ArrayList<Extension> {
 

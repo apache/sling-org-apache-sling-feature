@@ -19,10 +19,12 @@ package org.apache.sling.feature;
 /**
  * An artifact consists of
  * <ul>
- *   <li>An id
- *   <li>metadata
- *   <li>an optional start order property (which is part of the metadata)
+ * <li>An id
+ * <li>metadata
+ * <li>an optional start order property (which is part of the metadata)
  * </ul>
+ *
+ * This class is not thread-safe.
  */
 public class Artifact implements Comparable<Artifact> {
 

@@ -23,6 +23,8 @@ import java.util.TreeMap;
 
 /**
  * Helper class to hold key value pairs.
+ *
+ * This class is not thread-safe.
  */
 public class KeyValueMap
     implements Iterable<Map.Entry<String, String>> {

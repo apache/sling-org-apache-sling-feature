@@ -20,6 +20,8 @@ import java.util.ArrayList;
 
 /**
  * A container for configurations.
+ *
+ * This class is not thread-safe.
  */
 public class Configurations extends ArrayList<Configuration> {
 

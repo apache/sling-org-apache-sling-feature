@@ -16,17 +16,16 @@
  */
 package org.apache.sling.feature;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * An Extension can either be of type
  * <ul>
- *   <li>Artifacts : it contains a list of artifacts
- *   <li>Text : it contains text
- *   <li>JSON : it contains a blob of JSON
+ * <li>Artifacts : it contains a list of artifacts
+ * <li>Text : it contains text
+ * <li>JSON : it contains a blob of JSON
  * </ul>
  *
+ * This class is not thread-safe.
+ * 
  * @see ExtensionType
  */
 public class Extension {
@@ -38,7 +37,7 @@ public class Extension {
     private final String name;
 
     /** The list of artifacts (if type artifacts) */
-    private final List<Artifact> artifacts;
+    private final Artifacts artifacts;
 
     /** The text or json (if corresponding type) */
     private String text;
@@ -63,7 +62,7 @@ public class Extension {
         this.name = name;
         this.required = required;
         if ( t == ExtensionType.ARTIFACTS ) {
-            this.artifacts = new ArrayList<>();
+            this.artifacts = new Artifacts();
         } else {
             this.artifacts = null;
         }
@@ -154,7 +153,7 @@ public class Extension {
      * @return The artifacts
      * @throws IllegalStateException if the type is not {@code ExtensionType#ARTIFACTS}
      */
-    public List<Artifact> getArtifacts() {
+    public Artifacts getArtifacts() {
         if ( type != ExtensionType.ARTIFACTS ) {
             throw new IllegalStateException();
         }

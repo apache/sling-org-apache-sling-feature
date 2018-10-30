@@ -28,14 +28,16 @@ import org.osgi.resource.Requirement;
 /**
  * A feature consists of
  * <ul>
- *   <li>A unique id {@link ArtifactId}
- *   <li>Bundles
- *   <li>Configurations
- *   <li>Framework properties
- *   <li>Requirements and capabilities
- *   <li>Includes
- *   <li>Extensions
+ * <li>A unique id {@link ArtifactId}
+ * <li>Bundles
+ * <li>Configurations
+ * <li>Framework properties
+ * <li>Requirements and capabilities
+ * <li>Includes
+ * <li>Extensions
  * </ul>
+ *
+ * This class is not thread-safe.
  */
 public class Feature implements Comparable<Feature> {
 

@@ -24,13 +24,16 @@ import java.util.Map;
 /**
  * A include is an inclusion of a feature with optional removals of
  * <ul>
- *   <li>Configurations / configuration properties
- *   <li>Bundles
- *   <li>Framework properties
- *   <li>Extensions or artifacts from extensions
+ * <li>Configurations / configuration properties
+ * <li>Bundles
+ * <li>Framework properties
+ * <li>Extensions or artifacts from extensions
  * </ul>
  *
- *  TODO - requirement, capabilities
+ * This class is not thread-safe.
+ *
+ * TODO - requirement, capabilities
+ *
  */
 public class Include implements Comparable<Include> {
 
