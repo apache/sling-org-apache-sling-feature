@@ -21,12 +21,10 @@ import org.apache.sling.feature.Feature;
 import org.osgi.annotation.versioning.ConsumerType;
 
 /**
- * A feature extension handler can merge a feature of a particular type
- * and also post process the final assembled feature.
+ * A feature merge handler can merge a feature of a particular type.
  */
 @ConsumerType
-public interface FeatureExtensionHandler {
-
+public interface MergeHandler {
     /**
      * Checks whether this merger can merge extensions with that name
      * @param extension The extension
@@ -41,20 +39,11 @@ public interface FeatureExtensionHandler {
      * extensions share the same name and type and that
      * {@link #canMerge(Extension)} returned {@code true}.
      *
+     * @param context Context for the handler
      * @param target The target feature
      * @param source The source feature
      * @param extension The extension
      * @throws IllegalStateException If the extensions can't be merged
      */
-    void merge(Feature target, Feature source, Extension extension);
-
-    /**
-     * Post process the feature with respect to the extension.
-     * Post processing is invoked after all extensions have been merged.
-     * This method is called regardless whether {@link #canMerge(Extension)} returned {@code true} or not.
-     * @param feature The feature
-     * @param extension The extension
-     * @throws IllegalStateException If post processing failed
-     */
-    void postProcess(Feature feature, Extension extension);
+    void merge(HandlerContext context, Feature target, Feature source, Extension targetEx, Extension sourceEx);
 }
