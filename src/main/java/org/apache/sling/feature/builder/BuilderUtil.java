@@ -260,9 +260,9 @@ class BuilderUtil {
                             + " : " + current.getType() + " and " + ext.getType());
                     }
                     boolean handled = false;
-                    for(final FeatureExtensionHandler fem : context.getFeatureExtensionHandlers()) {
-                        if ( fem.canMerge(current) ) {
-                            fem.merge(target, source, current);
+                    for(final MergeHandler me : context.getMergeExtensions()) {
+                        if ( me.canMerge(current) ) {
+                            me.merge(() -> context.getArtifactProvider(), target, source, current, ext);
                             handled = true;
                             break;
                         }
@@ -279,8 +279,8 @@ class BuilderUtil {
         }
         // post processing
         for(final Extension ext : target.getExtensions()) {
-            for(final FeatureExtensionHandler fem : context.getFeatureExtensionHandlers()) {
-                fem.postProcess(target, ext);
+            for(final PostProcessHandler ppe : context.getPostProcessExtensions()) {
+                ppe.postProcess(() -> context.getArtifactProvider(), target, ext);
             }
         }
     }

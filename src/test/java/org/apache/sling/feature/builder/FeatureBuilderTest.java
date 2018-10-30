@@ -16,23 +16,6 @@
  */
 package org.apache.sling.feature.builder;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.felix.utils.resource.CapabilityImpl;
 import org.apache.felix.utils.resource.RequirementImpl;
 import org.apache.sling.feature.Artifact;
@@ -47,6 +30,23 @@ import org.apache.sling.feature.KeyValueMap;
 import org.junit.Test;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
+
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class FeatureBuilderTest {
 
@@ -248,7 +248,7 @@ public class FeatureBuilderTest {
 
         assertFalse(base.isAssembled());
 
-        final Feature assembled = FeatureBuilder.assemble(base, new BuilderContext(provider));
+        final Feature assembled = FeatureBuilder.assemble(base, new BuilderContext(provider, null));
 
         equals(base, assembled);
     }
@@ -313,7 +313,7 @@ public class FeatureBuilderTest {
         result.getConfigurations().add(co3);
 
         // assemble
-        final Feature assembled = FeatureBuilder.assemble(base, new BuilderContext(provider));
+        final Feature assembled = FeatureBuilder.assemble(base, new BuilderContext(provider, null));
 
         // and test
         equals(result, assembled);
@@ -331,12 +331,11 @@ public class FeatureBuilderTest {
 
         // assemble application, it should only contain feature b as a is included by b
         Feature[] features = FeatureBuilder.deduplicate(new BuilderContext(new FeatureProvider() {
-
             @Override
             public Feature provide(ArtifactId id) {
                 return null;
             }
-        }), a, b);
+        }, null), a, b);
         assertEquals(1, features.length);
         assertEquals(idB, features[0].getId());
     }
@@ -355,7 +354,7 @@ public class FeatureBuilderTest {
             public Feature provide(ArtifactId id) {
                 return null;
             }
-        }), a, b);
+        }, null), a, b);
         assertEquals(1, features.length);
         assertEquals(idB, features[0].getId());
     }
@@ -384,7 +383,7 @@ public class FeatureBuilderTest {
                 }
                 return null;
             }
-        }));
+        }, null));
         final Set<ArtifactId> set = new HashSet<>();
         for(final Artifact c : feature.getBundles()) {
             set.add(c.getId());
@@ -418,7 +417,7 @@ public class FeatureBuilderTest {
                 }
                 return null;
             }
-        }));
+        }, null));
         final Set<ArtifactId> set = new HashSet<>();
         for(final Artifact c : feature.getBundles()) {
             set.add(c.getId());
@@ -450,7 +449,7 @@ public class FeatureBuilderTest {
                     }
                     return null;
                 }
-            }));
+            }, null));
             fail();
         } catch ( final IllegalStateException ise) {
             // expected
@@ -483,7 +482,7 @@ public class FeatureBuilderTest {
                 }
                 return null;
             }
-        }));
+        }, null));
         final Set<ArtifactId> set = new HashSet<>();
         for(final Artifact c : feature.getExtensions().getByName("foo").getArtifacts()) {
             set.add(c.getId());
@@ -519,7 +518,7 @@ public class FeatureBuilderTest {
                 }
                 return null;
             }
-        }));
+        }, null));
         final Set<ArtifactId> set = new HashSet<>();
         for(final Artifact c : feature.getExtensions().getByName("foo").getArtifacts()) {
             set.add(c.getId());
@@ -553,7 +552,7 @@ public class FeatureBuilderTest {
                     }
                     return null;
                 }
-            }));
+            }, null));
             fail();
         } catch ( final IllegalStateException ise) {
             // expected
@@ -577,7 +576,7 @@ public class FeatureBuilderTest {
             public Feature provide(ArtifactId id) {
                 return null;
             }
-        }), a, b);
+        }, null), a, b);
         final Extension list = target.getExtensions().getByName(FeatureConstants.EXTENSION_NAME_ASSEMBLED_FEATURES);
         assertNotNull(list);
         assertEquals(1, list.getArtifacts().size());
@@ -626,7 +625,7 @@ public class FeatureBuilderTest {
             {
                 return null;
             }
-        },override, null), aFeature, bFeature);
+        }, null, override, null), aFeature, bFeature);
 
         KeyValueMap vars = new KeyValueMap();
         vars.putAll(kvMapA);
@@ -647,7 +646,7 @@ public class FeatureBuilderTest {
                 {
                     return null;
                 }
-            }, override, null), aFeature, bFeature);
+            }, null, override, null), aFeature, bFeature);
             fail("Excepted merge exception");
         } catch (IllegalStateException expected) {}
 
@@ -660,7 +659,7 @@ public class FeatureBuilderTest {
             {
                 return null;
             }
-        }, override, null), aFeature, bFeature);
+        }, null, override, null), aFeature, bFeature);
 
         vars = new KeyValueMap();
         vars.putAll(kvMapA);
@@ -679,7 +678,7 @@ public class FeatureBuilderTest {
             {
                 return null;
             }
-        }, override, null), aFeature, bFeature);
+        }, null, override, null), aFeature, bFeature);
 
         vars.put("var2", null);
         assertTrue(cFeature.getVariables().equals(vars));

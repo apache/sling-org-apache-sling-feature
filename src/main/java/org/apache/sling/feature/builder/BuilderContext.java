@@ -16,22 +16,23 @@
  */
 package org.apache.sling.feature.builder;
 
+import org.apache.sling.feature.KeyValueMap;
+
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.apache.sling.feature.KeyValueMap;
-
 /**
  * Builder context holds services used by  {@link FeatureBuilder}.
  */
 public class BuilderContext {
 
+    private final ArtifactProvider artifactProvider;
     private final FeatureProvider provider;
-
-    private final List<FeatureExtensionHandler> featureExtensionHandlers = new CopyOnWriteArrayList<>();
+    private final List<MergeHandler> mergeExtensions = new CopyOnWriteArrayList<>();
+    private final List<PostProcessHandler> postProcessExtensions = new CopyOnWriteArrayList<>();
     private final KeyValueMap variables = new KeyValueMap();
     private final Map<String, String> properties = new LinkedHashMap<>();
 
@@ -41,19 +42,20 @@ public class BuilderContext {
      * @param provider A provider providing the included features
      * @throws IllegalArgumentException If feature provider is {@code null}
      */
-    public BuilderContext(final FeatureProvider provider) {
-        this(provider, null, null);
+    public BuilderContext(final FeatureProvider provider, final ArtifactProvider ap) {
+        this(provider, ap, null, null);
     }
 
     /**
      * Create a new context
      *
      * @param provider A provider providing the included features
+     * @param ap
      * @param variables A map of variables to override on feature merge
      * @param properties A map of framework properties to override on feature merge
      * @throws IllegalArgumentException If feature provider is {@code null}
      */
-    public BuilderContext(final FeatureProvider provider, KeyValueMap variables, Map<String, String> properties) {
+    public BuilderContext(final FeatureProvider provider, ArtifactProvider ap, KeyValueMap variables, Map<String, String> properties) {
         if (variables != null) {
             this.variables.putAll(variables);
         }
@@ -63,17 +65,22 @@ public class BuilderContext {
         if ( provider == null ) {
             throw new IllegalArgumentException("Provider must not be null");
         }
+        this.artifactProvider = ap;
         this.provider = provider;
     }
 
-    /**
-     * Add a feature extension handlers
-     * @param handlers Handler(s) to add
-     * @return This instance
-     */
-    public BuilderContext add(final FeatureExtensionHandler... handlers) {
-        featureExtensionHandlers.addAll(Arrays.asList(handlers));
+    public BuilderContext addMergeExtensions(final MergeHandler... extensions) {
+        mergeExtensions.addAll(Arrays.asList(extensions));
         return this;
+    }
+
+    public BuilderContext addPostProcessExtensions(final PostProcessHandler... extensions) {
+        postProcessExtensions.addAll(Arrays.asList(extensions));
+        return this;
+    }
+
+    ArtifactProvider getArtifactProvider() {
+        return this.artifactProvider;
     }
 
     KeyValueMap getVariables() {
@@ -92,11 +99,15 @@ public class BuilderContext {
     }
 
     /**
-     * Get the list of extension handlers
-     * @return The list of handlers
+     * Get the list of merge extensions
+     * @return The list of extenion
      */
-    List<FeatureExtensionHandler> getFeatureExtensionHandlers() {
-        return this.featureExtensionHandlers;
+    List<MergeHandler> getMergeExtensions() {
+        return this.mergeExtensions;
+    }
+
+    List<PostProcessHandler> getPostProcessExtensions() {
+        return this.postProcessExtensions;
     }
 
     /**
@@ -105,8 +116,9 @@ public class BuilderContext {
      * @return Cloned context
      */
     BuilderContext clone(final FeatureProvider featureProvider) {
-        final BuilderContext ctx = new BuilderContext(featureProvider, this.variables, this.properties);
-        ctx.featureExtensionHandlers.addAll(featureExtensionHandlers);
+        final BuilderContext ctx = new BuilderContext(featureProvider, this.artifactProvider, this.variables, this.properties);
+        ctx.mergeExtensions.addAll(mergeExtensions);
+        ctx.postProcessExtensions.addAll(postProcessExtensions);
         return ctx;
     }
 }
