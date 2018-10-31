@@ -75,6 +75,8 @@ public class Feature implements Comparable<Feature> {
     /** Flag indicating whether this is an assembled feature */
     private volatile boolean assembled = false;
 
+    /** Flag indicating whether this is a final feature */
+    private volatile boolean finalFlag = false;
 
     /** The optional include. */
     private volatile Include include;
@@ -259,8 +261,29 @@ public class Feature implements Comparable<Feature> {
     }
 
     /**
+     * Check whether the feature is final A final feature can't be included by other
+     * features.
+     *
+     * @return {@code true} if it is final, {@code false} otherwise
+     */
+    public boolean isFinal() {
+        return finalFlag;
+    }
+
+    /**
+     * Set the final flag
+     *
+     * @param flag The flag
+     */
+    public void setFinal(final boolean flag) {
+        this.finalFlag = flag;
+    }
+
+    /**
      * Check whether the feature is already assembled
-     * @return {@code true} if it is assembled, {@code false} if it needs to be assembled
+     *
+     * @return {@code true} if it is assembled, {@code false} if it needs to be
+     *         assembled
      */
     public boolean isAssembled() {
         return assembled;
@@ -297,6 +320,7 @@ public class Feature implements Comparable<Feature> {
         result.setVendor(this.getVendor());
         result.setLicense(this.getLicense());
         result.setAssembled(this.isAssembled());
+        result.setFinal(this.isFinal());
 
         // variables
         result.getVariables().putAll(this.getVariables());

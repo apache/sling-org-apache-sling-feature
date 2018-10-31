@@ -302,6 +302,10 @@ public abstract class FeatureBuilder {
             if ( f == null ) {
                 throw new IllegalStateException("Unable to find included feature " + i.getId());
             }
+            if (f.isFinal()) {
+                throw new IllegalStateException(
+                        "Included feature " + i.getId() + " is marked as final and can't be used in an include.");
+            }
             final Feature af = internalAssemble(processedFeatures, f, context);
 
             // process include instructions
