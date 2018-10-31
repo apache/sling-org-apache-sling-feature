@@ -80,6 +80,13 @@ public class FeatureJSONReader extends JSONReaderBase {
         this.feature = new Feature(featureId);
         this.feature.setLocation(this.location);
 
+        // final flag
+        if (map.containsKey(JSONConstants.FEATURE_FINAL)) {
+            final Object finalObj = map.get(JSONConstants.FEATURE_FINAL);
+            checkType(JSONConstants.FEATURE_FINAL, finalObj, Boolean.class);
+            this.feature.setFinal(((Boolean) finalObj).booleanValue());
+        }
+
         // title, description, vendor and license
         this.feature.setTitle(getProperty(map, JSONConstants.FEATURE_TITLE));
         this.feature.setDescription(getProperty(map, JSONConstants.FEATURE_DESCRIPTION));

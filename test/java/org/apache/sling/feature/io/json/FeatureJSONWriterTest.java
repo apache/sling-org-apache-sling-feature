@@ -16,18 +16,24 @@
  */
 package org.apache.sling.feature.io.json;
 
-import org.apache.sling.feature.Feature;
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
+import java.io.InputStreamReader;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.util.Arrays;
 
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
-import java.io.*;
-import java.util.Arrays;
+import javax.json.JsonValue;
+import javax.json.JsonValue.ValueType;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import org.apache.sling.feature.Feature;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class FeatureJSONWriterTest {
 
@@ -101,6 +107,29 @@ public class FeatureJSONWriterTest {
             JsonArray refJsonArray = refJson.getJsonArray("repoinit:TEXT|false");
             JsonArray resultJsonArray = resultJson.getJsonArray("repoinit:TEXT|false");
             Assert.assertEquals(refJsonArray, resultJsonArray);
+        }
+    }
+
+    @Test
+    public void testFinalFlag() throws Exception {
+        // no final flag set in test feature
+        final Feature featureA = U.readFeature("test");
+        try (final StringWriter writer = new StringWriter()) {
+            FeatureJSONWriter.write(writer, featureA);
+            final JsonObject resultJson = Json.createReader(new StringReader(writer.toString())).readObject();
+
+            assertNull(resultJson.get(JSONConstants.FEATURE_FINAL));
+        }
+
+        // final flag set in final feature
+        final Feature featureB = U.readFeature("final");
+        try (final StringWriter writer = new StringWriter()) {
+            FeatureJSONWriter.write(writer, featureB);
+            final JsonObject resultJson = Json.createReader(new StringReader(writer.toString())).readObject();
+
+            final JsonValue val = resultJson.get(JSONConstants.FEATURE_FINAL);
+            assertNotNull(val);
+            assertEquals(ValueType.TRUE, val.getValueType());
         }
     }
 }

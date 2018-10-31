@@ -54,6 +54,10 @@ public class FeatureJSONWriter extends JSONWriterBase {
 
         writeFeatureId(generator, feature);
 
+        if (feature.isFinal()) {
+            generator.write(JSONConstants.FEATURE_FINAL, true);
+        }
+
         // title, description, vendor, license
         writeProperty(generator, JSONConstants.FEATURE_TITLE, feature.getTitle());
         writeProperty(generator, JSONConstants.FEATURE_DESCRIPTION, feature.getDescription());

@@ -16,18 +16,20 @@
  */
 package org.apache.sling.feature.io.json;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Arrays;
+
 import org.apache.sling.feature.Configuration;
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.Extensions;
 import org.apache.sling.feature.Feature;
 import org.junit.Test;
 import org.osgi.resource.Capability;
-
-import java.util.Arrays;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 public class FeatureJSONReaderTest {
 
@@ -74,5 +76,14 @@ public class FeatureJSONReaderTest {
     @Test public void testReadArtifactsExtensions() throws Exception {
         final Feature feature = U.readFeature("artifacts-extension");
         ArtifactsExtensions.testReadArtifactsExtensions(feature);
+    }
+
+    @Test
+    public void testFinalFlag() throws Exception {
+        final Feature featureA = U.readFeature("test");
+        assertFalse(featureA.isFinal());
+
+        final Feature featureB = U.readFeature("final");
+        assertTrue(featureB.isFinal());
     }
 }
