@@ -16,6 +16,18 @@
  */
 package org.apache.sling.feature.io.json;
 
+import org.apache.sling.feature.Artifact;
+import org.apache.sling.feature.ArtifactId;
+import org.apache.sling.feature.Bundles;
+import org.apache.sling.feature.Configuration;
+import org.apache.sling.feature.Configurations;
+import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.ExtensionType;
+import org.apache.sling.feature.Include;
+import org.apache.sling.feature.KeyValueMap;
+import org.osgi.resource.Capability;
+import org.osgi.resource.Requirement;
+
 import java.io.StringReader;
 import java.io.Writer;
 import java.lang.reflect.Array;
@@ -29,18 +41,6 @@ import javax.json.Json;
 import javax.json.JsonStructure;
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonGeneratorFactory;
-
-import org.apache.sling.feature.Artifact;
-import org.apache.sling.feature.ArtifactId;
-import org.apache.sling.feature.Bundles;
-import org.apache.sling.feature.Configuration;
-import org.apache.sling.feature.Configurations;
-import org.apache.sling.feature.Extension;
-import org.apache.sling.feature.ExtensionType;
-import org.apache.sling.feature.Include;
-import org.apache.sling.feature.KeyValueMap;
-import org.osgi.resource.Capability;
-import org.osgi.resource.Requirement;
 
 /**
  * Common functionality for writing JSON
@@ -94,7 +94,7 @@ abstract class JSONWriterBase {
 
     /**
      * Write the list of configurations into a "configurations" element
-     * @param ob The json generator
+     * @param generator The json generator
      * @param cfgs The list of configurations
      */
     protected void writeConfigurations(final JsonGenerator generator, final Configurations cfgs) {
