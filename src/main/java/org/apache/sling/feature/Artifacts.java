@@ -30,7 +30,7 @@ public class Artifacts extends ArrayList<Artifact> {
      * collection, it is not added again.
      *
      * @param artifact The artifact
-     * @return @{code true} if this collection changed as a result of the call
+     * @return {@code true} if this collection changed as a result of the call
      */
     @Override
     public boolean add(final Artifact artifact) {

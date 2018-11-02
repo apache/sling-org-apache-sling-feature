@@ -42,7 +42,8 @@ public interface MergeHandler {
      * @param context Context for the handler
      * @param target The target feature
      * @param source The source feature
-     * @param extension The extension
+     * @param targetEx The target extension
+     * @param sourceEx The source extension
      * @throws IllegalStateException If the extensions can't be merged
      */
     void merge(HandlerContext context, Feature target, Feature source, Extension targetEx, Extension sourceEx);

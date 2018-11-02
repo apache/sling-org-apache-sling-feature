@@ -40,6 +40,7 @@ public class BuilderContext {
      * Create a new context
      *
      * @param provider A provider providing the included features
+     * @param ap An ArtifactProvider to resolve artifact IDs to files
      * @throws IllegalArgumentException If feature provider is {@code null}
      */
     public BuilderContext(final FeatureProvider provider, final ArtifactProvider ap) {
@@ -50,7 +51,7 @@ public class BuilderContext {
      * Create a new context
      *
      * @param provider A provider providing the included features
-     * @param ap
+     * @param ap An ArtifactProvider to resolve artifact IDs to files
      * @param variables A map of variables to override on feature merge
      * @param properties A map of framework properties to override on feature merge
      * @throws IllegalArgumentException If feature provider is {@code null}
