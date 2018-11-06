@@ -18,6 +18,7 @@ package org.apache.sling.feature.builder;
 
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
@@ -252,7 +253,9 @@ class BuilderUtil {
         final BuilderContext context) {
         for(final Extension ext : source.getExtensions()) {
             boolean found = false;
-            for(final Extension current : target.getExtensions()) {
+
+            // Make a defensive copy of the extensions, as the handlers may modify the extensions on the target
+            for(final Extension current : new ArrayList<>(target.getExtensions())) {
                 if ( current.getName().equals(ext.getName()) ) {
                     found = true;
                     if ( current.getType() != ext.getType() ) {
@@ -274,7 +277,20 @@ class BuilderUtil {
                 }
             }
             if ( !found ) {
-                target.getExtensions().add(ext);
+                // The extension isn't found in the target, still call merge to allow handlers to operate on the
+                // first extension being aggregated
+                boolean handled = false;
+                for (final MergeHandler mh : context.getMergeExtensions()) {
+                    if (mh.canMerge(ext)) {
+                        mh.merge(() -> context.getArtifactProvider(), target, source, null, ext);
+                        handled = true;
+                        break;
+                    }
+                }
+                if ( !handled ) {
+                    // no merge handler, just add
+                    target.getExtensions().add(ext);
+                }
             }
         }
         // post processing

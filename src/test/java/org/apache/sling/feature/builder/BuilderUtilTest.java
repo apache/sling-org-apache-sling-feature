@@ -25,11 +25,24 @@ import org.apache.sling.feature.Feature;
 import org.apache.sling.feature.KeyValueMap;
 import org.apache.sling.feature.builder.BuilderUtil.ArtifactMerge;
 import org.junit.Test;
+import org.mockito.Mockito;
 
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.json.JsonString;
+import javax.json.JsonValue;
+import javax.json.stream.JsonGenerator;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -220,6 +233,148 @@ public class BuilderUtilTest {
         assertEquals(2, target.size());
         assertEquals("b", target.get("a"));
         assertEquals("327", target.get("x"));
+    }
+
+    static class TestMergeHandler implements MergeHandler {
+        @Override
+        public boolean canMerge(Extension extension) {
+            return "foo".equals(extension.getName());
+        }
+
+        @Override
+        public void merge(HandlerContext context, Feature target, Feature source, Extension targetEx, Extension sourceEx) {
+            JsonObject tobj = null;
+            if (targetEx != null) {
+                tobj = Json.createReader(new StringReader(targetEx.getJSON())).readObject();
+            }
+            JsonObject sobj = Json.createReader(new StringReader(sourceEx.getJSON())).readObject();
+
+            JsonArrayBuilder ja = Json.createArrayBuilder();
+            if (tobj != null && tobj.containsKey("org")) {
+                JsonArray a = tobj.getJsonArray("org");
+                for (JsonValue o : a) {
+                    if (o instanceof JsonString) {
+                        ja.add(((JsonString) o).getString());
+                    }
+                }
+            }
+            ja.add(source.getId().toMvnId());
+
+            StringWriter sw = new StringWriter();
+            JsonGenerator gen = Json.createGenerator(sw);
+            gen.writeStartObject();
+            copyJsonObject(sobj, gen);
+            gen.write("org", ja.build());
+            gen.writeEnd();
+            gen.close();
+
+            Extension tex = new Extension(ExtensionType.JSON, "foo", false);
+            tex.setJSON(sw.toString());
+            target.getExtensions().remove(targetEx);
+            target.getExtensions().add(tex);
+        }
+
+    }
+
+    static void copyJsonObject(JsonObject obj, JsonGenerator gen, String ... exclusions) {
+        for (Map.Entry<String, JsonValue> entry : obj.entrySet()) {
+            if (Arrays.asList(exclusions).contains(entry.getKey()))
+                continue;
+
+            gen.write(entry.getKey(), entry.getValue());
+        }
+    }
+
+    @Test public void testMergeDefaultExtensionsFirst() {
+        FeatureProvider fp = Mockito.mock(FeatureProvider.class);
+        BuilderContext ctx = new BuilderContext(fp, null);
+        Feature fs = new Feature(ArtifactId.fromMvnId("g:s:1"));
+        Extension e = new Extension(ExtensionType.JSON, "foo", false);
+        e.setJSON("{\"a\": 123}");
+        fs.getExtensions().add(e);
+        Feature ft = new Feature(ArtifactId.fromMvnId("g:t:1"));
+
+        assertEquals("Precondition", 0, ft.getExtensions().size());
+        BuilderUtil.mergeExtensions(ft, fs, ArtifactMerge.LATEST, ctx);
+        assertEquals(1, ft.getExtensions().size());
+
+        Extension actual = ft.getExtensions().get(0);
+        String expected = "{\"a\": 123}";
+
+        JsonReader ar = Json.createReader(new StringReader(actual.getJSON()));
+        JsonReader er = Json.createReader(new StringReader(expected));
+        assertEquals(er.readObject(), ar.readObject());
+    }
+
+    @Test public void testMergeDefaultExtensionsSecond() {
+        FeatureProvider fp = Mockito.mock(FeatureProvider.class);
+        BuilderContext ctx = new BuilderContext(fp, null);
+        Feature fs = new Feature(ArtifactId.fromMvnId("g:s:1"));
+        Extension e = new Extension(ExtensionType.JSON, "foo", false);
+        e.setJSON("[{\"a\": 123}]");
+        fs.getExtensions().add(e);
+        Feature ft = new Feature(ArtifactId.fromMvnId("g:t:1"));
+        Extension et = new Extension(ExtensionType.JSON, "foo", false);
+        et.setJSON("[{\"a\": 456}]");
+        ft.getExtensions().add(et);
+
+        assertEquals("Precondition", 1, ft.getExtensions().size());
+        BuilderUtil.mergeExtensions(ft, fs, ArtifactMerge.LATEST, ctx);
+        assertEquals(1, ft.getExtensions().size());
+
+        Extension actual = ft.getExtensions().get(0);
+        String expected = "[{\"a\": 456}, {\"a\": 123}]";
+
+        JsonReader ar = Json.createReader(new StringReader(actual.getJSON()));
+        JsonReader er = Json.createReader(new StringReader(expected));
+        assertEquals(er.readArray(), ar.readArray());
+    }
+
+    @Test public void testMergeCustomExtensionsFirst() {
+        FeatureProvider fp = Mockito.mock(FeatureProvider.class);
+        BuilderContext ctx = new BuilderContext(fp, null);
+        ctx.addMergeExtensions(new TestMergeHandler());
+        Feature fs = new Feature(ArtifactId.fromMvnId("g:s:1"));
+        Extension e = new Extension(ExtensionType.JSON, "foo", false);
+        e.setJSON("{\"a\": 123}");
+        fs.getExtensions().add(e);
+        Feature ft = new Feature(ArtifactId.fromMvnId("g:t:1"));
+
+        assertEquals("Precondition", 0, ft.getExtensions().size());
+        BuilderUtil.mergeExtensions(ft, fs, ArtifactMerge.LATEST, ctx);
+        assertEquals(1, ft.getExtensions().size());
+
+        Extension actual = ft.getExtensions().get(0);
+        String expected = "{\"a\": 123, \"org\": [\"g:s:1\"]}";
+
+        JsonReader ar = Json.createReader(new StringReader(actual.getJSON()));
+        JsonReader er = Json.createReader(new StringReader(expected));
+        assertEquals(er.readObject(), ar.readObject());
+    }
+
+    @Test public void testMergeCustomExtensionsSecond() {
+        FeatureProvider fp = Mockito.mock(FeatureProvider.class);
+        BuilderContext ctx = new BuilderContext(fp, null);
+        ctx.addMergeExtensions(new TestMergeHandler());
+        Feature fs = new Feature(ArtifactId.fromMvnId("g:s:1"));
+        Extension e = new Extension(ExtensionType.JSON, "foo", false);
+        e.setJSON("{\"a\": 123}");
+        fs.getExtensions().add(e);
+        Feature ft = new Feature(ArtifactId.fromMvnId("g:t:1"));
+        Extension et = new Extension(ExtensionType.JSON, "foo", false);
+        et.setJSON("{\"a\": 123, \"org\": [\"g:s2:2\"]}");
+        ft.getExtensions().add(et);
+
+        assertEquals("Precondition", 1, ft.getExtensions().size());
+        BuilderUtil.mergeExtensions(ft, fs, ArtifactMerge.LATEST, ctx);
+        assertEquals(1, ft.getExtensions().size());
+
+        Extension actual = ft.getExtensions().get(0);
+        String expected = "{\"a\": 123, \"org\": [\"g:s2:2\", \"g:s:1\"]}";
+
+        JsonReader ar = Json.createReader(new StringReader(actual.getJSON()));
+        JsonReader er = Json.createReader(new StringReader(expected));
+        assertEquals(er.readObject(), ar.readObject());
     }
 
     @SafeVarargs
