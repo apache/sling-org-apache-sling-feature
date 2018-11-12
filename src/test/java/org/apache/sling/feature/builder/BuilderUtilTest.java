@@ -31,6 +31,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -39,6 +40,7 @@ import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
 import javax.json.JsonString;
 import javax.json.JsonValue;
@@ -265,6 +267,16 @@ public class BuilderUtilTest {
             gen.writeStartObject();
             copyJsonObject(sobj, gen);
             gen.write("org", ja.build());
+
+            JsonObjectBuilder jo = Json.createObjectBuilder();
+            boolean hasCfg = false;
+            for (Map.Entry<String,String> entry : context.getConfiguration().entrySet()) {
+                jo.add(entry.getKey(), entry.getValue());
+                hasCfg = true;
+            }
+            if (hasCfg)
+                gen.write("cfg", jo.build());
+
             gen.writeEnd();
             gen.close();
 
@@ -331,8 +343,13 @@ public class BuilderUtilTest {
     }
 
     @Test public void testMergeCustomExtensionsFirst() {
+        Map<String, String> m = new HashMap<>();
+        m.put("abc", "def");
+        m.put("hij", "klm");
+
         FeatureProvider fp = Mockito.mock(FeatureProvider.class);
         BuilderContext ctx = new BuilderContext(fp, null);
+        ctx.getHandlerConfiguration().put("TestMergeHandler", m);
         ctx.addMergeExtensions(new TestMergeHandler());
         Feature fs = new Feature(ArtifactId.fromMvnId("g:s:1"));
         Extension e = new Extension(ExtensionType.JSON, "foo", false);
@@ -345,7 +362,7 @@ public class BuilderUtilTest {
         assertEquals(1, ft.getExtensions().size());
 
         Extension actual = ft.getExtensions().get(0);
-        String expected = "{\"a\": 123, \"org\": [\"g:s:1\"]}";
+        String expected = "{\"a\": 123, \"org\": [\"g:s:1\"], \"cfg\":{\"abc\":\"def\",\"hij\":\"klm\"}}";
 
         JsonReader ar = Json.createReader(new StringReader(actual.getJSON()));
         JsonReader er = Json.createReader(new StringReader(expected));

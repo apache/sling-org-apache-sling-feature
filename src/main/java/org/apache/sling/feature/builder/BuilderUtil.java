@@ -16,9 +16,21 @@
  */
 package org.apache.sling.feature.builder;
 
+import org.apache.sling.feature.Artifact;
+import org.apache.sling.feature.Bundles;
+import org.apache.sling.feature.Configuration;
+import org.apache.sling.feature.Configurations;
+import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.FeatureConstants;
+import org.apache.sling.feature.KeyValueMap;
+import org.osgi.resource.Capability;
+import org.osgi.resource.Requirement;
+
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
@@ -33,17 +45,6 @@ import javax.json.JsonStructure;
 import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
 import javax.json.JsonWriter;
-
-import org.apache.sling.feature.Artifact;
-import org.apache.sling.feature.Bundles;
-import org.apache.sling.feature.Configuration;
-import org.apache.sling.feature.Configurations;
-import org.apache.sling.feature.Extension;
-import org.apache.sling.feature.Feature;
-import org.apache.sling.feature.FeatureConstants;
-import org.apache.sling.feature.KeyValueMap;
-import org.osgi.resource.Capability;
-import org.osgi.resource.Requirement;
 
 /**
  * Utility methods for the builders
@@ -265,7 +266,7 @@ class BuilderUtil {
                     boolean handled = false;
                     for(final MergeHandler me : context.getMergeExtensions()) {
                         if ( me.canMerge(current) ) {
-                            me.merge(() -> context.getArtifactProvider(), target, source, current, ext);
+                            me.merge(new HandlerContextImpl(context, me), target, source, current, ext);
                             handled = true;
                             break;
                         }
@@ -282,7 +283,7 @@ class BuilderUtil {
                 boolean handled = false;
                 for (final MergeHandler mh : context.getMergeExtensions()) {
                     if (mh.canMerge(ext)) {
-                        mh.merge(() -> context.getArtifactProvider(), target, source, null, ext);
+                        mh.merge(new HandlerContextImpl(context, mh), target, source, null, ext);
                         handled = true;
                         break;
                     }
@@ -296,7 +297,7 @@ class BuilderUtil {
         // post processing
         for(final Extension ext : target.getExtensions()) {
             for(final PostProcessHandler ppe : context.getPostProcessExtensions()) {
-                ppe.postProcess(() -> context.getArtifactProvider(), target, ext);
+                ppe.postProcess(new HandlerContextImpl(context, ppe), target, ext);
             }
         }
     }
@@ -331,5 +332,46 @@ class BuilderUtil {
             }
         }
         return builder.build();
+    }
+
+    private static class HandlerContextImpl implements HandlerContext {
+        private final ArtifactProvider artifactProvider;
+        private final Map<String, String> configuration;
+
+        public HandlerContextImpl(BuilderContext bc, MergeHandler handler) {
+            artifactProvider = bc.getArtifactProvider();
+            configuration = getHandlerConfiguration(bc, handler);
+        }
+
+        public HandlerContextImpl(BuilderContext bc, PostProcessHandler handler) {
+            artifactProvider = bc.getArtifactProvider();
+            configuration = getHandlerConfiguration(bc, handler);
+        }
+
+        private Map<String, String> getHandlerConfiguration(BuilderContext bc, Object handler) {
+            String name = getHandlerName(handler);
+            Map<String, String> cfg = null;
+            if (name != null) {
+                cfg = bc.getHandlerConfiguration().get(name);
+            }
+            if (cfg != null)
+                return cfg;
+            else
+                return Collections.emptyMap();
+        }
+
+        private static String getHandlerName(Object handler) {
+            return handler.getClass().getSimpleName();
+        }
+
+        @Override
+        public ArtifactProvider getArtifactProvider() {
+            return artifactProvider;
+        }
+
+        @Override
+        public Map<String, String> getConfiguration() {
+            return configuration;
+        }
     }
 }

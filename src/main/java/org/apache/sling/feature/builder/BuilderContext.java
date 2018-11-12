@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -31,6 +32,7 @@ public class BuilderContext {
 
     private final ArtifactProvider artifactProvider;
     private final FeatureProvider provider;
+    private final Map<String, Map<String, String>> extensionConfiguration = new ConcurrentHashMap<>();
     private final List<MergeHandler> mergeExtensions = new CopyOnWriteArrayList<>();
     private final List<PostProcessHandler> postProcessExtensions = new CopyOnWriteArrayList<>();
     private final KeyValueMap variables = new KeyValueMap();
@@ -80,6 +82,16 @@ public class BuilderContext {
         return this;
     }
 
+    /**
+     * Obtain the handler configuration. The object returned can be modified to provide
+     * additional handler configurations.
+     * @return The current handler configuration object. The key is the handler name
+     * and the value is a map of configuration values.
+     */
+    public Map<String, Map<String, String>> getHandlerConfiguration() {
+        return this.extensionConfiguration;
+    }
+
     ArtifactProvider getArtifactProvider() {
         return this.artifactProvider;
     }
@@ -91,6 +103,7 @@ public class BuilderContext {
     Map<String, String> getProperties() {
         return this.properties;
     }
+
     /**
      * Get the feature provider.
      * @return The feature provider
@@ -101,12 +114,16 @@ public class BuilderContext {
 
     /**
      * Get the list of merge extensions
-     * @return The list of extenion
+     * @return The list of merge extensions
      */
     List<MergeHandler> getMergeExtensions() {
         return this.mergeExtensions;
     }
 
+    /**
+     * Get the list of extension post processors
+     * @return The list of post processors
+     */
     List<PostProcessHandler> getPostProcessExtensions() {
         return this.postProcessExtensions;
     }

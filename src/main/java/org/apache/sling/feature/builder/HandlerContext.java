@@ -17,6 +17,8 @@
  */
 package org.apache.sling.feature.builder;
 
+import java.util.Map;
+
 /**
  * Context for an extension handler.
  */
@@ -26,4 +28,11 @@ public interface HandlerContext {
      * @return The artifact provider.
      */
     ArtifactProvider getArtifactProvider();
+
+    /**
+     * Configuration for the handler
+     * @return Map of provided configuration, or an empty map if there is no configuration.
+     * Never {@code null}.
+     */
+    Map<String, String> getConfiguration();
 }
