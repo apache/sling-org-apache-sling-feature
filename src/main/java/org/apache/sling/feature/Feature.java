@@ -343,6 +343,7 @@ public class Feature implements Comparable<Feature> {
         result.setLicense(this.getLicense());
         result.setAssembled(this.isAssembled());
         result.setFinal(this.isFinal());
+        result.setComplete(this.isComplete());
 
         // variables
         result.getVariables().putAll(this.getVariables());
