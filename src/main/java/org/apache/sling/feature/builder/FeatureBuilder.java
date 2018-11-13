@@ -196,7 +196,7 @@ public abstract class FeatureBuilder {
             }
             usedFeatures.add(assembled.getId());
 
-            merge(target, assembled, context, BuilderUtil.ArtifactMerge.HIGHEST);
+            merge(target, assembled, context, context.getMergeAlgorithm());
         }
 
         // append feature list in extension
@@ -321,9 +321,9 @@ public abstract class FeatureBuilder {
             include(af, i);
 
             // and now merge
-            merge(result, af, context, BuilderUtil.ArtifactMerge.LATEST);
+            merge(result, af, context, BuilderContext.ArtifactMergeAlgorithm.LATEST);
 
-            merge(result, feature, context, BuilderUtil.ArtifactMerge.LATEST);
+            merge(result, feature, context, BuilderContext.ArtifactMergeAlgorithm.LATEST);
         }
         processedFeatures.remove(feature.getId().toMvnId());
 
@@ -334,7 +334,7 @@ public abstract class FeatureBuilder {
     private static void merge(final Feature target,
             final Feature source,
             final BuilderContext context,
-            final BuilderUtil.ArtifactMerge mergeAlg) {
+            final BuilderContext.ArtifactMergeAlgorithm mergeAlg) {
         BuilderUtil.mergeVariables(target.getVariables(), source.getVariables(), context);
         BuilderUtil.mergeBundles(target.getBundles(), source.getBundles(), source, mergeAlg);
         BuilderUtil.mergeConfigurations(target.getConfigurations(), source.getConfigurations());

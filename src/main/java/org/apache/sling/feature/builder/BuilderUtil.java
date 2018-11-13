@@ -16,17 +16,6 @@
  */
 package org.apache.sling.feature.builder;
 
-import org.apache.sling.feature.Artifact;
-import org.apache.sling.feature.Bundles;
-import org.apache.sling.feature.Configuration;
-import org.apache.sling.feature.Configurations;
-import org.apache.sling.feature.Extension;
-import org.apache.sling.feature.Feature;
-import org.apache.sling.feature.FeatureConstants;
-import org.apache.sling.feature.KeyValueMap;
-import org.osgi.resource.Capability;
-import org.osgi.resource.Requirement;
-
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -46,15 +35,22 @@ import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
 import javax.json.JsonWriter;
 
+import org.apache.sling.feature.Artifact;
+import org.apache.sling.feature.Bundles;
+import org.apache.sling.feature.Configuration;
+import org.apache.sling.feature.Configurations;
+import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.FeatureConstants;
+import org.apache.sling.feature.KeyValueMap;
+import org.apache.sling.feature.builder.BuilderContext.ArtifactMergeAlgorithm;
+import org.osgi.resource.Capability;
+import org.osgi.resource.Requirement;
+
 /**
  * Utility methods for the builders
  */
 class BuilderUtil {
-
-    enum ArtifactMerge {
-        LATEST,
-        HIGHEST
-    }
 
     static boolean contains(String key, Iterable<Map.Entry<String, String>> iterable) {
         if (iterable != null) {
@@ -118,7 +114,7 @@ class BuilderUtil {
     static void mergeBundles(final Bundles target,
         final Bundles source,
         final Feature originatingFeature,
-        final ArtifactMerge artifactMergeAlg) {
+            final ArtifactMergeAlgorithm artifactMergeAlg) {
         for(final Map.Entry<Integer, List<Artifact>> entry : source.getBundlesByStartOrder().entrySet()) {
             for(final Artifact a : entry.getValue()) {
                 // Record the original feature of the bundle
@@ -128,7 +124,7 @@ class BuilderUtil {
 
                 // version handling - use provided algorithm
                 boolean replace = true;
-                if ( artifactMergeAlg == ArtifactMerge.HIGHEST ) {
+                if (artifactMergeAlg == ArtifactMergeAlgorithm.HIGHEST) {
                     final Artifact existing = target.getSame(a.getId());
                     if ( existing != null && existing.getId().getOSGiVersion().compareTo(a.getId().getOSGiVersion()) > 0 ) {
                         replace = false;
@@ -190,7 +186,7 @@ class BuilderUtil {
     // default merge for extensions
     static void mergeExtensions(final Extension target,
         final Extension source,
-        final ArtifactMerge artifactMergeAlg) {
+            final ArtifactMergeAlgorithm artifactMergeAlg) {
         switch ( target.getType() ) {
             case TEXT : // simply append
                 target.setText(target.getText() + "\n" + source.getText());
@@ -232,7 +228,7 @@ class BuilderUtil {
             case ARTIFACTS : for(final Artifact a : source.getArtifacts()) {
                     // use artifactMergeAlg
                     boolean replace = true;
-                    if ( artifactMergeAlg == ArtifactMerge.HIGHEST ) {
+                if (artifactMergeAlg == ArtifactMergeAlgorithm.HIGHEST) {
                          final Artifact existing = target.getArtifacts().getSame(a.getId());
                          if ( existing != null && existing.getId().getOSGiVersion().compareTo(a.getId().getOSGiVersion()) > 0 ) {
                             replace = false;
@@ -250,7 +246,7 @@ class BuilderUtil {
     // extensions (add/merge)
     static void mergeExtensions(final Feature target,
         final Feature source,
-        final ArtifactMerge artifactMergeAlg,
+            final ArtifactMergeAlgorithm artifactMergeAlg,
         final BuilderContext context) {
         for(final Extension ext : source.getExtensions()) {
             boolean found = false;

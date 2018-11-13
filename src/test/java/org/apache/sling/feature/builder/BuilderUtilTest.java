@@ -16,16 +16,9 @@
  */
 package org.apache.sling.feature.builder;
 
-import org.apache.sling.feature.Artifact;
-import org.apache.sling.feature.ArtifactId;
-import org.apache.sling.feature.Bundles;
-import org.apache.sling.feature.Extension;
-import org.apache.sling.feature.ExtensionType;
-import org.apache.sling.feature.Feature;
-import org.apache.sling.feature.KeyValueMap;
-import org.apache.sling.feature.builder.BuilderUtil.ArtifactMerge;
-import org.junit.Test;
-import org.mockito.Mockito;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -46,9 +39,16 @@ import javax.json.JsonString;
 import javax.json.JsonValue;
 import javax.json.stream.JsonGenerator;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
+import org.apache.sling.feature.Artifact;
+import org.apache.sling.feature.ArtifactId;
+import org.apache.sling.feature.Bundles;
+import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.ExtensionType;
+import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.KeyValueMap;
+import org.apache.sling.feature.builder.BuilderContext.ArtifactMergeAlgorithm;
+import org.junit.Test;
+import org.mockito.Mockito;
 
 public class BuilderUtilTest {
 
@@ -106,7 +106,7 @@ public class BuilderUtilTest {
 
         final Feature orgFeat = new Feature(new ArtifactId("gid", "aid", "123", null, null));
 
-        BuilderUtil.mergeBundles(target, source, orgFeat, ArtifactMerge.HIGHEST);
+        BuilderUtil.mergeBundles(target, source, orgFeat, ArtifactMergeAlgorithm.HIGHEST);
 
         final List<Map.Entry<Integer, Artifact>> result = getBundles(target);
         assertEquals(3, result.size());
@@ -134,7 +134,7 @@ public class BuilderUtilTest {
 
         final Feature orgFeat = new Feature(new ArtifactId("gid", "aid", "123", null, null));
 
-        BuilderUtil.mergeBundles(target, source, orgFeat, ArtifactMerge.LATEST);
+        BuilderUtil.mergeBundles(target, source, orgFeat, ArtifactMergeAlgorithm.LATEST);
 
         final List<Map.Entry<Integer, Artifact>> result = getBundles(target);
         assertEquals(3, result.size());
@@ -152,7 +152,7 @@ public class BuilderUtilTest {
         source.add(createBundle("g/a/1.1", 2));
 
         final Feature orgFeat = new Feature(new ArtifactId("gid", "aid", "123", null, null));
-        BuilderUtil.mergeBundles(target, source, orgFeat, ArtifactMerge.LATEST);
+        BuilderUtil.mergeBundles(target, source, orgFeat, ArtifactMergeAlgorithm.LATEST);
 
         final List<Map.Entry<Integer, Artifact>> result = getBundles(target);
         assertEquals(1, result.size());
@@ -172,7 +172,7 @@ public class BuilderUtilTest {
         source.add(createBundle("g/f/2.5", 3));
 
         final Feature orgFeat = new Feature(new ArtifactId("gid", "aid", "123", null, null));
-        BuilderUtil.mergeBundles(target, source, orgFeat, ArtifactMerge.LATEST);
+        BuilderUtil.mergeBundles(target, source, orgFeat, ArtifactMergeAlgorithm.LATEST);
 
         final List<Map.Entry<Integer, Artifact>> result = getBundles(target);
         assertEquals(6, result.size());
@@ -192,11 +192,11 @@ public class BuilderUtilTest {
         source.add(createBundle("g/b/1.0", 1));
 
         final Feature orgFeat = new Feature(new ArtifactId("gid", "aid", "123", "c1", "slingfeature"));
-        BuilderUtil.mergeBundles(target, source, orgFeat, ArtifactMerge.LATEST);
+        BuilderUtil.mergeBundles(target, source, orgFeat, ArtifactMergeAlgorithm.LATEST);
 
         final Bundles target2 = new Bundles();
         final Feature orgFeat2 = new Feature(new ArtifactId("g", "a", "1", null, null));
-        BuilderUtil.mergeBundles(target2, target, orgFeat2, ArtifactMerge.LATEST);
+        BuilderUtil.mergeBundles(target2, target, orgFeat2, ArtifactMergeAlgorithm.LATEST);
 
         List<Entry<Integer, Artifact>> result = getBundles(target2);
         assertEquals(2, result.size());
@@ -215,7 +215,7 @@ public class BuilderUtilTest {
 
         source.setJSON("[\"source1\",\"source2\"]");
 
-        BuilderUtil.mergeExtensions(target, source, ArtifactMerge.HIGHEST);
+        BuilderUtil.mergeExtensions(target, source, ArtifactMergeAlgorithm.HIGHEST);
 
         assertEquals(target.getJSON(), "[\"target1\",\"target2\",\"source1\",\"source2\"]");
 
@@ -307,7 +307,7 @@ public class BuilderUtilTest {
         Feature ft = new Feature(ArtifactId.fromMvnId("g:t:1"));
 
         assertEquals("Precondition", 0, ft.getExtensions().size());
-        BuilderUtil.mergeExtensions(ft, fs, ArtifactMerge.LATEST, ctx);
+        BuilderUtil.mergeExtensions(ft, fs, ArtifactMergeAlgorithm.LATEST, ctx);
         assertEquals(1, ft.getExtensions().size());
 
         Extension actual = ft.getExtensions().get(0);
@@ -331,7 +331,7 @@ public class BuilderUtilTest {
         ft.getExtensions().add(et);
 
         assertEquals("Precondition", 1, ft.getExtensions().size());
-        BuilderUtil.mergeExtensions(ft, fs, ArtifactMerge.LATEST, ctx);
+        BuilderUtil.mergeExtensions(ft, fs, ArtifactMergeAlgorithm.LATEST, ctx);
         assertEquals(1, ft.getExtensions().size());
 
         Extension actual = ft.getExtensions().get(0);
@@ -358,7 +358,7 @@ public class BuilderUtilTest {
         Feature ft = new Feature(ArtifactId.fromMvnId("g:t:1"));
 
         assertEquals("Precondition", 0, ft.getExtensions().size());
-        BuilderUtil.mergeExtensions(ft, fs, ArtifactMerge.LATEST, ctx);
+        BuilderUtil.mergeExtensions(ft, fs, ArtifactMergeAlgorithm.LATEST, ctx);
         assertEquals(1, ft.getExtensions().size());
 
         Extension actual = ft.getExtensions().get(0);
@@ -383,7 +383,7 @@ public class BuilderUtilTest {
         ft.getExtensions().add(et);
 
         assertEquals("Precondition", 1, ft.getExtensions().size());
-        BuilderUtil.mergeExtensions(ft, fs, ArtifactMerge.LATEST, ctx);
+        BuilderUtil.mergeExtensions(ft, fs, ArtifactMergeAlgorithm.LATEST, ctx);
         assertEquals(1, ft.getExtensions().size());
 
         Extension actual = ft.getExtensions().get(0);

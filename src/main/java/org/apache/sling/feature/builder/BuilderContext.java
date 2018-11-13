@@ -16,8 +16,6 @@
  */
 package org.apache.sling.feature.builder;
 
-import org.apache.sling.feature.KeyValueMap;
-
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -25,10 +23,16 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.apache.sling.feature.KeyValueMap;
+
 /**
  * Builder context holds services used by  {@link FeatureBuilder}.
  */
 public class BuilderContext {
+
+    enum ArtifactMergeAlgorithm {
+        LATEST, HIGHEST
+    }
 
     private final ArtifactProvider artifactProvider;
     private final FeatureProvider provider;
@@ -37,6 +41,8 @@ public class BuilderContext {
     private final List<PostProcessHandler> postProcessExtensions = new CopyOnWriteArrayList<>();
     private final KeyValueMap variables = new KeyValueMap();
     private final Map<String, String> properties = new LinkedHashMap<>();
+
+    private ArtifactMergeAlgorithm merge = ArtifactMergeAlgorithm.HIGHEST;
 
     /**
      * Create a new context
@@ -82,6 +88,11 @@ public class BuilderContext {
         return this;
     }
 
+    public BuilderContext setMergeAlgorithm(final ArtifactMergeAlgorithm alg) {
+        this.merge = alg;
+        return this;
+    }
+
     /**
      * Obtain the handler configuration. The object returned can be modified to provide
      * additional handler configurations.
@@ -112,6 +123,10 @@ public class BuilderContext {
         return this.provider;
     }
 
+    ArtifactMergeAlgorithm getMergeAlgorithm() {
+        return this.merge;
+    }
+
     /**
      * Get the list of merge extensions
      * @return The list of merge extensions
@@ -137,6 +152,7 @@ public class BuilderContext {
         final BuilderContext ctx = new BuilderContext(featureProvider, this.artifactProvider, this.variables, this.properties);
         ctx.mergeExtensions.addAll(mergeExtensions);
         ctx.postProcessExtensions.addAll(postProcessExtensions);
+        ctx.merge = this.merge;
         return ctx;
     }
 }
