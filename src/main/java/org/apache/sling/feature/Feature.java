@@ -78,6 +78,9 @@ public class Feature implements Comparable<Feature> {
     /** Flag indicating whether this is a final feature */
     private volatile boolean finalFlag = false;
 
+    /** Flag indicating whether this is a complete feature */
+    private volatile boolean completeFlag = false;
+
     /** The optional include. */
     private volatile Include include;
 
@@ -261,8 +264,8 @@ public class Feature implements Comparable<Feature> {
     }
 
     /**
-     * Check whether the feature is final A final feature can't be included by other
-     * features.
+     * Check whether the feature is final. A final feature can't be included by
+     * other features.
      *
      * @return {@code true} if it is final, {@code false} otherwise
      */
@@ -277,6 +280,25 @@ public class Feature implements Comparable<Feature> {
      */
     public void setFinal(final boolean flag) {
         this.finalFlag = flag;
+    }
+
+    /**
+     * Check whether the feature is complete. A complete feature has no external
+     * dependencies and can run as-is.
+     *
+     * @return {@code true} if it is complete, {@code false} otherwise
+     */
+    public boolean isComplete() {
+        return completeFlag;
+    }
+
+    /**
+     * Set the complete flag
+     *
+     * @param flag The flag
+     */
+    public void setComplete(final boolean flag) {
+        this.completeFlag = flag;
     }
 
     /**
