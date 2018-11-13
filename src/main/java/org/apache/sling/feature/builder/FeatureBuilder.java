@@ -189,7 +189,11 @@ public abstract class FeatureBuilder {
         final Set<ArtifactId> usedFeatures = new HashSet<>();
 
         // assemble feature
+        boolean targetIsComplete = true;
         for(final Feature assembled : assembledFeatures) {
+            if (!assembled.isComplete()) {
+                targetIsComplete = false;
+            }
             usedFeatures.add(assembled.getId());
 
             merge(target, assembled, context, BuilderUtil.ArtifactMerge.HIGHEST);
@@ -201,6 +205,11 @@ public abstract class FeatureBuilder {
             list.getArtifacts().add(new Artifact(id));
         }
         target.getExtensions().add(list);
+
+        // check complete flag
+        if (targetIsComplete) {
+            target.setComplete(true);
+        }
 
         return target;
     }
