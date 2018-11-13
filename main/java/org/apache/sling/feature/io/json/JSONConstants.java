@@ -49,6 +49,8 @@ public abstract class JSONConstants {
 
     static final String FEATURE_FINAL = "final";
 
+    static final String FEATURE_COMPLETE = "complete";
+
     static final String FEATURE_MODEL_VERSION = "model-version";
 
     static final List<String> FEATURE_KNOWN_PROPERTIES = Arrays.asList(FEATURE_ID,
@@ -64,6 +66,7 @@ public abstract class JSONConstants {
             FEATURE_DESCRIPTION,
             FEATURE_VENDOR,
             FEATURE_FINAL,
+            FEATURE_COMPLETE,
             FEATURE_LICENSE);
 
     static final String ARTIFACT_ID = "id";
