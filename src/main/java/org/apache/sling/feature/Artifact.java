@@ -128,6 +128,20 @@ public class Artifact implements Comparable<Artifact> {
         return this.id.equals(((Artifact)obj).id);
     }
 
+    /**
+     * Create a copy of the artifact with a different id
+     * 
+     * @param id The new id
+     * @return The copy of the feature with the new id
+     */
+    public Artifact copy(final ArtifactId id) {
+        final Artifact result = new Artifact(id);
+
+        result.getMetadata().putAll(this.getMetadata());
+
+        return result;
+    }
+
     @Override
     public String toString() {
         return "Artifact [id=" + id.toMvnId()

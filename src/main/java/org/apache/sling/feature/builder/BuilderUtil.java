@@ -110,18 +110,20 @@ class BuilderUtil {
         mergeWithContextOverwrite("Variable", target, source, (null != context) ? context.getVariables() : null);
     }
 
-    // bundles
+    /**
+     * Merge bundles from source into target
+     *
+     * @param target             The target bundles
+     * @param source             The source bundles
+     * @param originatingFeature Optional, if set origin will be recorded
+     * @param artifactMergeAlg   Algorithm used to merge the artifacts
+     */
     static void mergeBundles(final Bundles target,
         final Bundles source,
         final Feature originatingFeature,
             final ArtifactMergeAlgorithm artifactMergeAlg) {
         for(final Map.Entry<Integer, List<Artifact>> entry : source.getBundlesByStartOrder().entrySet()) {
             for(final Artifact a : entry.getValue()) {
-                // Record the original feature of the bundle
-                if (a.getMetadata().get(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE) == null) {
-                    a.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, originatingFeature.getId().toMvnId());
-                }
-
                 // version handling - use provided algorithm
                 boolean replace = true;
                 if (artifactMergeAlg == ArtifactMergeAlgorithm.HIGHEST) {
@@ -132,7 +134,15 @@ class BuilderUtil {
                 }
                 if ( replace ) {
                     target.removeSame(a.getId());
-                    target.add(a);
+                    // create a copy to detach artifact from source
+                    final Artifact cp = a.copy(a.getId());
+                    // Record the original feature of the bundle
+                    if (originatingFeature != null
+                            && a.getMetadata().get(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE) == null) {
+                        cp.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE,
+                                originatingFeature.getId().toMvnId());
+                    }
+                    target.add(cp);
                 }
             }
         }
@@ -183,9 +193,17 @@ class BuilderUtil {
         }
     }
 
-    // default merge for extensions
+    /**
+     * Merge an extension from source into target
+     *
+     * @param target             The target extension
+     * @param source             The source extension
+     * @param originatingFeature Optional, if set origin will be recorded for
+     *                           artifacts
+     * @param artifactMergeAlg   The merge algorithm for artifacts
+     */
     static void mergeExtensions(final Extension target,
-        final Extension source,
+            final Extension source, final Feature originatingFeature,
             final ArtifactMergeAlgorithm artifactMergeAlg) {
         switch ( target.getType() ) {
             case TEXT : // simply append
@@ -225,29 +243,38 @@ class BuilderUtil {
                 target.setJSON(buffer.toString());
                 break;
 
-            case ARTIFACTS : for(final Artifact a : source.getArtifacts()) {
-                    // use artifactMergeAlg
-                    boolean replace = true;
+        case ARTIFACTS:
+            for (final Artifact a : source.getArtifacts()) {
+                // use artifactMergeAlg
+                boolean replace = true;
                 if (artifactMergeAlg == ArtifactMergeAlgorithm.HIGHEST) {
-                         final Artifact existing = target.getArtifacts().getSame(a.getId());
-                         if ( existing != null && existing.getId().getOSGiVersion().compareTo(a.getId().getOSGiVersion()) > 0 ) {
-                            replace = false;
-                         }
+                    final Artifact existing = target.getArtifacts().getSame(a.getId());
+                    if (existing != null
+                            && existing.getId().getOSGiVersion().compareTo(a.getId().getOSGiVersion()) > 0) {
+                        replace = false;
                     }
-                    if ( replace ) {
+                }
+                if (replace) {
                     target.getArtifacts().removeSame(a.getId());
-                    target.getArtifacts().add(a);
+                    // create a copy to detach artifact from source
+                    final Artifact cp = a.copy(a.getId());
+                    // Record the original feature of the artifact
+                    if (originatingFeature != null
+                            && a.getMetadata().get(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE) == null) {
+                        cp.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE,
+                                originatingFeature.getId().toMvnId());
+                    }
+                    target.getArtifacts().add(cp);
                 }
-                }
-                break;
+            }
+            break;
         }
     }
 
     // extensions (add/merge)
     static void mergeExtensions(final Feature target,
         final Feature source,
-            final ArtifactMergeAlgorithm artifactMergeAlg,
-        final BuilderContext context) {
+            final ArtifactMergeAlgorithm artifactMergeAlg, final BuilderContext context, final boolean recordOrigin) {
         for(final Extension ext : source.getExtensions()) {
             boolean found = false;
 
@@ -269,7 +296,7 @@ class BuilderUtil {
                     }
                     if ( !handled ) {
                         // default merge
-                        mergeExtensions(current, ext, artifactMergeAlg);
+                        mergeExtensions(current, ext, recordOrigin ? source : null, artifactMergeAlg);
                     }
                 }
             }

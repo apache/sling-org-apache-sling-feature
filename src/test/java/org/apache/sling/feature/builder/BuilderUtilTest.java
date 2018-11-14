@@ -215,7 +215,7 @@ public class BuilderUtilTest {
 
         source.setJSON("[\"source1\",\"source2\"]");
 
-        BuilderUtil.mergeExtensions(target, source, ArtifactMergeAlgorithm.HIGHEST);
+        BuilderUtil.mergeExtensions(target, source, null, ArtifactMergeAlgorithm.HIGHEST);
 
         assertEquals(target.getJSON(), "[\"target1\",\"target2\",\"source1\",\"source2\"]");
 
@@ -307,7 +307,7 @@ public class BuilderUtilTest {
         Feature ft = new Feature(ArtifactId.fromMvnId("g:t:1"));
 
         assertEquals("Precondition", 0, ft.getExtensions().size());
-        BuilderUtil.mergeExtensions(ft, fs, ArtifactMergeAlgorithm.LATEST, ctx);
+        BuilderUtil.mergeExtensions(ft, fs, ArtifactMergeAlgorithm.LATEST, ctx, true);
         assertEquals(1, ft.getExtensions().size());
 
         Extension actual = ft.getExtensions().get(0);
@@ -331,7 +331,7 @@ public class BuilderUtilTest {
         ft.getExtensions().add(et);
 
         assertEquals("Precondition", 1, ft.getExtensions().size());
-        BuilderUtil.mergeExtensions(ft, fs, ArtifactMergeAlgorithm.LATEST, ctx);
+        BuilderUtil.mergeExtensions(ft, fs, ArtifactMergeAlgorithm.LATEST, ctx, true);
         assertEquals(1, ft.getExtensions().size());
 
         Extension actual = ft.getExtensions().get(0);
@@ -358,7 +358,7 @@ public class BuilderUtilTest {
         Feature ft = new Feature(ArtifactId.fromMvnId("g:t:1"));
 
         assertEquals("Precondition", 0, ft.getExtensions().size());
-        BuilderUtil.mergeExtensions(ft, fs, ArtifactMergeAlgorithm.LATEST, ctx);
+        BuilderUtil.mergeExtensions(ft, fs, ArtifactMergeAlgorithm.LATEST, ctx, true);
         assertEquals(1, ft.getExtensions().size());
 
         Extension actual = ft.getExtensions().get(0);
@@ -383,7 +383,7 @@ public class BuilderUtilTest {
         ft.getExtensions().add(et);
 
         assertEquals("Precondition", 1, ft.getExtensions().size());
-        BuilderUtil.mergeExtensions(ft, fs, ArtifactMergeAlgorithm.LATEST, ctx);
+        BuilderUtil.mergeExtensions(ft, fs, ArtifactMergeAlgorithm.LATEST, ctx, true);
         assertEquals(1, ft.getExtensions().size());
 
         Extension actual = ft.getExtensions().get(0);

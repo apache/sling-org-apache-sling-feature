@@ -196,7 +196,7 @@ public abstract class FeatureBuilder {
             }
             usedFeatures.add(assembled.getId());
 
-            merge(target, assembled, context, context.getMergeAlgorithm());
+            merge(target, assembled, context, context.getMergeAlgorithm(), true);
         }
 
         // append feature list in extension
@@ -315,15 +315,15 @@ public abstract class FeatureBuilder {
                 throw new IllegalStateException(
                         "Included feature " + i.getId() + " is marked as final and can't be used in an include.");
             }
-            final Feature af = internalAssemble(processedFeatures, f, context);
+            final Feature includedFeature = internalAssemble(processedFeatures, f, context);
 
             // process include instructions
-            include(af, i);
+            processInclude(includedFeature, i);
 
             // and now merge
-            merge(result, af, context, BuilderContext.ArtifactMergeAlgorithm.LATEST);
+            merge(result, includedFeature, context, BuilderContext.ArtifactMergeAlgorithm.LATEST, true);
 
-            merge(result, feature, context, BuilderContext.ArtifactMergeAlgorithm.LATEST);
+            merge(result, feature, context, BuilderContext.ArtifactMergeAlgorithm.LATEST, false);
         }
         processedFeatures.remove(feature.getId().toMvnId());
 
@@ -334,9 +334,9 @@ public abstract class FeatureBuilder {
     private static void merge(final Feature target,
             final Feature source,
             final BuilderContext context,
-            final BuilderContext.ArtifactMergeAlgorithm mergeAlg) {
+            final BuilderContext.ArtifactMergeAlgorithm mergeAlg, final boolean recordOrigin) {
         BuilderUtil.mergeVariables(target.getVariables(), source.getVariables(), context);
-        BuilderUtil.mergeBundles(target.getBundles(), source.getBundles(), source, mergeAlg);
+        BuilderUtil.mergeBundles(target.getBundles(), source.getBundles(), recordOrigin ? source : null, mergeAlg);
         BuilderUtil.mergeConfigurations(target.getConfigurations(), source.getConfigurations());
         BuilderUtil.mergeFrameworkProperties(target.getFrameworkProperties(), source.getFrameworkProperties(), context);
         BuilderUtil.mergeRequirements(target.getRequirements(), source.getRequirements());
@@ -344,29 +344,36 @@ public abstract class FeatureBuilder {
         BuilderUtil.mergeExtensions(target,
                 source,
                 mergeAlg,
-                context);
+                context, recordOrigin);
     }
 
-    private static void include(final Feature base, final Include i) {
-        // process removals
-        // bundles
-        for(final ArtifactId a : i.getBundleRemovals()) {
+    /**
+     * Process the include statement Process all the removals contained in the
+     * include
+     *
+     * @param feature The feature
+     * @param include The include
+     */
+    private static void processInclude(final Feature feature, final Include include) {
+        // process bundles removals
+        for (final ArtifactId a : include.getBundleRemovals()) {
             boolean removed = false;
             final boolean ignoreVersion = a.getOSGiVersion().equals(Version.emptyVersion);
             if ( ignoreVersion ) {
                 // remove any version of that bundle
-                while (base.getBundles().removeSame(a)) {
+                while (feature.getBundles().removeSame(a)) {
                     // continue to remove
                     removed = true;
                 }
             } else {
                 // remove exact version
-                removed = base.getBundles().removeExact(a);
+                removed = feature.getBundles().removeExact(a);
             }
             if ( !removed ) {
-                throw new IllegalStateException("Bundle " + a + " can't be removed from feature " + base.getId() + " as it is not part of that feature.");
+                throw new IllegalStateException("Bundle " + a + " can't be removed from feature " + feature.getId()
+                        + " as it is not part of that feature.");
             }
-            final Iterator<Configuration> iter = base.getConfigurations().iterator();
+            final Iterator<Configuration> iter = feature.getConfigurations().iterator();
             while ( iter.hasNext() ) {
                 final Configuration cfg = iter.next();
                 final String bundleId = (String)cfg.getProperties().get(Configuration.PROP_ARTIFACT_ID);
@@ -382,8 +389,9 @@ public abstract class FeatureBuilder {
                 }
             }
         }
-        // configurations
-        for(final String c : i.getConfigurationRemovals()) {
+
+        // process configuration removals
+        for (final String c : include.getConfigurationRemovals()) {
             final int attrPos = c.indexOf('@');
             final String val = (attrPos == -1 ? c : c.substring(0, attrPos));
             final String attr = (attrPos == -1 ? null : c.substring(attrPos + 1));
@@ -391,39 +399,40 @@ public abstract class FeatureBuilder {
             final int sepPos = val.indexOf('~');
             Configuration found = null;
             if ( sepPos == -1 ) {
-                found = base.getConfigurations().getConfiguration(val);
+                found = feature.getConfigurations().getConfiguration(val);
 
             } else {
                 final String factoryPid = val.substring(0, sepPos);
                 final String name = val.substring(sepPos + 1);
 
-                found = base.getConfigurations().getFactoryConfiguration(factoryPid, name);
+                found = feature.getConfigurations().getFactoryConfiguration(factoryPid, name);
             }
             if ( found != null ) {
                 if ( attr == null ) {
-                    base.getConfigurations().remove(found);
+                    feature.getConfigurations().remove(found);
                 } else {
                     found.getProperties().remove(attr);
                 }
             }
         }
 
-        // framework properties
-        for(final String p : i.getFrameworkPropertiesRemovals()) {
-            base.getFrameworkProperties().remove(p);
+        // process framework properties removals
+        for (final String p : include.getFrameworkPropertiesRemovals()) {
+            feature.getFrameworkProperties().remove(p);
         }
 
-        // extensions
-        for(final String name : i.getExtensionRemovals()) {
-            for(final Extension ext : base.getExtensions()) {
+        // process extensions removals
+        for (final String name : include.getExtensionRemovals()) {
+            for (final Extension ext : feature.getExtensions()) {
                 if ( ext.getName().equals(name) ) {
-                    base.getExtensions().remove(ext);
+                    feature.getExtensions().remove(ext);
                     break;
                 }
             }
         }
-        for(final Map.Entry<String, List<ArtifactId>> entry : i.getArtifactExtensionRemovals().entrySet()) {
-            for(final Extension ext : base.getExtensions()) {
+        // process artifact extensions removals
+        for (final Map.Entry<String, List<ArtifactId>> entry : include.getArtifactExtensionRemovals().entrySet()) {
+            for (final Extension ext : feature.getExtensions()) {
                 if ( ext.getName().equals(entry.getKey()) ) {
                     for(final ArtifactId toRemove : entry.getValue() ) {
                         boolean removed = false;
@@ -452,7 +461,8 @@ public abstract class FeatureBuilder {
                             }
                         }
                         if ( !removed ) {
-                            throw new IllegalStateException("Artifact " + toRemove + " can't be removed from feature " + base.getId() + " as it is not part of that feature.");
+                            throw new IllegalStateException("Artifact " + toRemove + " can't be removed from feature "
+                                    + feature.getId() + " as it is not part of that feature.");
                         }
                     }
                     break;
