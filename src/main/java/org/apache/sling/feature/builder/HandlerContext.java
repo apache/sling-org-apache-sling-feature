@@ -17,7 +17,7 @@
  */
 package org.apache.sling.feature.builder;
 
-import java.util.Map;
+import org.apache.sling.feature.KeyValueMap;
 
 /**
  * Context for an extension handler.
@@ -34,5 +34,5 @@ public interface HandlerContext {
      * @return Map of provided configuration, or an empty map if there is no configuration.
      * Never {@code null}.
      */
-    Map<String, String> getConfiguration();
+    KeyValueMap getConfiguration();
 }

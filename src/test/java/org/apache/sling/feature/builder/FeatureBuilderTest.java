@@ -248,7 +248,7 @@ public class FeatureBuilderTest {
 
         assertFalse(base.isAssembled());
 
-        final Feature assembled = FeatureBuilder.assemble(base, new BuilderContext(provider, null));
+        final Feature assembled = FeatureBuilder.assemble(base, new BuilderContext(provider));
 
         equals(base, assembled);
     }
@@ -313,7 +313,7 @@ public class FeatureBuilderTest {
         result.getConfigurations().add(co3);
 
         // assemble
-        final Feature assembled = FeatureBuilder.assemble(base, new BuilderContext(provider, null));
+        final Feature assembled = FeatureBuilder.assemble(base, new BuilderContext(provider));
 
         // and test
         equals(result, assembled);
@@ -335,7 +335,7 @@ public class FeatureBuilderTest {
             public Feature provide(ArtifactId id) {
                 return null;
             }
-        }, null), a, b);
+        }), a, b);
         assertEquals(1, features.length);
         assertEquals(idB, features[0].getId());
     }
@@ -354,7 +354,7 @@ public class FeatureBuilderTest {
             public Feature provide(ArtifactId id) {
                 return null;
             }
-        }, null), a, b);
+        }), a, b);
         assertEquals(1, features.length);
         assertEquals(idB, features[0].getId());
     }
@@ -383,7 +383,7 @@ public class FeatureBuilderTest {
                 }
                 return null;
             }
-        }, null));
+        }));
         final Set<ArtifactId> set = new HashSet<>();
         for(final Artifact c : feature.getBundles()) {
             set.add(c.getId());
@@ -417,7 +417,7 @@ public class FeatureBuilderTest {
                 }
                 return null;
             }
-        }, null));
+        }));
         final Set<ArtifactId> set = new HashSet<>();
         for(final Artifact c : feature.getBundles()) {
             set.add(c.getId());
@@ -449,7 +449,7 @@ public class FeatureBuilderTest {
                     }
                     return null;
                 }
-            }, null));
+            }));
             fail();
         } catch ( final IllegalStateException ise) {
             // expected
@@ -482,7 +482,7 @@ public class FeatureBuilderTest {
                 }
                 return null;
             }
-        }, null));
+        }));
         final Set<ArtifactId> set = new HashSet<>();
         for(final Artifact c : feature.getExtensions().getByName("foo").getArtifacts()) {
             set.add(c.getId());
@@ -518,7 +518,7 @@ public class FeatureBuilderTest {
                 }
                 return null;
             }
-        }, null));
+        }));
         final Set<ArtifactId> set = new HashSet<>();
         for(final Artifact c : feature.getExtensions().getByName("foo").getArtifacts()) {
             set.add(c.getId());
@@ -552,7 +552,7 @@ public class FeatureBuilderTest {
                     }
                     return null;
                 }
-            }, null));
+            }));
             fail();
         } catch ( final IllegalStateException ise) {
             // expected
@@ -576,7 +576,7 @@ public class FeatureBuilderTest {
             public Feature provide(ArtifactId id) {
                 return null;
             }
-        }, null), a, b);
+                }), a, b);
         final Extension list = target.getExtensions().getByName(FeatureConstants.EXTENSION_NAME_ASSEMBLED_FEATURES);
         assertNotNull(list);
         assertEquals(1, list.getArtifacts().size());
@@ -625,7 +625,7 @@ public class FeatureBuilderTest {
             {
                 return null;
             }
-        }, null, override, null), aFeature, bFeature);
+                }).addVariablesOverwrites(override), aFeature, bFeature);
 
         KeyValueMap vars = new KeyValueMap();
         vars.putAll(kvMapA);
@@ -646,7 +646,7 @@ public class FeatureBuilderTest {
                 {
                     return null;
                 }
-            }, null, override, null), aFeature, bFeature);
+                    }).addVariablesOverwrites(override), aFeature, bFeature);
             fail("Excepted merge exception");
         } catch (IllegalStateException expected) {}
 
@@ -659,7 +659,7 @@ public class FeatureBuilderTest {
             {
                 return null;
             }
-        }, null, override, null), aFeature, bFeature);
+                }).addVariablesOverwrites(override), aFeature, bFeature);
 
         vars = new KeyValueMap();
         vars.putAll(kvMapA);
@@ -678,7 +678,7 @@ public class FeatureBuilderTest {
             {
                 return null;
             }
-        }, null, override, null), aFeature, bFeature);
+                }).addVariablesOverwrites(override), aFeature, bFeature);
 
         vars.put("var2", null);
         assertTrue(cFeature.getVariables().equals(vars));
@@ -709,7 +709,7 @@ public class FeatureBuilderTest {
                     }
                     return null;
                 }
-            }, null));
+            }));
             fail();
         } catch (final IllegalStateException ise) {
             assertTrue(ise.getMessage().contains(" final "));

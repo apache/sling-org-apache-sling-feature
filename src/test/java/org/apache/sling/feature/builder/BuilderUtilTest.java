@@ -24,7 +24,6 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -270,7 +269,7 @@ public class BuilderUtilTest {
 
             JsonObjectBuilder jo = Json.createObjectBuilder();
             boolean hasCfg = false;
-            for (Map.Entry<String,String> entry : context.getConfiguration().entrySet()) {
+            for (Map.Entry<String, String> entry : context.getConfiguration()) {
                 jo.add(entry.getKey(), entry.getValue());
                 hasCfg = true;
             }
@@ -299,7 +298,7 @@ public class BuilderUtilTest {
 
     @Test public void testMergeDefaultExtensionsFirst() {
         FeatureProvider fp = Mockito.mock(FeatureProvider.class);
-        BuilderContext ctx = new BuilderContext(fp, null);
+        BuilderContext ctx = new BuilderContext(fp);
         Feature fs = new Feature(ArtifactId.fromMvnId("g:s:1"));
         Extension e = new Extension(ExtensionType.JSON, "foo", false);
         e.setJSON("{\"a\": 123}");
@@ -320,7 +319,7 @@ public class BuilderUtilTest {
 
     @Test public void testMergeDefaultExtensionsSecond() {
         FeatureProvider fp = Mockito.mock(FeatureProvider.class);
-        BuilderContext ctx = new BuilderContext(fp, null);
+        BuilderContext ctx = new BuilderContext(fp);
         Feature fs = new Feature(ArtifactId.fromMvnId("g:s:1"));
         Extension e = new Extension(ExtensionType.JSON, "foo", false);
         e.setJSON("[{\"a\": 123}]");
@@ -343,13 +342,13 @@ public class BuilderUtilTest {
     }
 
     @Test public void testMergeCustomExtensionsFirst() {
-        Map<String, String> m = new HashMap<>();
+        KeyValueMap m = new KeyValueMap();
         m.put("abc", "def");
         m.put("hij", "klm");
 
         FeatureProvider fp = Mockito.mock(FeatureProvider.class);
-        BuilderContext ctx = new BuilderContext(fp, null);
-        ctx.getHandlerConfiguration().put("TestMergeHandler", m);
+        BuilderContext ctx = new BuilderContext(fp);
+        ctx.setHandlerConfiguration("TestMergeHandler", m);
         ctx.addMergeExtensions(new TestMergeHandler());
         Feature fs = new Feature(ArtifactId.fromMvnId("g:s:1"));
         Extension e = new Extension(ExtensionType.JSON, "foo", false);
@@ -371,7 +370,7 @@ public class BuilderUtilTest {
 
     @Test public void testMergeCustomExtensionsSecond() {
         FeatureProvider fp = Mockito.mock(FeatureProvider.class);
-        BuilderContext ctx = new BuilderContext(fp, null);
+        BuilderContext ctx = new BuilderContext(fp);
         ctx.addMergeExtensions(new TestMergeHandler());
         Feature fs = new Feature(ArtifactId.fromMvnId("g:s:1"));
         Extension e = new Extension(ExtensionType.JSON, "foo", false);

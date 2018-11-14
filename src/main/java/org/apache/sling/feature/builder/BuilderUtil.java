@@ -19,7 +19,6 @@ package org.apache.sling.feature.builder;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
@@ -107,7 +106,8 @@ class BuilderUtil {
 
     // variables
     static void mergeVariables(KeyValueMap target, KeyValueMap source, BuilderContext context) {
-        mergeWithContextOverwrite("Variable", target, source, (null != context) ? context.getVariables() : null);
+        mergeWithContextOverwrite("Variable", target, source,
+                (null != context) ? context.getVariablesOverwrites() : null);
     }
 
     /**
@@ -172,7 +172,8 @@ class BuilderUtil {
 
     // framework properties (add/merge)
     static void mergeFrameworkProperties(final KeyValueMap target, final KeyValueMap source, BuilderContext context) {
-        mergeWithContextOverwrite("Property", target, source, context != null ? context.getProperties().entrySet() : null);
+        mergeWithContextOverwrite("Property", target, source,
+                context != null ? context.getFrameworkPropertiesOverwrites() : null);
     }
 
     // requirements (add)
@@ -359,7 +360,7 @@ class BuilderUtil {
 
     private static class HandlerContextImpl implements HandlerContext {
         private final ArtifactProvider artifactProvider;
-        private final Map<String, String> configuration;
+        private final KeyValueMap configuration;
 
         public HandlerContextImpl(BuilderContext bc, MergeHandler handler) {
             artifactProvider = bc.getArtifactProvider();
@@ -371,16 +372,15 @@ class BuilderUtil {
             configuration = getHandlerConfiguration(bc, handler);
         }
 
-        private Map<String, String> getHandlerConfiguration(BuilderContext bc, Object handler) {
-            String name = getHandlerName(handler);
-            Map<String, String> cfg = null;
+        private KeyValueMap getHandlerConfiguration(BuilderContext bc, Object handler) {
+            final KeyValueMap result = new KeyValueMap();
+
+            result.putAll(bc.getHandlerConfigurations().get("*"));
+            final String name = getHandlerName(handler);
             if (name != null) {
-                cfg = bc.getHandlerConfiguration().get(name);
+                result.putAll(bc.getHandlerConfigurations().get(name));
             }
-            if (cfg != null)
-                return cfg;
-            else
-                return Collections.emptyMap();
+            return result;
         }
 
         private static String getHandlerName(Object handler) {
@@ -393,7 +393,7 @@ class BuilderUtil {
         }
 
         @Override
-        public Map<String, String> getConfiguration() {
+        public KeyValueMap getConfiguration() {
             return configuration;
         }
     }

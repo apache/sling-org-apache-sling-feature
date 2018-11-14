@@ -42,8 +42,24 @@ public class KeyValueMap
     }
 
     /**
-     * Put an item in the map
+     * Get an item from the map or the default.
+     *
      * @param key The key of the item.
+     * @param def The default value
+     * @return The item or the default.
+     */
+    public String getOrDefault(final String key, final String def) {
+        String result = this.properties.get(key);
+        if (result == null) {
+            result = def;
+        }
+        return result;
+    }
+
+    /**
+     * Put an item in the map
+     *
+     * @param key   The key of the item.
      * @param value The value
      */
     public void put(final String key, final String value) {
@@ -64,7 +80,20 @@ public class KeyValueMap
      * @param map The other map
      */
     public void putAll(final KeyValueMap map) {
-        this.properties.putAll(map.properties);
+        if (map != null) {
+            this.properties.putAll(map.properties);
+        }
+    }
+
+    /**
+     * Put all items from the other map in this map
+     * 
+     * @param map The other map
+     */
+    public void putAll(final Map<String, String> map) {
+        if (map != null) {
+            this.properties.putAll(map);
+        }
     }
 
     @Override

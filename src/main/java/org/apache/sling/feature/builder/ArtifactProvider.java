@@ -20,6 +20,9 @@ import java.io.File;
 
 import org.apache.sling.feature.ArtifactId;
 
+/**
+ * The artifact provider provides a file for an artifact.
+ */
 public interface ArtifactProvider {
 
     /**

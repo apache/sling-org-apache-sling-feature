@@ -16,17 +16,18 @@
  */
 package org.apache.sling.feature.builder;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.sling.feature.KeyValueMap;
 
 /**
- * Builder context holds services used by  {@link FeatureBuilder}.
+ * Builder context holds services used by {@link FeatureBuilder}.
+ *
+ * This class is not thread-safe.
  */
 public class BuilderContext {
 
@@ -34,13 +35,17 @@ public class BuilderContext {
         LATEST, HIGHEST
     }
 
-    private final ArtifactProvider artifactProvider;
+    /** The required feature provider */
     private final FeatureProvider provider;
-    private final Map<String, Map<String, String>> extensionConfiguration = new ConcurrentHashMap<>();
-    private final List<MergeHandler> mergeExtensions = new CopyOnWriteArrayList<>();
-    private final List<PostProcessHandler> postProcessExtensions = new CopyOnWriteArrayList<>();
+
+    /** The optional artifact provider. */
+    private ArtifactProvider artifactProvider;
+
+    private final Map<String, KeyValueMap> extensionConfiguration = new HashMap<>();
+    private final List<MergeHandler> mergeExtensions = new ArrayList<>();
+    private final List<PostProcessHandler> postProcessExtensions = new ArrayList<>();
     private final KeyValueMap variables = new KeyValueMap();
-    private final Map<String, String> properties = new LinkedHashMap<>();
+    private final KeyValueMap frameworkProperties = new KeyValueMap();
 
     private ArtifactMergeAlgorithm merge = ArtifactMergeAlgorithm.HIGHEST;
 
@@ -48,58 +53,100 @@ public class BuilderContext {
      * Create a new context
      *
      * @param provider A provider providing the included features
-     * @param ap An ArtifactProvider to resolve artifact IDs to files
      * @throws IllegalArgumentException If feature provider is {@code null}
      */
-    public BuilderContext(final FeatureProvider provider, final ArtifactProvider ap) {
-        this(provider, ap, null, null);
-    }
-
-    /**
-     * Create a new context
-     *
-     * @param provider A provider providing the included features
-     * @param ap An ArtifactProvider to resolve artifact IDs to files
-     * @param variables A map of variables to override on feature merge
-     * @param properties A map of framework properties to override on feature merge
-     * @throws IllegalArgumentException If feature provider is {@code null}
-     */
-    public BuilderContext(final FeatureProvider provider, ArtifactProvider ap, KeyValueMap variables, Map<String, String> properties) {
-        if (variables != null) {
-            this.variables.putAll(variables);
-        }
-        if (properties != null) {
-            this.properties.putAll(properties);
-        }
+    public BuilderContext(final FeatureProvider provider) {
         if ( provider == null ) {
             throw new IllegalArgumentException("Provider must not be null");
         }
-        this.artifactProvider = ap;
         this.provider = provider;
     }
 
+    /**
+     * Set the artifact provider
+     *
+     * @param ap An ArtifactProvider to resolve artifact IDs to files
+     * @return The builder context
+     */
+    public BuilderContext setArtifactProvider(final ArtifactProvider ap) {
+        this.artifactProvider = ap;
+        return this;
+    }
+
+    /**
+     * Add overwrites for the variables
+     *
+     * @param vars The overwrites
+     * @return The builder context
+     */
+    public BuilderContext addVariablesOverwrites(final KeyValueMap vars) {
+        this.variables.putAll(vars);
+        return this;
+    }
+
+    /**
+     * Add overwrites for the framework properties
+     *
+     * @param props The overwrites
+     * @return The builder context
+     */
+    public BuilderContext addFrameworkPropertiesOverwrites(final KeyValueMap props) {
+        this.frameworkProperties.putAll(props);
+        return this;
+    }
+
+    /**
+     * Add merge extensions
+     *
+     * @param extensions A list of merge extensions
+     * @return The builder context
+     */
     public BuilderContext addMergeExtensions(final MergeHandler... extensions) {
         mergeExtensions.addAll(Arrays.asList(extensions));
         return this;
     }
 
+    /**
+     * Add post process extensions
+     *
+     * @param extensions A list of extensions
+     * @return The builder context
+     */
     public BuilderContext addPostProcessExtensions(final PostProcessHandler... extensions) {
         postProcessExtensions.addAll(Arrays.asList(extensions));
         return this;
     }
 
+    /**
+     * Set the merge algorithm
+     *
+     * @param alg The algorithm
+     * @return The builder context
+     */
     public BuilderContext setMergeAlgorithm(final ArtifactMergeAlgorithm alg) {
         this.merge = alg;
         return this;
     }
 
     /**
-     * Obtain the handler configuration. The object returned can be modified to provide
-     * additional handler configurations.
-     * @return The current handler configuration object. The key is the handler name
-     * and the value is a map of configuration values.
+     * Set a handler configuration
+     *
+     * @param The name of the handler
+     * @param The configuration for the handler
+     * @return The builder context
      */
-    public Map<String, Map<String, String>> getHandlerConfiguration() {
+    public BuilderContext setHandlerConfiguration(final String name, final KeyValueMap cfg) {
+        this.extensionConfiguration.put(name, cfg);
+        return this;
+    }
+
+    /**
+     * Obtain the handler configuration.
+     * 
+     * @return The current handler configuration object. The key is the handler name
+     *         and the value is a map of configuration values.
+     */
+    Map<String, KeyValueMap> getHandlerConfigurations() {
         return this.extensionConfiguration;
     }
 
@@ -107,12 +154,12 @@ public class BuilderContext {
         return this.artifactProvider;
     }
 
-    KeyValueMap getVariables() {
+    KeyValueMap getVariablesOverwrites() {
         return  this.variables;
     }
 
-    Map<String, String> getProperties() {
-        return this.properties;
+    KeyValueMap getFrameworkPropertiesOverwrites() {
+        return this.frameworkProperties;
     }
 
     /**
@@ -149,7 +196,10 @@ public class BuilderContext {
      * @return Cloned context
      */
     BuilderContext clone(final FeatureProvider featureProvider) {
-        final BuilderContext ctx = new BuilderContext(featureProvider, this.artifactProvider, this.variables, this.properties);
+        final BuilderContext ctx = new BuilderContext(featureProvider);
+        ctx.setArtifactProvider(this.artifactProvider);
+        ctx.variables.putAll(this.variables);
+        ctx.frameworkProperties.putAll(this.frameworkProperties);
         ctx.mergeExtensions.addAll(mergeExtensions);
         ctx.postProcessExtensions.addAll(postProcessExtensions);
         ctx.merge = this.merge;
