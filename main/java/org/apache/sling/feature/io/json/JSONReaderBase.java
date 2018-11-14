@@ -31,7 +31,6 @@ import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.Extensions;
 import org.apache.sling.feature.Include;
-import org.apache.sling.feature.KeyValueMap;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
 
@@ -49,8 +48,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.function.BiConsumer;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
@@ -150,7 +149,7 @@ abstract class JSONReaderBase {
      * @return The same variables as a normal map
      * @throws IOException If the json is invalid.
      */
-    protected Map<String, String> readVariables(Map<String, Object> map, KeyValueMap kvMap) throws IOException {
+    protected Map<String, String> readVariables(Map<String, Object> map, Map<String,String> kvMap) throws IOException {
         HashMap<String, String> variables = new HashMap<>();
 
         if (map.containsKey(JSONConstants.FEATURE_VARIABLES)) {
@@ -320,7 +319,7 @@ abstract class JSONReaderBase {
     }
 
     protected void readFrameworkProperties(final Map<String, Object> map,
-            final KeyValueMap container) throws IOException {
+            final Map<String,String> container) throws IOException {
         if ( map.containsKey(JSONConstants.FEATURE_FRAMEWORK_PROPERTIES) ) {
             final Object propsObj= map.get(JSONConstants.FEATURE_FRAMEWORK_PROPERTIES);
             checkType(JSONConstants.FEATURE_FRAMEWORK_PROPERTIES, propsObj, Map.class);

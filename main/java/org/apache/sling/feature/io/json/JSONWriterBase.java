@@ -24,7 +24,6 @@ import org.apache.sling.feature.Configurations;
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.Include;
-import org.apache.sling.feature.KeyValueMap;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
 
@@ -68,7 +67,7 @@ abstract class JSONWriterBase {
                         cfgs.add(cfg);
                     }
                 }
-                KeyValueMap md = artifact.getMetadata();
+                Map<String,String> md = artifact.getMetadata();
                 if ( md.isEmpty() && cfgs.isEmpty() ) {
                     generator.write(artifact.getId().toMvnId());
                 } else {
@@ -80,7 +79,7 @@ abstract class JSONWriterBase {
                         md.put("run-modes", (String) runmodes);
                     }
 
-                    for(final Map.Entry<String, String> me : md) {
+                    for(final Map.Entry<String, String> me : md.entrySet()) {
                         generator.write(me.getKey(), me.getValue());
                     }
 
@@ -188,11 +187,11 @@ abstract class JSONWriterBase {
         generator.writeEnd();
     }
 
-    protected void writeVariables(final JsonGenerator generator, final KeyValueMap vars) {
+    protected void writeVariables(final JsonGenerator generator, final Map<String,String> vars) {
         if ( !vars.isEmpty()) {
             generator.writeStartObject(JSONConstants.FEATURE_VARIABLES);
 
-            for (final Map.Entry<String, String> entry : vars) {
+            for (final Map.Entry<String, String> entry : vars.entrySet()) {
                 String val = entry.getValue();
                 if (val != null)
                     generator.write(entry.getKey(), val);
@@ -204,11 +203,11 @@ abstract class JSONWriterBase {
         }
     }
 
-    protected void writeFrameworkProperties(final JsonGenerator generator, final KeyValueMap props) {
+    protected void writeFrameworkProperties(final JsonGenerator generator, final Map<String,String> props) {
         // framework properties
         if ( !props.isEmpty() ) {
             generator.writeStartObject(JSONConstants.FEATURE_FRAMEWORK_PROPERTIES);
-            for(final Map.Entry<String, String> entry : props) {
+            for(final Map.Entry<String, String> entry : props.entrySet()) {
                 generator.write(entry.getKey(), entry.getValue());
             }
             generator.writeEnd();
@@ -248,7 +247,7 @@ abstract class JSONWriterBase {
                         generator.writeStartObject();
                         generator.write(JSONConstants.ARTIFACT_ID, artifact.getId().toMvnId());
 
-                        for(final Map.Entry<String, String> me : artifact.getMetadata()) {
+                        for(final Map.Entry<String, String> me : artifact.getMetadata().entrySet()) {
                             generator.write(me.getKey(), me.getValue());
                         }
 
