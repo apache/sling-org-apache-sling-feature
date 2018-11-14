@@ -22,8 +22,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.sling.feature.KeyValueMap;
-
 /**
  * Builder context holds services used by {@link FeatureBuilder}.
  *
@@ -41,11 +39,11 @@ public class BuilderContext {
     /** The optional artifact provider. */
     private ArtifactProvider artifactProvider;
 
-    private final Map<String, KeyValueMap> extensionConfiguration = new HashMap<>();
+    private final Map<String, Map<String,String>> extensionConfiguration = new HashMap<>();
     private final List<MergeHandler> mergeExtensions = new ArrayList<>();
     private final List<PostProcessHandler> postProcessExtensions = new ArrayList<>();
-    private final KeyValueMap variables = new KeyValueMap();
-    private final KeyValueMap frameworkProperties = new KeyValueMap();
+    private final Map<String,String> variables = new HashMap<>();
+    private final Map<String,String> frameworkProperties = new HashMap<>();
 
     private ArtifactMergeAlgorithm merge = ArtifactMergeAlgorithm.HIGHEST;
 
@@ -79,7 +77,7 @@ public class BuilderContext {
      * @param vars The overwrites
      * @return The builder context
      */
-    public BuilderContext addVariablesOverwrites(final KeyValueMap vars) {
+    public BuilderContext addVariablesOverwrites(final Map<String,String> vars) {
         this.variables.putAll(vars);
         return this;
     }
@@ -90,7 +88,7 @@ public class BuilderContext {
      * @param props The overwrites
      * @return The builder context
      */
-    public BuilderContext addFrameworkPropertiesOverwrites(final KeyValueMap props) {
+    public BuilderContext addFrameworkPropertiesOverwrites(final Map<String,String> props) {
         this.frameworkProperties.putAll(props);
         return this;
     }
@@ -135,18 +133,18 @@ public class BuilderContext {
      * @param The configuration for the handler
      * @return The builder context
      */
-    public BuilderContext setHandlerConfiguration(final String name, final KeyValueMap cfg) {
+    public BuilderContext setHandlerConfiguration(final String name, final Map<String,String> cfg) {
         this.extensionConfiguration.put(name, cfg);
         return this;
     }
 
     /**
      * Obtain the handler configuration.
-     * 
+     *
      * @return The current handler configuration object. The key is the handler name
      *         and the value is a map of configuration values.
      */
-    Map<String, KeyValueMap> getHandlerConfigurations() {
+    Map<String, Map<String,String>> getHandlerConfigurations() {
         return this.extensionConfiguration;
     }
 
@@ -154,11 +152,11 @@ public class BuilderContext {
         return this.artifactProvider;
     }
 
-    KeyValueMap getVariablesOverwrites() {
+    Map<String,String> getVariablesOverwrites() {
         return  this.variables;
     }
 
-    KeyValueMap getFrameworkPropertiesOverwrites() {
+    Map<String,String> getFrameworkPropertiesOverwrites() {
         return this.frameworkProperties;
     }
 

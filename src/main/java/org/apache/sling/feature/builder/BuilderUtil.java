@@ -16,10 +16,22 @@
  */
 package org.apache.sling.feature.builder;
 
+import org.apache.sling.feature.Artifact;
+import org.apache.sling.feature.Bundles;
+import org.apache.sling.feature.Configuration;
+import org.apache.sling.feature.Configurations;
+import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.FeatureConstants;
+import org.apache.sling.feature.builder.BuilderContext.ArtifactMergeAlgorithm;
+import org.osgi.resource.Capability;
+import org.osgi.resource.Requirement;
+
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -33,18 +45,6 @@ import javax.json.JsonStructure;
 import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
 import javax.json.JsonWriter;
-
-import org.apache.sling.feature.Artifact;
-import org.apache.sling.feature.Bundles;
-import org.apache.sling.feature.Configuration;
-import org.apache.sling.feature.Configurations;
-import org.apache.sling.feature.Extension;
-import org.apache.sling.feature.Feature;
-import org.apache.sling.feature.FeatureConstants;
-import org.apache.sling.feature.KeyValueMap;
-import org.apache.sling.feature.builder.BuilderContext.ArtifactMergeAlgorithm;
-import org.osgi.resource.Capability;
-import org.osgi.resource.Requirement;
 
 /**
  * Utility methods for the builders
@@ -73,12 +73,12 @@ class BuilderUtil {
         return null;
     }
 
-    private static void mergeWithContextOverwrite(String type, KeyValueMap target, KeyValueMap source, Iterable<Map.Entry<String,String>> context) {
-        KeyValueMap result = new KeyValueMap();
-        for (Map.Entry<String, String> entry : target) {
+    private static void mergeWithContextOverwrite(String type, Map<String,String> target, Map<String,String> source, Iterable<Map.Entry<String,String>> context) {
+        Map<String,String> result = new HashMap<>();
+        for (Map.Entry<String, String> entry : target.entrySet()) {
             result.put(entry.getKey(), contains(entry.getKey(), context) ? get(entry.getKey(), context) : entry.getValue());
         }
-        for (Map.Entry<String, String> entry : source) {
+        for (Map.Entry<String, String> entry : source.entrySet()) {
             if (contains(entry.getKey(), context)) {
                 result.put(entry.getKey(), get(entry.getKey(), context));
             }
@@ -95,7 +95,7 @@ class BuilderUtil {
                         result.put(entry.getKey(), value);
                     }
                 }
-                else if (!contains(entry.getKey(), target)) {
+                else if (!contains(entry.getKey(), target.entrySet())) {
                     result.put(entry.getKey(), value);
                 }
             }
@@ -105,9 +105,9 @@ class BuilderUtil {
     }
 
     // variables
-    static void mergeVariables(KeyValueMap target, KeyValueMap source, BuilderContext context) {
+    static void mergeVariables(Map<String,String> target, Map<String,String> source, BuilderContext context) {
         mergeWithContextOverwrite("Variable", target, source,
-                (null != context) ? context.getVariablesOverwrites() : null);
+                (null != context) ? context.getVariablesOverwrites().entrySet() : null);
     }
 
     /**
@@ -171,9 +171,9 @@ class BuilderUtil {
     }
 
     // framework properties (add/merge)
-    static void mergeFrameworkProperties(final KeyValueMap target, final KeyValueMap source, BuilderContext context) {
+    static void mergeFrameworkProperties(final Map<String,String> target, final Map<String,String> source, BuilderContext context) {
         mergeWithContextOverwrite("Property", target, source,
-                context != null ? context.getFrameworkPropertiesOverwrites() : null);
+                context != null ? context.getFrameworkPropertiesOverwrites().entrySet() : null);
     }
 
     // requirements (add)
@@ -360,7 +360,7 @@ class BuilderUtil {
 
     private static class HandlerContextImpl implements HandlerContext {
         private final ArtifactProvider artifactProvider;
-        private final KeyValueMap configuration;
+        private final Map<String,String> configuration;
 
         public HandlerContextImpl(BuilderContext bc, MergeHandler handler) {
             artifactProvider = bc.getArtifactProvider();
@@ -372,13 +372,17 @@ class BuilderUtil {
             configuration = getHandlerConfiguration(bc, handler);
         }
 
-        private KeyValueMap getHandlerConfiguration(BuilderContext bc, Object handler) {
-            final KeyValueMap result = new KeyValueMap();
+        private Map<String,String> getHandlerConfiguration(BuilderContext bc, Object handler) {
+            final Map<String,String> result = new HashMap<>();
 
-            result.putAll(bc.getHandlerConfigurations().get("*"));
+            Map<String, String> overall = bc.getHandlerConfigurations().get("*");
+            if (overall != null)
+                result.putAll(overall);
             final String name = getHandlerName(handler);
             if (name != null) {
-                result.putAll(bc.getHandlerConfigurations().get(name));
+                Map<String, String> handlerSpecific = bc.getHandlerConfigurations().get(name);
+                if (handlerSpecific != null)
+                    result.putAll(handlerSpecific);
             }
             return result;
         }
@@ -393,7 +397,7 @@ class BuilderUtil {
         }
 
         @Override
-        public KeyValueMap getConfiguration() {
+        public Map<String,String> getConfiguration() {
             return configuration;
         }
     }

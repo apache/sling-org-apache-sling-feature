@@ -16,14 +16,16 @@
  */
 package org.apache.sling.feature;
 
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-
 import org.apache.felix.utils.resource.CapabilityImpl;
 import org.apache.felix.utils.resource.RequirementImpl;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
+
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * A feature consists of
@@ -47,7 +49,7 @@ public class Feature implements Comparable<Feature> {
 
     private final Configurations configurations = new Configurations();
 
-    private final KeyValueMap frameworkProperties = new KeyValueMap();
+    private final Map<String,String> frameworkProperties = new HashMap<>();
 
     private final List<Requirement> requirements = new ArrayList<>();
 
@@ -55,7 +57,7 @@ public class Feature implements Comparable<Feature> {
 
     private final Extensions extensions = new Extensions();
 
-    private final KeyValueMap variables = new KeyValueMap();
+    private final Map<String,String> variables = new HashMap<>();
 
     /** The optional location. */
     private volatile String location;
@@ -144,7 +146,7 @@ public class Feature implements Comparable<Feature> {
      * The returned object is modifiable.
      * @return The framework properties
      */
-    public KeyValueMap getFrameworkProperties() {
+    public Map<String,String> getFrameworkProperties() {
         return this.frameworkProperties;
     }
 
@@ -227,7 +229,7 @@ public class Feature implements Comparable<Feature> {
      * Obtain the variables of the feature
      * @return The variables
      */
-    public KeyValueMap getVariables() {
+    public Map<String,String> getVariables() {
         return this.variables;
     }
 

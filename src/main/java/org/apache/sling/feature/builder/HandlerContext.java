@@ -1,6 +1,6 @@
 /*
 
- * Licensed to the Apache Software Foundation (ASF) under one or more
+Map<String,String> * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -17,7 +17,7 @@
  */
 package org.apache.sling.feature.builder;
 
-import org.apache.sling.feature.KeyValueMap;
+import java.util.Map;
 
 /**
  * Context for an extension handler.
@@ -34,5 +34,5 @@ public interface HandlerContext {
      * @return Map of provided configuration, or an empty map if there is no configuration.
      * Never {@code null}.
      */
-    KeyValueMap getConfiguration();
+    Map<String,String> getConfiguration();
 }

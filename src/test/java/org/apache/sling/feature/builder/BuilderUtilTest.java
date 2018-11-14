@@ -16,14 +16,21 @@
  */
 package org.apache.sling.feature.builder;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
+import org.apache.sling.feature.Artifact;
+import org.apache.sling.feature.ArtifactId;
+import org.apache.sling.feature.Bundles;
+import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.ExtensionType;
+import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.builder.BuilderContext.ArtifactMergeAlgorithm;
+import org.junit.Test;
+import org.mockito.Mockito;
 
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -38,16 +45,9 @@ import javax.json.JsonString;
 import javax.json.JsonValue;
 import javax.json.stream.JsonGenerator;
 
-import org.apache.sling.feature.Artifact;
-import org.apache.sling.feature.ArtifactId;
-import org.apache.sling.feature.Bundles;
-import org.apache.sling.feature.Extension;
-import org.apache.sling.feature.ExtensionType;
-import org.apache.sling.feature.Feature;
-import org.apache.sling.feature.KeyValueMap;
-import org.apache.sling.feature.builder.BuilderContext.ArtifactMergeAlgorithm;
-import org.junit.Test;
-import org.mockito.Mockito;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 public class BuilderUtilTest {
 
@@ -221,10 +221,10 @@ public class BuilderUtilTest {
     }
 
     @Test public void testMergeVariables() {
-        KeyValueMap target = new KeyValueMap();
+        Map<String,String> target = new HashMap<>();
         target.put("x", "327");
 
-        KeyValueMap source = new KeyValueMap();
+        Map<String,String> source = new HashMap<>();
         source.put("a", "b");
 
         BuilderUtil.mergeVariables(target, source, null);
@@ -269,7 +269,7 @@ public class BuilderUtilTest {
 
             JsonObjectBuilder jo = Json.createObjectBuilder();
             boolean hasCfg = false;
-            for (Map.Entry<String, String> entry : context.getConfiguration()) {
+            for (Map.Entry<String, String> entry : context.getConfiguration().entrySet()) {
                 jo.add(entry.getKey(), entry.getValue());
                 hasCfg = true;
             }
@@ -342,7 +342,7 @@ public class BuilderUtilTest {
     }
 
     @Test public void testMergeCustomExtensionsFirst() {
-        KeyValueMap m = new KeyValueMap();
+        Map<String,String> m = new HashMap<>();
         m.put("abc", "def");
         m.put("hij", "klm");
 

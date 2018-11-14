@@ -16,12 +16,19 @@
  */
 package org.apache.sling.feature.builder;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.apache.felix.utils.resource.CapabilityImpl;
+import org.apache.felix.utils.resource.RequirementImpl;
+import org.apache.sling.feature.Artifact;
+import org.apache.sling.feature.ArtifactId;
+import org.apache.sling.feature.Configuration;
+import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.ExtensionType;
+import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.FeatureConstants;
+import org.apache.sling.feature.Include;
+import org.junit.Test;
+import org.osgi.resource.Capability;
+import org.osgi.resource.Requirement;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -33,20 +40,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.felix.utils.resource.CapabilityImpl;
-import org.apache.felix.utils.resource.RequirementImpl;
-import org.apache.sling.feature.Artifact;
-import org.apache.sling.feature.ArtifactId;
-import org.apache.sling.feature.Configuration;
-import org.apache.sling.feature.Extension;
-import org.apache.sling.feature.ExtensionType;
-import org.apache.sling.feature.Feature;
-import org.apache.sling.feature.FeatureConstants;
-import org.apache.sling.feature.Include;
-import org.apache.sling.feature.KeyValueMap;
-import org.junit.Test;
-import org.osgi.resource.Capability;
-import org.osgi.resource.Requirement;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class FeatureBuilderTest {
 
@@ -586,7 +585,7 @@ public class FeatureBuilderTest {
     @Test public void testHandleVars() throws Exception {
         ArtifactId aid = new ArtifactId("gid", "aid", "1.2.3", null, null);
         Feature feature = new Feature(aid);
-        KeyValueMap kvMap = feature.getVariables();
+        Map<String,String> kvMap = feature.getVariables();
         kvMap.put("var1", "bar");
         kvMap.put("varvariable", "${myvar}");
         kvMap.put("var.2", "2");
@@ -605,16 +604,16 @@ public class FeatureBuilderTest {
         Feature aFeature = new Feature(aid);
         Feature bFeature = new Feature(bid);
 
-        KeyValueMap kvMapA = aFeature.getVariables();
+        Map<String,String> kvMapA = aFeature.getVariables();
         kvMapA.put("var1", "val1");
         kvMapA.put("var2", "val2");
 
-        KeyValueMap kvMapB = bFeature.getVariables();
+        Map<String,String> kvMapB = bFeature.getVariables();
         kvMapB.put("var1", "val1");
         kvMapB.put("var2", "val2");
         kvMapB.put("var3", "val3");
 
-        KeyValueMap override = new KeyValueMap();
+        Map<String,String> override = new HashMap<>();
         override.put("var3", "valo");
         override.put("val4", "notused");
 
@@ -627,7 +626,7 @@ public class FeatureBuilderTest {
             }
                 }).addVariablesOverwrites(override), aFeature, bFeature);
 
-        KeyValueMap vars = new KeyValueMap();
+        Map<String,String> vars = new HashMap<>();
         vars.putAll(kvMapA);
         vars.putAll(kvMapB);
 
@@ -661,7 +660,7 @@ public class FeatureBuilderTest {
             }
                 }).addVariablesOverwrites(override), aFeature, bFeature);
 
-        vars = new KeyValueMap();
+        vars = new HashMap<>();
         vars.putAll(kvMapA);
         vars.putAll(kvMapB);
         vars.put("var2", "valo");

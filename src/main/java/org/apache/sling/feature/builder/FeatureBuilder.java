@@ -16,6 +16,16 @@
  */
 package org.apache.sling.feature.builder;
 
+import org.apache.sling.feature.Artifact;
+import org.apache.sling.feature.ArtifactId;
+import org.apache.sling.feature.Configuration;
+import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.ExtensionType;
+import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.FeatureConstants;
+import org.apache.sling.feature.Include;
+import org.osgi.framework.Version;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -25,17 +35,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.apache.sling.feature.Artifact;
-import org.apache.sling.feature.ArtifactId;
-import org.apache.sling.feature.Configuration;
-import org.apache.sling.feature.Extension;
-import org.apache.sling.feature.ExtensionType;
-import org.apache.sling.feature.Feature;
-import org.apache.sling.feature.FeatureConstants;
-import org.apache.sling.feature.Include;
-import org.apache.sling.feature.KeyValueMap;
-import org.osgi.framework.Version;
 
 public abstract class FeatureBuilder {
 
@@ -221,7 +220,7 @@ public abstract class FeatureBuilder {
      * @param feature The feature
      * @param additionalVariables Optional additional variables
      */
-    public static void resolveVariables(final Feature feature, final KeyValueMap additionalVariables) {
+    public static void resolveVariables(final Feature feature, final Map<String,String> additionalVariables) {
         for(final Configuration cfg : feature.getConfigurations()) {
         	final Set<String> keys = new HashSet<>(Collections.list(cfg.getProperties().keys()));
         	for(final String key : keys) {
@@ -229,7 +228,7 @@ public abstract class FeatureBuilder {
                 cfg.getProperties().put(key, replaceVariables(value, additionalVariables, feature));
             }
         }
-        for(final Map.Entry<String, String> entry : feature.getFrameworkProperties()) {
+        for(final Map.Entry<String, String> entry : feature.getFrameworkProperties().entrySet()) {
             // the  value is always a string
             entry.setValue((String)replaceVariables(entry.getValue(), additionalVariables, feature));
         }
@@ -247,7 +246,7 @@ public abstract class FeatureBuilder {
      * @param feature The feature containing variables
      * @return The value with the variables substituted.
      */
-    static Object replaceVariables(final Object value, final KeyValueMap additionalVariables, final Feature feature) {
+    static Object replaceVariables(final Object value, final Map<String,String> additionalVariables, final Feature feature) {
         if (!(value instanceof String)) {
             return value;
         }
@@ -261,8 +260,10 @@ public abstract class FeatureBuilder {
 
             final int len = var.length();
             final String name = var.substring(2, len - 1);
-            if (BuilderUtil.contains(name, feature.getVariables())) {
-                String val = BuilderUtil.get(name, additionalVariables);
+            if (BuilderUtil.contains(name, feature.getVariables().entrySet())) {
+                String val = null;
+                if (additionalVariables != null)
+                    val = BuilderUtil.get(name, additionalVariables.entrySet());
                 if (val == null) {
                     val = feature.getVariables().get(name);
                 }

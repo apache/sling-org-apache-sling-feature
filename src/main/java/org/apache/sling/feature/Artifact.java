@@ -16,6 +16,9 @@
  */
 package org.apache.sling.feature;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * An artifact consists of
  * <ul>
@@ -35,7 +38,7 @@ public class Artifact implements Comparable<Artifact> {
     private final ArtifactId id;
 
     /** Artifact metadata. */
-    private final KeyValueMap metadata = new KeyValueMap();
+    private final Map<String,String> metadata = new HashMap<>();
 
     /**
      * Construct a new artifact
@@ -62,7 +65,7 @@ public class Artifact implements Comparable<Artifact> {
      * The metadata can be modified.
      * @return The metadata.
      */
-    public KeyValueMap getMetadata() {
+    public Map<String,String> getMetadata() {
         return this.metadata;
     }
 
@@ -130,7 +133,7 @@ public class Artifact implements Comparable<Artifact> {
 
     /**
      * Create a copy of the artifact with a different id
-     * 
+     *
      * @param id The new id
      * @return The copy of the feature with the new id
      */
