@@ -195,7 +195,7 @@ public abstract class FeatureBuilder {
             }
             usedFeatures.add(assembled.getId());
 
-            merge(target, assembled, context, context.getMergeAlgorithm(), true);
+            merge(target, assembled, context, context.getArtifactOverrides(), true);
         }
 
         // append feature list in extension
@@ -322,9 +322,8 @@ public abstract class FeatureBuilder {
             processInclude(includedFeature, i);
 
             // and now merge
-            merge(result, includedFeature, context, BuilderContext.ArtifactMergeAlgorithm.LATEST, true);
-
-            merge(result, feature, context, BuilderContext.ArtifactMergeAlgorithm.LATEST, false);
+            merge(result, includedFeature, context, context.getArtifactOverrides(), true);
+            merge(result, feature, context, context.getArtifactOverrides(), false);
         }
         processedFeatures.remove(feature.getId().toMvnId());
 
@@ -335,17 +334,15 @@ public abstract class FeatureBuilder {
     private static void merge(final Feature target,
             final Feature source,
             final BuilderContext context,
-            final BuilderContext.ArtifactMergeAlgorithm mergeAlg, final boolean recordOrigin) {
+            final List<String> artifactOverrides,
+            final boolean recordOrigin) {
         BuilderUtil.mergeVariables(target.getVariables(), source.getVariables(), context);
-        BuilderUtil.mergeBundles(target.getBundles(), source.getBundles(), recordOrigin ? source : null, mergeAlg);
+        BuilderUtil.mergeBundles(target.getBundles(), source.getBundles(), recordOrigin ? source : null, artifactOverrides);
         BuilderUtil.mergeConfigurations(target.getConfigurations(), source.getConfigurations());
         BuilderUtil.mergeFrameworkProperties(target.getFrameworkProperties(), source.getFrameworkProperties(), context);
         BuilderUtil.mergeRequirements(target.getRequirements(), source.getRequirements());
         BuilderUtil.mergeCapabilities(target.getCapabilities(), source.getCapabilities());
-        BuilderUtil.mergeExtensions(target,
-                source,
-                mergeAlg,
-                context, recordOrigin);
+        BuilderUtil.mergeExtensions(target, source, context, recordOrigin, artifactOverrides);
     }
 
     /**

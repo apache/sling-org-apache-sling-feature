@@ -22,7 +22,6 @@ import org.apache.sling.feature.Bundles;
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.Feature;
-import org.apache.sling.feature.builder.BuilderContext.ArtifactMergeAlgorithm;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -30,6 +29,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -105,7 +105,8 @@ public class BuilderUtilTest {
 
         final Feature orgFeat = new Feature(new ArtifactId("gid", "aid", "123", null, null));
 
-        BuilderUtil.mergeBundles(target, source, orgFeat, ArtifactMergeAlgorithm.HIGHEST);
+        List<String> overrides = Arrays.asList("g:a:HIGHEST", "g:b:HIGHEST");
+        BuilderUtil.mergeBundles(target, source, orgFeat, overrides);
 
         final List<Map.Entry<Integer, Artifact>> result = getBundles(target);
         assertEquals(3, result.size());
@@ -133,7 +134,8 @@ public class BuilderUtilTest {
 
         final Feature orgFeat = new Feature(new ArtifactId("gid", "aid", "123", null, null));
 
-        BuilderUtil.mergeBundles(target, source, orgFeat, ArtifactMergeAlgorithm.LATEST);
+        List<String> overrides = Arrays.asList("g:a:LATEST", "g:b:LATEST");
+        BuilderUtil.mergeBundles(target, source, orgFeat, overrides);
 
         final List<Map.Entry<Integer, Artifact>> result = getBundles(target);
         assertEquals(3, result.size());
@@ -151,7 +153,8 @@ public class BuilderUtilTest {
         source.add(createBundle("g/a/1.1", 2));
 
         final Feature orgFeat = new Feature(new ArtifactId("gid", "aid", "123", null, null));
-        BuilderUtil.mergeBundles(target, source, orgFeat, ArtifactMergeAlgorithm.LATEST);
+        List<String> overrides = Arrays.asList("g:a:LATEST", "g:b:LATEST");
+        BuilderUtil.mergeBundles(target, source, orgFeat, overrides);
 
         final List<Map.Entry<Integer, Artifact>> result = getBundles(target);
         assertEquals(1, result.size());
@@ -171,7 +174,7 @@ public class BuilderUtilTest {
         source.add(createBundle("g/f/2.5", 3));
 
         final Feature orgFeat = new Feature(new ArtifactId("gid", "aid", "123", null, null));
-        BuilderUtil.mergeBundles(target, source, orgFeat, ArtifactMergeAlgorithm.LATEST);
+        BuilderUtil.mergeBundles(target, source, orgFeat, new ArrayList<>());
 
         final List<Map.Entry<Integer, Artifact>> result = getBundles(target);
         assertEquals(6, result.size());
@@ -191,11 +194,11 @@ public class BuilderUtilTest {
         source.add(createBundle("g/b/1.0", 1));
 
         final Feature orgFeat = new Feature(new ArtifactId("gid", "aid", "123", "c1", "slingfeature"));
-        BuilderUtil.mergeBundles(target, source, orgFeat, ArtifactMergeAlgorithm.LATEST);
+        BuilderUtil.mergeBundles(target, source, orgFeat, new ArrayList<>());
 
         final Bundles target2 = new Bundles();
         final Feature orgFeat2 = new Feature(new ArtifactId("g", "a", "1", null, null));
-        BuilderUtil.mergeBundles(target2, target, orgFeat2, ArtifactMergeAlgorithm.LATEST);
+        BuilderUtil.mergeBundles(target2, target, orgFeat2, new ArrayList<>());
 
         List<Entry<Integer, Artifact>> result = getBundles(target2);
         assertEquals(2, result.size());
@@ -214,7 +217,7 @@ public class BuilderUtilTest {
 
         source.setJSON("[\"source1\",\"source2\"]");
 
-        BuilderUtil.mergeExtensions(target, source, null, ArtifactMergeAlgorithm.HIGHEST);
+        BuilderUtil.mergeExtensions(target, source, null, new ArrayList<>());
 
         assertEquals(target.getJSON(), "[\"target1\",\"target2\",\"source1\",\"source2\"]");
 
@@ -306,7 +309,7 @@ public class BuilderUtilTest {
         Feature ft = new Feature(ArtifactId.fromMvnId("g:t:1"));
 
         assertEquals("Precondition", 0, ft.getExtensions().size());
-        BuilderUtil.mergeExtensions(ft, fs, ArtifactMergeAlgorithm.LATEST, ctx, true);
+        BuilderUtil.mergeExtensions(ft, fs, ctx, true, new ArrayList<>());
         assertEquals(1, ft.getExtensions().size());
 
         Extension actual = ft.getExtensions().get(0);
@@ -330,7 +333,7 @@ public class BuilderUtilTest {
         ft.getExtensions().add(et);
 
         assertEquals("Precondition", 1, ft.getExtensions().size());
-        BuilderUtil.mergeExtensions(ft, fs, ArtifactMergeAlgorithm.LATEST, ctx, true);
+        BuilderUtil.mergeExtensions(ft, fs, ctx, true, new ArrayList<>());
         assertEquals(1, ft.getExtensions().size());
 
         Extension actual = ft.getExtensions().get(0);
@@ -357,7 +360,7 @@ public class BuilderUtilTest {
         Feature ft = new Feature(ArtifactId.fromMvnId("g:t:1"));
 
         assertEquals("Precondition", 0, ft.getExtensions().size());
-        BuilderUtil.mergeExtensions(ft, fs, ArtifactMergeAlgorithm.LATEST, ctx, true);
+        BuilderUtil.mergeExtensions(ft, fs, ctx, true, new ArrayList<>());
         assertEquals(1, ft.getExtensions().size());
 
         Extension actual = ft.getExtensions().get(0);
@@ -382,7 +385,7 @@ public class BuilderUtilTest {
         ft.getExtensions().add(et);
 
         assertEquals("Precondition", 1, ft.getExtensions().size());
-        BuilderUtil.mergeExtensions(ft, fs, ArtifactMergeAlgorithm.LATEST, ctx, true);
+        BuilderUtil.mergeExtensions(ft, fs, ctx, true, new ArrayList<>());
         assertEquals(1, ft.getExtensions().size());
 
         Extension actual = ft.getExtensions().get(0);
@@ -391,6 +394,80 @@ public class BuilderUtilTest {
         JsonReader ar = Json.createReader(new StringReader(actual.getJSON()));
         JsonReader er = Json.createReader(new StringReader(expected));
         assertEquals(er.readObject(), ar.readObject());
+    }
+
+    @Test public void testSelectArtifactOverrideAll() {
+        Artifact a1 = new Artifact(ArtifactId.fromMvnId("gid:aid:1"));
+        Artifact a2 = new Artifact(ArtifactId.fromMvnId("gid:aid:2"));
+        List<String> overrides = Arrays.asList("gid:aid2:1", "gid:aid:ALL ");
+        assertEquals(Arrays.asList(a1, a2), BuilderUtil.selectArtifactOverride(a1, a2, overrides));
+    }
+
+    @Test public void testSelectArtifactOverrideIdenticalNeedsNoRule() {
+        Artifact a1 = new Artifact(ArtifactId.fromMvnId("gid:aid:1"));
+        Artifact a2 = new Artifact(ArtifactId.fromMvnId("gid:aid:1"));
+        assertEquals(Collections.singletonList(a1), BuilderUtil.selectArtifactOverride(a1, a2, Collections.emptyList()));
+    }
+
+    @Test public void testSelectArtifactOverride1() {
+        Artifact a1 = new Artifact(ArtifactId.fromMvnId("gid:aid:1"));
+        Artifact a2 = new Artifact(ArtifactId.fromMvnId("gid:aid:2"));
+        List<String> overrides = Collections.singletonList("gid:aid:1");
+        assertEquals(Collections.singletonList(a1), BuilderUtil.selectArtifactOverride(a1, a2, overrides));
+    }
+
+    @Test public void testSelectArtifactOverride2() {
+        Artifact a1 = new Artifact(ArtifactId.fromMvnId("gid:aid:1"));
+        Artifact a2 = new Artifact(ArtifactId.fromMvnId("gid:aid:2"));
+        List<String> overrides = Collections.singletonList("gid:aid:2");
+        assertEquals(Collections.singletonList(a2), BuilderUtil.selectArtifactOverride(a1, a2, overrides));
+    }
+
+    @Test(expected=IllegalStateException.class)
+    public void testSelectArtifactOverride3() {
+        Artifact a1 = new Artifact(ArtifactId.fromMvnId("gid:aid:1"));
+        Artifact a2 = new Artifact(ArtifactId.fromMvnId("gid:aid:2"));
+        List<String> overrides = Collections.singletonList("gid:aid:3");
+        BuilderUtil.selectArtifactOverride(a1, a2, overrides);
+    }
+
+    @Test(expected=IllegalStateException.class)
+    public void testSelectArtifactOverrideDifferentGroupID() {
+        Artifact a1 = new Artifact(ArtifactId.fromMvnId("aid:aid:1"));
+        Artifact a2 = new Artifact(ArtifactId.fromMvnId("gid:aid:2"));
+        List<String> overrides = Collections.singletonList("gid:aid:2");
+        BuilderUtil.selectArtifactOverride(a1, a2, overrides);
+    }
+
+    @Test(expected=IllegalStateException.class)
+    public void testSelectArtifactOverrideDifferentArtifactID() {
+        Artifact a1 = new Artifact(ArtifactId.fromMvnId("gid:gid:1"));
+        Artifact a2 = new Artifact(ArtifactId.fromMvnId("gid:aid:2"));
+        List<String> overrides = Collections.singletonList("gid:aid:2");
+        BuilderUtil.selectArtifactOverride(a1, a2, overrides);
+    }
+
+    @Test(expected=IllegalStateException.class)
+    public void testSelectArtifactOverrideDifferentNoRule() {
+        Artifact a1 = new Artifact(ArtifactId.fromMvnId("gid:aid:1"));
+        Artifact a2 = new Artifact(ArtifactId.fromMvnId("gid:aid:2"));
+        BuilderUtil.selectArtifactOverride(a1, a2, Collections.emptyList());
+    }
+
+    @Test public void testSelectArtifactOverrideHigest() {
+        Artifact a1 = new Artifact(ArtifactId.fromMvnId("gid:aid:1.1"));
+        Artifact a2 = new Artifact(ArtifactId.fromMvnId("gid:aid:2.0.1"));
+        List<String> overrides = Collections.singletonList("gid:aid:HIGHEST");
+        assertEquals(Collections.singletonList(a2), BuilderUtil.selectArtifactOverride(a1, a2, overrides));
+        assertEquals(Collections.singletonList(a2), BuilderUtil.selectArtifactOverride(a2, a1, overrides));
+    }
+
+    @Test public void testSelectArtifactOverrideLatest() {
+        Artifact a1 = new Artifact(ArtifactId.fromMvnId("gid:aid:1.1"));
+        Artifact a2 = new Artifact(ArtifactId.fromMvnId("gid:aid:2.0.1"));
+        List<String> overrides = Collections.singletonList("gid:aid:LATEST");
+        assertEquals(Collections.singletonList(a2), BuilderUtil.selectArtifactOverride(a1, a2, overrides));
+        assertEquals(Collections.singletonList(a1), BuilderUtil.selectArtifactOverride(a2, a1, overrides));
     }
 
     @SafeVarargs
