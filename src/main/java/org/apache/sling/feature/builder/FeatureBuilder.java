@@ -16,16 +16,6 @@
  */
 package org.apache.sling.feature.builder;
 
-import org.apache.sling.feature.Artifact;
-import org.apache.sling.feature.ArtifactId;
-import org.apache.sling.feature.Configuration;
-import org.apache.sling.feature.Extension;
-import org.apache.sling.feature.ExtensionType;
-import org.apache.sling.feature.Feature;
-import org.apache.sling.feature.FeatureConstants;
-import org.apache.sling.feature.Include;
-import org.osgi.framework.Version;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -35,6 +25,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.sling.feature.Artifact;
+import org.apache.sling.feature.ArtifactId;
+import org.apache.sling.feature.Configuration;
+import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.ExtensionType;
+import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.FeatureConstants;
+import org.apache.sling.feature.Include;
+import org.osgi.framework.Version;
 
 public abstract class FeatureBuilder {
 
@@ -326,9 +326,16 @@ public abstract class FeatureBuilder {
 
             merge(result, feature, context, BuilderContext.ArtifactMergeAlgorithm.LATEST, false);
         }
-        processedFeatures.remove(feature.getId().toMvnId());
+
+        // remove bundle info from configuration
+        for (final Configuration cfg : result.getConfigurations()) {
+            cfg.getProperties().remove(Configuration.PROP_ARTIFACT_ID);
+        }
 
         result.setAssembled(true);
+
+        processedFeatures.remove(feature.getId().toMvnId());
+
         return result;
     }
 
