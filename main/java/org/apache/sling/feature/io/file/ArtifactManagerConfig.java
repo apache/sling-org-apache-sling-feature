@@ -46,7 +46,7 @@ public class ArtifactManagerConfig implements ArtifactProviderContext {
     public ArtifactManagerConfig() {
         // set defaults
         this.repositoryUrls = new String[] {
-                "file://" + System.getProperty("user.home") + "/.m2/repository",
+                "file://" + new File(System.getProperty("user.home")).toURI().getPath() + ".m2/repository",
                 "https://repo.maven.apache.org/maven2",
                 "https://repository.apache.org/content/groups/snapshots"
                 };
