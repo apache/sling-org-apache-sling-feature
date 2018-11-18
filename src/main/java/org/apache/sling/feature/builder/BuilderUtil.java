@@ -52,6 +52,7 @@ import javax.json.JsonWriter;
  * Utility methods for the builders
  */
 class BuilderUtil {
+    static final String CATCHALL_OVERRIDE = "*:*:";
 
     static boolean contains(String key, Iterable<Map.Entry<String, String>> iterable) {
         if (iterable != null) {
@@ -168,8 +169,12 @@ class BuilderUtil {
 
         String prefix = a1gid + ":" + a1aid + ":";
         for (String o : artifactOverrides) {
-            if (o.startsWith(prefix)) {
-                String rule = o.substring(prefix.length()).trim();
+            if (o.startsWith(prefix) || o.startsWith(CATCHALL_OVERRIDE)) {
+                int idx = o.lastIndexOf(':');
+                if (idx <= 0 || o.length() <= idx)
+                    continue;
+
+                String rule = o.substring(idx+1).trim();
 
                 if ("ALL".equals(rule)) {
                     return Arrays.asList(a1, a2);

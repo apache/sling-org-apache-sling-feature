@@ -312,10 +312,6 @@ public class FeatureBuilderTest {
         result.getConfigurations().add(co3);
 
         BuilderContext builderContext = new BuilderContext(provider);
-        builderContext.addArtifactsOverrides(Arrays.asList(
-                "group:testnewversion_low:LATEST",
-                "group:testnewversion_high:LATEST",
-                "group:testnewstartlevelandversion:LATEST"));
 
         // assemble
         final Feature assembled = FeatureBuilder.assemble(base, builderContext);

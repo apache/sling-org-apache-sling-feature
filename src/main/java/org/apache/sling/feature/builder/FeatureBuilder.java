@@ -321,9 +321,10 @@ public abstract class FeatureBuilder {
             // process include instructions
             processInclude(includedFeature, i);
 
-            // and now merge
-            merge(result, includedFeature, context, context.getArtifactOverrides(), true);
-            merge(result, feature, context, context.getArtifactOverrides(), false);
+            // and now merge the included feature into the result. No overrides should be needed since the result is empty before
+            merge(result, includedFeature, context, Collections.emptyList(), true);
+            // and merge the current feature over the included feature into the result
+            merge(result, feature, context, Collections.singletonList("*:*:LATEST"), false);
         }
         processedFeatures.remove(feature.getId().toMvnId());
 
