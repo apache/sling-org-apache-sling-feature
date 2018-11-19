@@ -16,16 +16,6 @@
  */
 package org.apache.sling.feature.builder;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.apache.sling.feature.Artifact;
 import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Configuration;
@@ -35,6 +25,16 @@ import org.apache.sling.feature.Feature;
 import org.apache.sling.feature.FeatureConstants;
 import org.apache.sling.feature.Include;
 import org.osgi.framework.Version;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public abstract class FeatureBuilder {
 
@@ -195,7 +195,7 @@ public abstract class FeatureBuilder {
             }
             usedFeatures.add(assembled.getId());
 
-            merge(target, assembled, context, context.getMergeAlgorithm(), true);
+            merge(target, assembled, context, context.getArtifactOverrides());
         }
 
         // append feature list in extension
@@ -323,10 +323,10 @@ public abstract class FeatureBuilder {
             // process include instructions
             processInclude(includedFeature, i);
 
-            // and now merge
-            merge(result, includedFeature, context, BuilderContext.ArtifactMergeAlgorithm.LATEST, true);
-
-            merge(result, feature, context, BuilderContext.ArtifactMergeAlgorithm.LATEST, false);
+            // and now merge the included feature into the result. No overrides should be needed since the result is empty before
+            merge(result, includedFeature, context, Collections.emptyList());
+            // and merge the current feature over the included feature into the result
+            merge(result, feature, context, Collections.singletonList("*:*:LATEST"));
         }
 
         result.setAssembled(true);
@@ -339,18 +339,14 @@ public abstract class FeatureBuilder {
     private static void merge(final Feature target,
             final Feature source,
             final BuilderContext context,
-            final BuilderContext.ArtifactMergeAlgorithm mergeAlg, final boolean recordOrigin) {
+            final List<String> artifactOverrides) {
         BuilderUtil.mergeVariables(target.getVariables(), source.getVariables(), context);
-        BuilderUtil.mergeBundles(target.getBundles(), source.getBundles(), recordOrigin ? source : null, mergeAlg);
-        BuilderUtil.mergeConfigurations(target.getConfigurations(), source.getConfigurations(),
-                recordOrigin ? source : null);
+        BuilderUtil.mergeBundles(target.getBundles(), source.getBundles(), source, artifactOverrides);
+        BuilderUtil.mergeConfigurations(target.getConfigurations(), source.getConfigurations(), source);
         BuilderUtil.mergeFrameworkProperties(target.getFrameworkProperties(), source.getFrameworkProperties(), context);
         BuilderUtil.mergeRequirements(target.getRequirements(), source.getRequirements());
         BuilderUtil.mergeCapabilities(target.getCapabilities(), source.getCapabilities());
-        BuilderUtil.mergeExtensions(target,
-                source,
-                mergeAlg,
-                context, recordOrigin);
+        BuilderUtil.mergeExtensions(target, source, context, artifactOverrides);
     }
 
     /**

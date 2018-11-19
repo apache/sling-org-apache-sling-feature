@@ -29,10 +29,6 @@ import java.util.Map;
  */
 public class BuilderContext {
 
-    enum ArtifactMergeAlgorithm {
-        LATEST, HIGHEST
-    }
-
     /** The required feature provider */
     private final FeatureProvider provider;
 
@@ -42,10 +38,10 @@ public class BuilderContext {
     private final Map<String, Map<String,String>> extensionConfiguration = new HashMap<>();
     private final List<MergeHandler> mergeExtensions = new ArrayList<>();
     private final List<PostProcessHandler> postProcessExtensions = new ArrayList<>();
+    private final List<String> artifactsOverrides = new ArrayList<>();
     private final Map<String,String> variables = new HashMap<>();
     private final Map<String,String> frameworkProperties = new HashMap<>();
 
-    private ArtifactMergeAlgorithm merge = ArtifactMergeAlgorithm.HIGHEST;
 
     /**
      * Create a new context
@@ -94,6 +90,17 @@ public class BuilderContext {
     }
 
     /**
+     * Add overrides for artifact clashes
+     *
+     * @param overrides The overwrites
+     * @return The builder context
+     */
+    public BuilderContext addArtifactsOverrides(final List<String> overrides) {
+        this.artifactsOverrides.addAll(overrides);
+        return this;
+    }
+
+    /**
      * Add merge extensions
      *
      * @param extensions A list of merge extensions
@@ -112,17 +119,6 @@ public class BuilderContext {
      */
     public BuilderContext addPostProcessExtensions(final PostProcessHandler... extensions) {
         postProcessExtensions.addAll(Arrays.asList(extensions));
-        return this;
-    }
-
-    /**
-     * Set the merge algorithm
-     *
-     * @param alg The algorithm
-     * @return The builder context
-     */
-    public BuilderContext setMergeAlgorithm(final ArtifactMergeAlgorithm alg) {
-        this.merge = alg;
         return this;
     }
 
@@ -152,8 +148,12 @@ public class BuilderContext {
         return this.artifactProvider;
     }
 
+    List<String> getArtifactOverrides() {
+        return this.artifactsOverrides;
+    }
+
     Map<String,String> getVariablesOverwrites() {
-        return  this.variables;
+        return this.variables;
     }
 
     Map<String,String> getFrameworkPropertiesOverwrites() {
@@ -166,10 +166,6 @@ public class BuilderContext {
      */
     FeatureProvider getFeatureProvider() {
         return this.provider;
-    }
-
-    ArtifactMergeAlgorithm getMergeAlgorithm() {
-        return this.merge;
     }
 
     /**
@@ -196,11 +192,11 @@ public class BuilderContext {
     BuilderContext clone(final FeatureProvider featureProvider) {
         final BuilderContext ctx = new BuilderContext(featureProvider);
         ctx.setArtifactProvider(this.artifactProvider);
+        ctx.artifactsOverrides.addAll(this.artifactsOverrides);
         ctx.variables.putAll(this.variables);
         ctx.frameworkProperties.putAll(this.frameworkProperties);
         ctx.mergeExtensions.addAll(mergeExtensions);
         ctx.postProcessExtensions.addAll(postProcessExtensions);
-        ctx.merge = this.merge;
         return ctx;
     }
 }
