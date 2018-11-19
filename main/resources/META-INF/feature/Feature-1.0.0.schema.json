@@ -32,7 +32,7 @@
       "type": "object",
       "patternProperties": {
         "^(.+)$": {
-          "type": "string"
+          "type": ["string","null"]
         }
       }
     },
