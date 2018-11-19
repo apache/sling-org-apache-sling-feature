@@ -401,20 +401,10 @@ public abstract class FeatureBuilder {
         // process configuration removals
         for (final String c : include.getConfigurationRemovals()) {
             final int attrPos = c.indexOf('@');
-            final String val = (attrPos == -1 ? c : c.substring(0, attrPos));
+            final String pid = (attrPos == -1 ? c : c.substring(0, attrPos));
             final String attr = (attrPos == -1 ? null : c.substring(attrPos + 1));
 
-            final int sepPos = val.indexOf('~');
-            Configuration found = null;
-            if ( sepPos == -1 ) {
-                found = feature.getConfigurations().getConfiguration(val);
-
-            } else {
-                final String factoryPid = val.substring(0, sepPos);
-                final String name = val.substring(sepPos + 1);
-
-                found = feature.getConfigurations().getFactoryConfiguration(factoryPid, name);
-            }
+            final Configuration found = feature.getConfigurations().getConfiguration(pid);
             if ( found != null ) {
                 if ( attr == null ) {
                     feature.getConfigurations().remove(found);

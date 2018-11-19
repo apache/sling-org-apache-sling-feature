@@ -16,16 +16,16 @@
  */
 package org.apache.sling.feature;
 
-import org.apache.felix.utils.resource.CapabilityImpl;
-import org.apache.felix.utils.resource.RequirementImpl;
-import org.osgi.resource.Capability;
-import org.osgi.resource.Requirement;
-
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.felix.utils.resource.CapabilityImpl;
+import org.apache.felix.utils.resource.RequirementImpl;
+import org.osgi.resource.Capability;
+import org.osgi.resource.Requirement;
 
 /**
  * A feature consists of
@@ -330,7 +330,9 @@ public class Feature implements Comparable<Feature> {
     }
 
     /**
-     * Create a copy of the feature with a different id
+     * Create a copy of the feature with a different id For contained items like
+     * bundles, artifacts and configurations a copy is created as well.
+     * 
      * @param id The new id
      * @return The copy of the feature with the new id
      */
@@ -360,7 +362,7 @@ public class Feature implements Comparable<Feature> {
 
         // configurations
         for(final Configuration cfg : this.getConfigurations()) {
-            final Configuration c = cfg.isFactoryConfiguration() ? new Configuration(cfg.getFactoryPid(), cfg.getName()) : new Configuration(cfg.getPid());
+            final Configuration c = new Configuration(cfg.getPid());
             final Enumeration<String> keyEnum = cfg.getProperties().keys();
             while ( keyEnum.hasMoreElements() ) {
                 final String key = keyEnum.nextElement();

@@ -19,6 +19,7 @@ package org.apache.sling.feature;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -39,16 +40,23 @@ public class Configuration
     implements Comparable<Configuration> {
 
     /**
-     * This optional configuration property stores the artifact id (mvn id) of the bundle
-     * this configuration belongs to.
+     * Prefix for instructions for the configurator.
      */
-    public static final String PROP_ARTIFACT_ID = "service.bundleLocation";
+    public static final String CONFIGURATOR_PREFIX = ":configurator:";
+
+    /**
+     * Prefix for special properties which are not configuration properties.
+     */
+    public static final String PROP_PREFIX = CONFIGURATOR_PREFIX + "feature:";
+
+    /**
+     * This optional configuration property stores the artifact id (mvn id) of the
+     * bundle this configuration belongs to.
+     */
+    public static final String PROP_ARTIFACT_ID = PROP_PREFIX + "service.bundleLocation";
 
     /** The pid or name for factory pids. */
     private final String pid;
-
-    /** The factory pid. */
-    private final String factoryPid;
 
     /** The properties. */
     private final Dictionary<String, Object> properties = new OrderedDictionary();
@@ -63,101 +71,88 @@ public class Configuration
             throw new IllegalArgumentException("pid must not be null");
         }
         this.pid = pid;
-        this.factoryPid = null;
-    }
-
-    /**
-     * Create a new factor configuration
-     * @param factoryPid The factory pid
-     * @param name The name of the factory pid
-     * @throws IllegalArgumentException If factoryPid or name is {@code null}
-     */
-    public Configuration(final String factoryPid, final String name) {
-        if ( factoryPid == null || name == null ) {
-            throw new IllegalArgumentException("factoryPid and/or name must not be null");
-        }
-        this.pid = name;
-        this.factoryPid = factoryPid;
-    }
-
-    private int compareString(final String a, final String b) {
-        if ( a == null ) {
-            if ( b == null ) {
-                return 0;
-            }
-            return -1;
-        }
-        if ( b == null ) {
-            return 1;
-        }
-        return a.compareTo(b);
     }
 
     @Override
     public int compareTo(final Configuration o) {
-        int result = compareString(this.factoryPid, o.factoryPid);
-        if ( result == 0 ) {
-            result = compareString(this.pid, o.pid);
-        }
-        return result;
+        return this.pid.compareTo(o.pid);
     }
-
 
     /**
      * Get the pid.
-     * If this is a factory configuration, it returns {@code null}
-     * @return The pid or {@code null}
+     * 
+     * @return The pid
      */
     public String getPid() {
-        if ( this.isFactoryConfiguration() ) {
-            return null;
-        }
         return this.pid;
     }
 
     /**
-     * Return the factory pid
-     * @return The factory pid or {@code null}.
+     * Check whether the pid is a factory pid
+     * 
+     * @param pid The pid
+     * @return {@code true} if it's a factory pid
      */
-    public String getFactoryPid() {
-        return this.factoryPid;
+    public static boolean isFactoryConfiguration(final String pid) {
+        return pid.contains("~");
     }
 
     /**
-     * Return the name for a factory configuration.
-     * @return The name or {@code null}.
+     * Return the factory pid of a pid if it's a factory configuration
+     * 
+     * @param pid The pid
+     * @return The factory pid or {@code null}.
      */
-    public String getName() {
-        if ( this.isFactoryConfiguration() ) {
-            return this.pid;
+    public static String getFactoryPid(final String pid) {
+        final int pos = pid.indexOf('~');
+        if (pos != -1) {
+            return pid.substring(0, pos);
         }
         return null;
     }
 
     /**
-     * Check whether this is a factory configuration
-     * @return {@code true} if it is a factory configuration
+     * Return the name for a factory configuration.
+     * 
+     * @param pid The pid
+     * @return The name or {@code null}.
      */
-    public boolean isFactoryConfiguration() {
-        return this.factoryPid != null;
+    public static String getName(final String pid) {
+        final int pos = pid.indexOf('~');
+        if (pos != -1) {
+            return pid.substring(pos + 1);
+        }
+        return null;
     }
 
     /**
      * Get all properties of the configuration.
+     * 
      * @return The properties
      */
     public Dictionary<String, Object> getProperties() {
         return this.properties;
     }
 
+    /**
+     * Get the configuration properties of the configuration.
+     * 
+     * @return The properties
+     */
+    public Dictionary<String, Object> getConfigurationProperties() {
+        final Dictionary<String, Object> p = new Hashtable<>();
+        final Enumeration<String> keys = this.properties.keys();
+        while (keys.hasMoreElements()) {
+            final String key = keys.nextElement();
+            if (!key.startsWith(CONFIGURATOR_PREFIX)) {
+                p.put(key, this.properties.get(key));
+            }
+        }
+        return p;
+    }
+
     @Override
     public String toString() {
-        if ( this.isFactoryConfiguration() ) {
-            return "Factory Configuration [factoryPid=" + factoryPid
-                    + ", name=" + pid
-                    + ", properties=" + properties
-                    + "]";
-        }
         return "Configuration [pid=" + pid
                 + ", properties=" + properties
                 + "]";

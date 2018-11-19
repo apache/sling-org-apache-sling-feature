@@ -16,6 +16,23 @@
  */
 package org.apache.sling.feature.builder;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.felix.utils.resource.CapabilityImpl;
 import org.apache.felix.utils.resource.RequirementImpl;
 import org.apache.sling.feature.Artifact;
@@ -29,23 +46,6 @@ import org.apache.sling.feature.Include;
 import org.junit.Test;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
-
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 public class FeatureBuilderTest {
 
@@ -139,8 +139,7 @@ public class FeatureBuilderTest {
         // configurations
         assertEquals(expected.getConfigurations().size(), actuals.getConfigurations().size());
         for(final Configuration cfg : expected.getConfigurations()) {
-            final Configuration found = (cfg.isFactoryConfiguration() ? actuals.getConfigurations().getFactoryConfiguration(cfg.getFactoryPid(), cfg.getName())
-                                                                      : actuals.getConfigurations().getConfiguration(cfg.getPid()));
+            final Configuration found = actuals.getConfigurations().getConfiguration(cfg.getPid());
             assertNotNull("Configuration " + cfg, found);
             assertEquals("Configuration " + cfg, cfg.getProperties(), found.getProperties());
         }
@@ -241,7 +240,7 @@ public class FeatureBuilderTest {
         co1.getProperties().put("number", 7);
         base.getConfigurations().add(co1);
 
-        final Configuration co2 = new Configuration("my.factory.pid", "name");
+        final Configuration co2 = new Configuration("my.factory.pid~name");
         co2.getProperties().put("a.value", "yeah");
         base.getConfigurations().add(co2);
 
@@ -294,7 +293,7 @@ public class FeatureBuilderTest {
         co1.getProperties().put("number", 7);
         base.getConfigurations().add(co1);
 
-        final Configuration co2 = new Configuration("my.factory.pid", "name");
+        final Configuration co2 = new Configuration("my.factory.pid~name");
         co2.getProperties().put("a.value", "yeah");
         base.getConfigurations().add(co2);
 

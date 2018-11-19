@@ -34,24 +34,7 @@ public class Configurations extends ArrayList<Configuration> {
      */
     public Configuration getConfiguration(final String pid) {
         for(final Configuration cfg : this) {
-            if ( !cfg.isFactoryConfiguration() && pid.equals(cfg.getPid())) {
-                return cfg;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Get the factory configuration
-     * @param factoryPid The factoryPid of the configuration
-     * @param name The name of the configuration
-     * @return The factory configuration or {@code null}
-     */
-    public Configuration getFactoryConfiguration(final String factoryPid, final String name) {
-        for(final Configuration cfg : this) {
-            if ( cfg.isFactoryConfiguration()
-                    && factoryPid.equals(cfg.getFactoryPid())
-                    && name.equals(cfg.getName())) {
+            if (pid.equals(cfg.getPid())) {
                 return cfg;
             }
         }
