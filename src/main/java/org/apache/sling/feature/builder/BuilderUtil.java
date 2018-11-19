@@ -16,17 +16,6 @@
  */
 package org.apache.sling.feature.builder;
 
-import org.apache.sling.feature.Artifact;
-import org.apache.sling.feature.Bundles;
-import org.apache.sling.feature.Configuration;
-import org.apache.sling.feature.Configurations;
-import org.apache.sling.feature.Extension;
-import org.apache.sling.feature.Feature;
-import org.apache.sling.feature.FeatureConstants;
-import org.apache.sling.feature.builder.BuilderContext.ArtifactMergeAlgorithm;
-import org.osgi.resource.Capability;
-import org.osgi.resource.Requirement;
-
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -45,6 +34,17 @@ import javax.json.JsonStructure;
 import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
 import javax.json.JsonWriter;
+
+import org.apache.sling.feature.Artifact;
+import org.apache.sling.feature.Bundles;
+import org.apache.sling.feature.Configuration;
+import org.apache.sling.feature.Configurations;
+import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.FeatureConstants;
+import org.apache.sling.feature.builder.BuilderContext.ArtifactMergeAlgorithm;
+import org.osgi.resource.Capability;
+import org.osgi.resource.Requirement;
 
 /**
  * Utility methods for the builders
@@ -149,7 +149,7 @@ class BuilderUtil {
     }
 
     // configurations - merge / override
-    static void mergeConfigurations(final Configurations target, final Configurations source) {
+    static void mergeConfigurations(final Configurations target, final Configurations source, final Feature origin) {
         for(final Configuration cfg : source) {
             boolean found = false;
             for(final Configuration current : target) {
@@ -165,7 +165,16 @@ class BuilderUtil {
                 }
             }
             if ( !found ) {
-                target.add(cfg);
+                final Configuration newCfg = new Configuration(cfg.getPid());
+                final Enumeration<String> keyEnum = cfg.getProperties().keys();
+                while (keyEnum.hasMoreElements()) {
+                    final String key = keyEnum.nextElement();
+                    newCfg.getProperties().put(key, cfg.getProperties().get(key));
+                }
+                if (origin != null) {
+                    newCfg.getProperties().put(Configuration.PROP_ORIGINAL__FEATURE, origin.getId().toMvnId());
+                }
+                target.add(newCfg);
             }
         }
     }

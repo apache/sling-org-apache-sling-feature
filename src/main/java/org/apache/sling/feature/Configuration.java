@@ -55,6 +55,12 @@ public class Configuration
      */
     public static final String PROP_ARTIFACT_ID = PROP_PREFIX + "service.bundleLocation";
 
+    /**
+     * This optional configuration property stores the artifact id (mvn id) of the
+     * feature this configuration actually originated from.
+     */
+    public static final String PROP_ORIGINAL__FEATURE = PROP_PREFIX + "org-feature";
+
     /** The pid or name for factory pids. */
     private final String pid;
 
@@ -80,7 +86,7 @@ public class Configuration
 
     /**
      * Get the pid.
-     * 
+     *
      * @return The pid
      */
     public String getPid() {
@@ -89,7 +95,7 @@ public class Configuration
 
     /**
      * Check whether the pid is a factory pid
-     * 
+     *
      * @param pid The pid
      * @return {@code true} if it's a factory pid
      */
@@ -99,7 +105,7 @@ public class Configuration
 
     /**
      * Return the factory pid of a pid if it's a factory configuration
-     * 
+     *
      * @param pid The pid
      * @return The factory pid or {@code null}.
      */
@@ -113,7 +119,7 @@ public class Configuration
 
     /**
      * Return the name for a factory configuration.
-     * 
+     *
      * @param pid The pid
      * @return The name or {@code null}.
      */
@@ -127,7 +133,7 @@ public class Configuration
 
     /**
      * Get all properties of the configuration.
-     * 
+     *
      * @return The properties
      */
     public Dictionary<String, Object> getProperties() {
@@ -136,7 +142,7 @@ public class Configuration
 
     /**
      * Get the configuration properties of the configuration.
-     * 
+     *
      * @return The properties
      */
     public Dictionary<String, Object> getConfigurationProperties() {

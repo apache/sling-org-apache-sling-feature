@@ -308,6 +308,7 @@ public class FeatureBuilderTest {
         result.getBundles().add(BuilderUtilTest.createBundle("org.apache.sling/foo-bar/4.5.6", 3, md2));
         final Configuration co3 = new Configuration("org.apache.sling.foo");
         co3.getProperties().put("prop", "value");
+        co3.getProperties().put(Configuration.PROP_ORIGINAL__FEATURE, i1.getId().toMvnId());
         result.getConfigurations().add(co3);
 
         // assemble

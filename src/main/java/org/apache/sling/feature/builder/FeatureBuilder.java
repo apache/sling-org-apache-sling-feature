@@ -210,6 +210,8 @@ public abstract class FeatureBuilder {
             target.setComplete(true);
         }
 
+        target.setAssembled(true);
+
         return target;
     }
 
@@ -327,11 +329,6 @@ public abstract class FeatureBuilder {
             merge(result, feature, context, BuilderContext.ArtifactMergeAlgorithm.LATEST, false);
         }
 
-        // remove bundle info from configuration
-        for (final Configuration cfg : result.getConfigurations()) {
-            cfg.getProperties().remove(Configuration.PROP_ARTIFACT_ID);
-        }
-
         result.setAssembled(true);
 
         processedFeatures.remove(feature.getId().toMvnId());
@@ -345,7 +342,8 @@ public abstract class FeatureBuilder {
             final BuilderContext.ArtifactMergeAlgorithm mergeAlg, final boolean recordOrigin) {
         BuilderUtil.mergeVariables(target.getVariables(), source.getVariables(), context);
         BuilderUtil.mergeBundles(target.getBundles(), source.getBundles(), recordOrigin ? source : null, mergeAlg);
-        BuilderUtil.mergeConfigurations(target.getConfigurations(), source.getConfigurations());
+        BuilderUtil.mergeConfigurations(target.getConfigurations(), source.getConfigurations(),
+                recordOrigin ? source : null);
         BuilderUtil.mergeFrameworkProperties(target.getFrameworkProperties(), source.getFrameworkProperties(), context);
         BuilderUtil.mergeRequirements(target.getRequirements(), source.getRequirements());
         BuilderUtil.mergeCapabilities(target.getCapabilities(), source.getCapabilities());
