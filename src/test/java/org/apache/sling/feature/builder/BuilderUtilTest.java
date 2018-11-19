@@ -309,7 +309,7 @@ public class BuilderUtilTest {
         Feature ft = new Feature(ArtifactId.fromMvnId("g:t:1"));
 
         assertEquals("Precondition", 0, ft.getExtensions().size());
-        BuilderUtil.mergeExtensions(ft, fs, ctx, true, new ArrayList<>());
+        BuilderUtil.mergeExtensions(ft, fs, ctx, new ArrayList<>());
         assertEquals(1, ft.getExtensions().size());
 
         Extension actual = ft.getExtensions().get(0);
@@ -333,7 +333,7 @@ public class BuilderUtilTest {
         ft.getExtensions().add(et);
 
         assertEquals("Precondition", 1, ft.getExtensions().size());
-        BuilderUtil.mergeExtensions(ft, fs, ctx, true, new ArrayList<>());
+        BuilderUtil.mergeExtensions(ft, fs, ctx, new ArrayList<>());
         assertEquals(1, ft.getExtensions().size());
 
         Extension actual = ft.getExtensions().get(0);
@@ -360,7 +360,7 @@ public class BuilderUtilTest {
         Feature ft = new Feature(ArtifactId.fromMvnId("g:t:1"));
 
         assertEquals("Precondition", 0, ft.getExtensions().size());
-        BuilderUtil.mergeExtensions(ft, fs, ctx, true, new ArrayList<>());
+        BuilderUtil.mergeExtensions(ft, fs, ctx, new ArrayList<>());
         assertEquals(1, ft.getExtensions().size());
 
         Extension actual = ft.getExtensions().get(0);
@@ -385,7 +385,7 @@ public class BuilderUtilTest {
         ft.getExtensions().add(et);
 
         assertEquals("Precondition", 1, ft.getExtensions().size());
-        BuilderUtil.mergeExtensions(ft, fs, ctx, true, new ArrayList<>());
+        BuilderUtil.mergeExtensions(ft, fs, ctx, new ArrayList<>());
         assertEquals(1, ft.getExtensions().size());
 
         Extension actual = ft.getExtensions().get(0);

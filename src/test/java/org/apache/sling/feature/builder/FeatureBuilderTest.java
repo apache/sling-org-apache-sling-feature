@@ -71,6 +71,25 @@ public class FeatureBuilderTest {
         FEATURES.put(f1.getId().toMvnId(), f1);
     }
 
+    static {
+        final Feature f2 = new Feature(ArtifactId.parse("g/a/2"));
+
+        f2.getBundles().add(BuilderUtilTest.createBundle("group/testmulti/1", 4));
+        f2.getBundles().add(BuilderUtilTest.createBundle("group/testmulti/2", 8));
+        f2.getBundles().add(BuilderUtilTest.createBundle("group/someart/1.2.3", 4));
+
+        FEATURES.put(f2.getId().toMvnId(), f2);
+    }
+
+    static {
+        final Feature f2 = new Feature(ArtifactId.parse("g/a/3"));
+
+        f2.getBundles().add(BuilderUtilTest.createBundle("group/testmulti/2", 8));
+        f2.getBundles().add(BuilderUtilTest.createBundle("group/someart/1.2.3", 4));
+
+        FEATURES.put(f2.getId().toMvnId(), f2);
+    }
+
     private final FeatureProvider provider = new FeatureProvider() {
 
         @Override
@@ -317,6 +336,118 @@ public class FeatureBuilderTest {
         final Feature assembled = FeatureBuilder.assemble(base, builderContext);
 
         // and test
+        equals(result, assembled);
+    }
+
+    @Test public void testSingleIncludeMultiVersion() {
+        Feature base = new Feature(ArtifactId.fromMvnId("g:tgtart:1"));
+        Include i1 = new Include(ArtifactId.fromMvnId("g:a:3"));
+        base.setInclude(i1);
+        base.getBundles().add(new Artifact(ArtifactId.fromMvnId("g:myart:1")));
+        base.getBundles().add(new Artifact(ArtifactId.fromMvnId("group:testmulti:1")));
+        base.getBundles().add(new Artifact(ArtifactId.fromMvnId("group:testmulti:3")));
+
+        BuilderContext builderContext = new BuilderContext(provider);
+        Feature assembled = FeatureBuilder.assemble(base, builderContext);
+
+        Feature result = new Feature(ArtifactId.parse("g:tgtart:1"));
+        Artifact b0 = new Artifact(ArtifactId.fromMvnId("g:myart:1"));
+        b0.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, "g:tgtart:1");
+        result.getBundles().add(b0);
+        Artifact b1 = new Artifact(ArtifactId.fromMvnId("group:testmulti:1"));
+        b1.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, "g:tgtart:1");
+        result.getBundles().add(b1);
+        Artifact b2 = new Artifact(ArtifactId.fromMvnId("group:testmulti:3"));
+        b2.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, "g:tgtart:1");
+        result.getBundles().add(b2);
+        Artifact b3 = new Artifact(ArtifactId.fromMvnId("group:someart:1.2.3"));
+        b3.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, "g:a:3");
+        b3.setStartOrder(4);
+        result.getBundles().add(b3);
+
+        equals(result, assembled);
+    }
+
+    @Test public void testSingleIncludeMultiVersion2() {
+        Feature base = new Feature(ArtifactId.fromMvnId("g:tgtart:1"));
+        Include i1 = new Include(ArtifactId.fromMvnId("g:a:2"));
+        base.setInclude(i1);
+        base.getBundles().add(new Artifact(ArtifactId.fromMvnId("g:myart:1")));
+
+        BuilderContext builderContext = new BuilderContext(provider);
+        Feature assembled = FeatureBuilder.assemble(base, builderContext);
+
+        Feature result = new Feature(ArtifactId.parse("g:tgtart:1"));
+        Artifact b0 = new Artifact(ArtifactId.fromMvnId("g:myart:1"));
+        b0.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, "g:tgtart:1");
+        result.getBundles().add(b0);
+        Artifact b1 = new Artifact(ArtifactId.fromMvnId("group:testmulti:1"));
+        b1.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, "g:a:2");
+        b1.setStartOrder(4);
+        result.getBundles().add(b1);
+        Artifact b2 = new Artifact(ArtifactId.fromMvnId("group:testmulti:2"));
+        b2.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, "g:a:2");
+        b2.setStartOrder(8);
+        result.getBundles().add(b2);
+        Artifact b3 = new Artifact(ArtifactId.fromMvnId("group:someart:1.2.3"));
+        b3.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, "g:a:2");
+        b3.setStartOrder(4);
+        result.getBundles().add(b3);
+
+        equals(result, assembled);
+    }
+
+    @Test public void testSingleIncludeMultiVersion3() {
+        Feature base = new Feature(ArtifactId.fromMvnId("g:tgtart:1"));
+        Include i1 = new Include(ArtifactId.fromMvnId("g:a:2"));
+        base.setInclude(i1);
+        base.getBundles().add(new Artifact(ArtifactId.fromMvnId("g:myart:1")));
+        base.getBundles().add(new Artifact(ArtifactId.fromMvnId("group:testmulti:1")));
+
+        BuilderContext builderContext = new BuilderContext(provider);
+        Feature assembled = FeatureBuilder.assemble(base, builderContext);
+
+        Feature result = new Feature(ArtifactId.parse("g:tgtart:1"));
+        Artifact b0 = new Artifact(ArtifactId.fromMvnId("g:myart:1"));
+        b0.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, "g:tgtart:1");
+        result.getBundles().add(b0);
+        Artifact b1 = new Artifact(ArtifactId.fromMvnId("group:testmulti:1"));
+        b1.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, "g:tgtart:1");
+        result.getBundles().add(b1);
+        Artifact b3 = new Artifact(ArtifactId.fromMvnId("group:someart:1.2.3"));
+        b3.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, "g:a:2");
+        b3.setStartOrder(4);
+        result.getBundles().add(b3);
+
+        equals(result, assembled);
+    }
+
+    @Test public void testSingleIncludeMultiVersion4() {
+        Feature base = new Feature(ArtifactId.fromMvnId("g:tgtart:1"));
+        Include i1 = new Include(ArtifactId.fromMvnId("g:a:2"));
+        base.setInclude(i1);
+        base.getBundles().add(new Artifact(ArtifactId.fromMvnId("g:myart:1")));
+        base.getBundles().add(new Artifact(ArtifactId.fromMvnId("group:testmulti:1")));
+        base.getBundles().add(new Artifact(ArtifactId.fromMvnId("group:testmulti:3")));
+
+        BuilderContext builderContext = new BuilderContext(provider);
+        Feature assembled = FeatureBuilder.assemble(base, builderContext);
+
+        Feature result = new Feature(ArtifactId.parse("g:tgtart:1"));
+        Artifact b0 = new Artifact(ArtifactId.fromMvnId("g:myart:1"));
+        b0.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, "g:tgtart:1");
+        result.getBundles().add(b0);
+        Artifact b1 = new Artifact(ArtifactId.fromMvnId("group:testmulti:1"));
+        b1.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, "g:tgtart:1");
+        result.getBundles().add(b1);
+        Artifact b2 = new Artifact(ArtifactId.fromMvnId("group:testmulti:3"));
+        b2.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, "g:tgtart:1");
+        result.getBundles().add(b2);
+        Artifact b3 = new Artifact(ArtifactId.fromMvnId("group:someart:1.2.3"));
+        b3.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, "g:a:2");
+        b3.setStartOrder(4);
+        result.getBundles().add(b3);
+
         equals(result, assembled);
     }
 

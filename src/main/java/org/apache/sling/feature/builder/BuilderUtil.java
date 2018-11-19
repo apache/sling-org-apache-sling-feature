@@ -130,8 +130,16 @@ class BuilderUtil {
                 Artifact existing = target.getSame(a.getId());
                 List<Artifact> selectedArtifacts = null;
                 if (existing != null) {
-                    selectedArtifacts = new ArrayList<>(selectArtifactOverride(existing, a, artifactOverrides));
-                    target.removeExact(existing.getId());
+                    if (sourceFeature.getId().toMvnId().equals(
+                            existing.getMetadata().get(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE))) {
+                        // If the source artifact came from the same feature, keep them side-by-side
+                        selectedArtifacts = Arrays.asList(existing, a);
+                    } else {
+                        selectedArtifacts = selectArtifactOverride(existing, a, artifactOverrides);
+                        while(target.removeSame(existing.getId())) {
+                            // Keep executing removeSame() which ignores the version until last one was removed
+                        }
+                    }
                 } else {
                     selectedArtifacts = Collections.singletonList(a);
                 }
@@ -297,8 +305,16 @@ class BuilderUtil {
                 Artifact existing = target.getArtifacts().getSame(a.getId());
                 List<Artifact> selectedArtifacts = null;
                 if (existing != null) {
-                    selectedArtifacts = new ArrayList<>(selectArtifactOverride(existing, a, artifactOverrides));
-                    target.getArtifacts().removeExact(existing.getId());
+                    if (sourceFeature.getId().toMvnId().equals(
+                            existing.getMetadata().get(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE))) {
+                        // If the source artifact came from the same feature, keep them side-by-side
+                        selectedArtifacts = Arrays.asList(existing, a);
+                    } else {
+                        selectedArtifacts = selectArtifactOverride(existing, a, artifactOverrides);
+                        while(target.getArtifacts().removeSame(existing.getId())) {
+                            // Keep executing removeSame() which ignores the version until last one was removed
+                        }
+                    }
                 } else {
                     selectedArtifacts = Collections.singletonList(a);
                 }
@@ -323,7 +339,6 @@ class BuilderUtil {
     static void mergeExtensions(final Feature target,
         final Feature source,
         final BuilderContext context,
-        final boolean recordOrigin,
         final List<String> artifactOverrides) {
         for(final Extension ext : source.getExtensions()) {
             boolean found = false;
@@ -346,7 +361,7 @@ class BuilderUtil {
                     }
                     if ( !handled ) {
                         // default merge
-                        mergeExtensions(current, ext, recordOrigin ? source : null, artifactOverrides);
+                        mergeExtensions(current, ext, source, artifactOverrides);
                     }
                 }
             }
