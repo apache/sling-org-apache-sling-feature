@@ -46,7 +46,7 @@ public class FeatureJSONReaderTest {
         assertEquals(2, feature.getConfigurations().size());
         final Configuration cfg1 = U.findConfiguration(feature.getConfigurations(), "my.pid");
         assertEquals(7, cfg1.getProperties().get("number"));
-        final Configuration cfg2 = U.findFactoryConfiguration(feature.getConfigurations(), "my.factory.pid", "name");
+        final Configuration cfg2 = U.findConfiguration(feature.getConfigurations(), "my.factory.pid~name");
         assertEquals("yeah", cfg2.getProperties().get("a.value"));
 
         assertEquals(3, feature.getCapabilities().size());

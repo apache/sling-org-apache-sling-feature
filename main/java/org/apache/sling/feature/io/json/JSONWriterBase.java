@@ -16,17 +16,6 @@
  */
 package org.apache.sling.feature.io.json;
 
-import org.apache.sling.feature.Artifact;
-import org.apache.sling.feature.ArtifactId;
-import org.apache.sling.feature.Bundles;
-import org.apache.sling.feature.Configuration;
-import org.apache.sling.feature.Configurations;
-import org.apache.sling.feature.Extension;
-import org.apache.sling.feature.ExtensionType;
-import org.apache.sling.feature.Include;
-import org.osgi.resource.Capability;
-import org.osgi.resource.Requirement;
-
 import java.io.StringReader;
 import java.io.Writer;
 import java.lang.reflect.Array;
@@ -40,6 +29,17 @@ import javax.json.Json;
 import javax.json.JsonStructure;
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonGeneratorFactory;
+
+import org.apache.sling.feature.Artifact;
+import org.apache.sling.feature.ArtifactId;
+import org.apache.sling.feature.Bundles;
+import org.apache.sling.feature.Configuration;
+import org.apache.sling.feature.Configurations;
+import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.ExtensionType;
+import org.apache.sling.feature.Include;
+import org.osgi.resource.Capability;
+import org.osgi.resource.Requirement;
 
 /**
  * Common functionality for writing JSON
@@ -104,14 +104,7 @@ abstract class JSONWriterBase {
         generator.writeStartObject(JSONConstants.FEATURE_CONFIGURATIONS);
 
         for(final Configuration cfg : cfgs) {
-            final String key;
-            if ( cfg.isFactoryConfiguration() ) {
-                key = cfg.getFactoryPid() + "~" + cfg.getName();
-            } else {
-                key = cfg.getPid();
-            }
-
-            generator.writeStartObject(key);
+            generator.writeStartObject(cfg.getPid());
 
             final Enumeration<String> e = cfg.getProperties().keys();
             while ( e.hasMoreElements() ) {

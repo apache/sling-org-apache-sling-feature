@@ -278,19 +278,11 @@ abstract class JSONReaderBase {
         }
 
         for(final Config c : configs) {
-            final int pos = c.getPid().indexOf('~');
-            final Configuration config;
-            if ( pos != -1 ) {
-                config = new Configuration(c.getPid().substring(0, pos), c.getPid().substring(pos + 1));
-            } else {
-                config = new Configuration(c.getPid());
-            }
+            final Configuration config = new Configuration(c.getPid());
+         
             final Enumeration<String> keyEnum = c.getProperties().keys();
             while ( keyEnum.hasMoreElements() ) {
                 final String key = keyEnum.nextElement();
-                if ( key.startsWith(":configurator:") ) {
-                    throw new IOException(exceptionPrefix + "Configuration must not define configurator property " + key);
-                }
                 final Object val = c.getProperties().get(key);
                 config.getProperties().put(key, val);
             }

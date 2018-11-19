@@ -41,21 +41,11 @@ public class U {
 
     public static Configuration findConfiguration(final List<Configuration> cfgs, final String pid) {
         for(final Configuration c : cfgs) {
-            if ( !c.isFactoryConfiguration() && pid.equals(c.getPid()) ) {
+            if (pid.equals(c.getPid())) {
                 return c;
             }
         }
         fail("Configuration not found " + pid);
-        return null;
-    }
-
-    public static Configuration findFactoryConfiguration(final List<Configuration> cfgs, final String factoryid, final String name) {
-        for(final Configuration c : cfgs) {
-            if ( c.isFactoryConfiguration() && factoryid.equals(c.getFactoryPid()) && name.equals(c.getName())) {
-                return c;
-            }
-        }
-        fail("Factory Configuration not found " + factoryid + "~" + name);
         return null;
     }
 
