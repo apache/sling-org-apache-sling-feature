@@ -157,6 +157,22 @@ public class Configuration
         return p;
     }
 
+    /**
+     * Create a copy of the configuration with a provided PID.
+     * 
+     * @param pid The pid of the configuration
+     * @return A copy of this configuration with the given PID
+     */
+    public Configuration copy(final String aPid) {
+        final Configuration result = new Configuration(aPid);
+        final Enumeration<String> keyEnum = this.getProperties().keys();
+        while (keyEnum.hasMoreElements()) {
+            final String key = keyEnum.nextElement();
+            result.getProperties().put(key, this.getProperties().get(key));
+        }
+        return result;
+    }
+
     @Override
     public String toString() {
         return "Configuration [pid=" + pid
@@ -164,7 +180,7 @@ public class Configuration
                 + "]";
     }
 
-    public static class OrderedDictionary extends Dictionary<String, Object> implements Map<String, Object> {
+    static class OrderedDictionary extends Dictionary<String, Object> implements Map<String, Object> {
 
         private static class EnumarationImpl<E> implements Enumeration<E> {
             private final Iterator<E> iterator;

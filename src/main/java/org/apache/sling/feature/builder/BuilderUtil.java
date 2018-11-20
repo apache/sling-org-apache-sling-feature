@@ -165,12 +165,7 @@ class BuilderUtil {
                 }
             }
             if ( !found ) {
-                final Configuration newCfg = new Configuration(cfg.getPid());
-                final Enumeration<String> keyEnum = cfg.getProperties().keys();
-                while (keyEnum.hasMoreElements()) {
-                    final String key = keyEnum.nextElement();
-                    newCfg.getProperties().put(key, cfg.getProperties().get(key));
-                }
+                final Configuration newCfg = cfg.copy(cfg.getPid());
                 if (origin != null) {
                     newCfg.getProperties().put(Configuration.PROP_ORIGINAL__FEATURE, origin.getId().toMvnId());
                 }

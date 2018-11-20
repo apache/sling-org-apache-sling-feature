@@ -17,7 +17,6 @@
 package org.apache.sling.feature;
 
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -332,7 +331,7 @@ public class Feature implements Comparable<Feature> {
     /**
      * Create a copy of the feature with a different id For contained items like
      * bundles, artifacts and configurations a copy is created as well.
-     * 
+     *
      * @param id The new id
      * @return The copy of the feature with the new id
      */
@@ -354,21 +353,12 @@ public class Feature implements Comparable<Feature> {
 
         // bundles
         for(final Artifact b : this.getBundles()) {
-            final Artifact c = new Artifact(b.getId());
-            c.getMetadata().putAll(b.getMetadata());
-
-            result.getBundles().add(c);
+            result.getBundles().add(b.copy(b.getId()));
         }
 
         // configurations
         for(final Configuration cfg : this.getConfigurations()) {
-            final Configuration c = new Configuration(cfg.getPid());
-            final Enumeration<String> keyEnum = cfg.getProperties().keys();
-            while ( keyEnum.hasMoreElements() ) {
-                final String key = keyEnum.nextElement();
-                c.getProperties().put(key, cfg.getProperties().get(key));
-            }
-            result.getConfigurations().add(c);
+            result.getConfigurations().add(cfg.copy(cfg.getPid()));
         }
 
         // framework properties
@@ -405,9 +395,7 @@ public class Feature implements Comparable<Feature> {
             final Extension c = new Extension(e.getType(), e.getName(), e.isRequired());
             switch ( c.getType() ) {
                 case ARTIFACTS : for(final Artifact a : e.getArtifacts()) {
-                                     final Artifact x = new Artifact(a.getId());
-                                     x.getMetadata().putAll(a.getMetadata());
-                                     c.getArtifacts().add(x);
+                                    c.getArtifacts().add(a.copy(a.getId()));
                                  }
                                  break;
                 case JSON : c.setJSON(e.getJSON());
