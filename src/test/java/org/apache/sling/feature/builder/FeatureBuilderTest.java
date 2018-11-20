@@ -762,7 +762,7 @@ public class FeatureBuilderTest {
             {
                 return null;
             }
-                }).addVariablesOverwrites(override), aFeature, bFeature);
+                }).addVariablesOverrides(override), aFeature, bFeature);
 
         Map<String,String> vars = new HashMap<>();
         vars.putAll(kvMapA);
@@ -783,7 +783,7 @@ public class FeatureBuilderTest {
                 {
                     return null;
                 }
-                    }).addVariablesOverwrites(override), aFeature, bFeature);
+                    }).addVariablesOverrides(override), aFeature, bFeature);
             fail("Excepted merge exception");
         } catch (IllegalStateException expected) {}
 
@@ -796,7 +796,7 @@ public class FeatureBuilderTest {
             {
                 return null;
             }
-                }).addVariablesOverwrites(override), aFeature, bFeature);
+                }).addVariablesOverrides(override), aFeature, bFeature);
 
         vars = new HashMap<>();
         vars.putAll(kvMapA);
@@ -815,7 +815,7 @@ public class FeatureBuilderTest {
             {
                 return null;
             }
-                }).addVariablesOverwrites(override), aFeature, bFeature);
+                }).addVariablesOverrides(override), aFeature, bFeature);
 
         vars.put("var2", null);
         assertTrue(cFeature.getVariables().equals(vars));

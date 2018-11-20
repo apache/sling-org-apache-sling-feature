@@ -68,23 +68,23 @@ public class BuilderContext {
     }
 
     /**
-     * Add overwrites for the variables
+     * Add overrides for the variables
      *
-     * @param vars The overwrites
+     * @param vars The overrides
      * @return The builder context
      */
-    public BuilderContext addVariablesOverwrites(final Map<String,String> vars) {
+    public BuilderContext addVariablesOverrides(final Map<String,String> vars) {
         this.variables.putAll(vars);
         return this;
     }
 
     /**
-     * Add overwrites for the framework properties
+     * Add overrides for the framework properties
      *
-     * @param props The overwrites
+     * @param props The overrides
      * @return The builder context
      */
-    public BuilderContext addFrameworkPropertiesOverwrites(final Map<String,String> props) {
+    public BuilderContext addFrameworkPropertiesOverrides(final Map<String,String> props) {
         this.frameworkProperties.putAll(props);
         return this;
     }
@@ -92,7 +92,7 @@ public class BuilderContext {
     /**
      * Add overrides for artifact clashes
      *
-     * @param overrides The overwrites
+     * @param overrides The overrides
      * @return The builder context
      */
     public BuilderContext addArtifactsOverrides(final List<String> overrides) {
@@ -152,11 +152,11 @@ public class BuilderContext {
         return this.artifactsOverrides;
     }
 
-    Map<String,String> getVariablesOverwrites() {
+    Map<String,String> getVariablesOverrides() {
         return this.variables;
     }
 
-    Map<String,String> getFrameworkPropertiesOverwrites() {
+    Map<String,String> getFrameworkPropertiesOverrides() {
         return this.frameworkProperties;
     }
 

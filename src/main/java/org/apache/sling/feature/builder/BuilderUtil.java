@@ -45,8 +45,8 @@ import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonStructure;
 import javax.json.JsonValue;
-import javax.json.JsonWriter;
 import javax.json.JsonValue.ValueType;
+import javax.json.JsonWriter;
 
 /**
  * Utility methods for the builders
@@ -76,7 +76,7 @@ class BuilderUtil {
         return null;
     }
 
-    private static void mergeWithContextOverwrite(String type, Map<String,String> target, Map<String,String> source, Iterable<Map.Entry<String,String>> context) {
+    private static void mergeWithContextOverride(String type, Map<String,String> target, Map<String,String> source, Iterable<Map.Entry<String,String>> context) {
         Map<String,String> result = new HashMap<>();
         for (Map.Entry<String, String> entry : target.entrySet()) {
             result.put(entry.getKey(), contains(entry.getKey(), context) ? get(entry.getKey(), context) : entry.getValue());
@@ -91,7 +91,7 @@ class BuilderUtil {
                     String targetValue = target.get(entry.getKey());
                     if (targetValue != null) {
                         if (!value.equals(targetValue)) {
-                            throw new IllegalStateException(String.format("Can't merge %s '%s' defined twice (as '%s' v.s. '%s') and not overwritten.", type, entry.getKey(), value, targetValue));
+                            throw new IllegalStateException(String.format("Can't merge %s '%s' defined twice (as '%s' v.s. '%s') and not overridden.", type, entry.getKey(), value, targetValue));
                         }
                     }
                     else {
@@ -109,8 +109,8 @@ class BuilderUtil {
 
     // variables
     static void mergeVariables(Map<String,String> target, Map<String,String> source, BuilderContext context) {
-        mergeWithContextOverwrite("Variable", target, source,
-                (null != context) ? context.getVariablesOverwrites().entrySet() : null);
+        mergeWithContextOverride("Variable", target, source,
+                (null != context) ? context.getVariablesOverrides().entrySet() : null);
     }
 
     /**
@@ -237,8 +237,8 @@ class BuilderUtil {
 
     // framework properties (add/merge)
     static void mergeFrameworkProperties(final Map<String,String> target, final Map<String,String> source, BuilderContext context) {
-        mergeWithContextOverwrite("Property", target, source,
-                context != null ? context.getFrameworkPropertiesOverwrites().entrySet() : null);
+        mergeWithContextOverride("Property", target, source,
+                context != null ? context.getFrameworkPropertiesOverrides().entrySet() : null);
     }
 
     // requirements (add)
