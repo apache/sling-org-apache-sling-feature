@@ -330,8 +330,8 @@ public abstract class FeatureBuilder {
             // and merge the current feature over the included feature into the result
             merge(result, feature, context, Collections.singletonList("*:*:LATEST"));
 
-            // set the origin of the included artifacts and configurations to the resulting feature
-            setOrigins(result, includedFeature);
+            // set the origin of the artifacts and configurations included and part of the resulting feature back to null
+            resetOrigins(result, includedFeature);
         }
 
         result.setAssembled(true);
@@ -469,26 +469,30 @@ public abstract class FeatureBuilder {
     }
 
     // Set the origin of elements coming from an included feature to the target feature
-    private static void setOrigins(Feature feature, Feature includedFeature) {
+    private static void resetOrigins(Feature feature, Feature includedFeature) {
+        String currentID = feature.getId().toMvnId();
         String includedID = includedFeature.getId().toMvnId();
 
         // As the feature is a prototype, set the origins to the target where it's going to
         for (Artifact a : feature.getBundles()) {
             Map<String, String> md = a.getMetadata();
-            if (includedID.equals(md.get(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE)))
-                md.put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, feature.getId().toMvnId());
+            if (currentID.equals(md.get(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE))
+                    || includedID.equals(md.get(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE)))
+                md.remove(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE);
         }
         for (Configuration c : feature.getConfigurations()) {
             Dictionary<String, Object> props = c.getProperties();
-            if (includedID.equals(props.get(Configuration.PROP_ORIGINAL__FEATURE)))
-                props.put(Configuration.PROP_ORIGINAL__FEATURE, feature.getId().toMvnId());
+            if (currentID.equals(props.get(Configuration.PROP_ORIGINAL__FEATURE))
+                    || includedID.equals(props.get(Configuration.PROP_ORIGINAL__FEATURE)))
+                props.remove(Configuration.PROP_ORIGINAL__FEATURE);
         }
         for (Extension e : feature.getExtensions()) {
             if (ExtensionType.ARTIFACTS == e.getType()) {
                 for (Artifact a : e.getArtifacts()) {
                     Map<String, String> md = a.getMetadata();
-                    if (includedID.equals(md.get(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE)))
-                        md.put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, feature.getId().toMvnId());
+                    if (currentID.equals(md.get(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE))
+                            || includedID.equals(md.get(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE)))
+                        md.remove(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE);
                 }
             }
         }

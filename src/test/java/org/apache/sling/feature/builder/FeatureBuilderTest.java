@@ -30,7 +30,6 @@ import org.junit.Test;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
 
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -295,16 +294,14 @@ public class FeatureBuilderTest {
         final Artifact a1 = new Artifact(ArtifactId.parse("org.apache.sling/oak-server/1.0.0"));
         a1.getMetadata().put(Artifact.KEY_START_ORDER, "1");
         a1.getMetadata().put("hash", "4632463464363646436");
-        a1.getMetadata().put("org-feature", "org.apache.sling:test-feature:1.1");
         base.getBundles().add(a1);
-        Map.Entry<String, String> md = new AbstractMap.SimpleEntry<String, String>("org-feature", "org.apache.sling:test-feature:1.1");
-        base.getBundles().add(BuilderUtilTest.createBundle("org.apache.sling/application-bundle/2.0.0", 1, md));
-        base.getBundles().add(BuilderUtilTest.createBundle("org.apache.sling/another-bundle/2.1.0", 1, md));
-        base.getBundles().add(BuilderUtilTest.createBundle("org.apache.sling/foo-xyz/1.2.3", 2, md));
-        base.getBundles().add(BuilderUtilTest.createBundle("group/testnewversion_low/1", 5, md));
-        base.getBundles().add(BuilderUtilTest.createBundle("group/testnewversion_high/5", 5, md));
-        base.getBundles().add(BuilderUtilTest.createBundle("group/testnewstartlevel/1", 10, md));
-        base.getBundles().add(BuilderUtilTest.createBundle("group/testnewstartlevelandversion/2", 10, md));
+        base.getBundles().add(BuilderUtilTest.createBundle("org.apache.sling/application-bundle/2.0.0", 1));
+        base.getBundles().add(BuilderUtilTest.createBundle("org.apache.sling/another-bundle/2.1.0", 1));
+        base.getBundles().add(BuilderUtilTest.createBundle("org.apache.sling/foo-xyz/1.2.3", 2));
+        base.getBundles().add(BuilderUtilTest.createBundle("group/testnewversion_low/1", 5));
+        base.getBundles().add(BuilderUtilTest.createBundle("group/testnewversion_high/5", 5));
+        base.getBundles().add(BuilderUtilTest.createBundle("group/testnewstartlevel/1", 10));
+        base.getBundles().add(BuilderUtilTest.createBundle("group/testnewstartlevelandversion/2", 10));
 
         final Configuration co1 = new Configuration("my.pid");
         co1.getProperties().put("foo", 5L);
@@ -323,21 +320,13 @@ public class FeatureBuilderTest {
         result.getVariables().put("varx", "myvalx");
         result.setInclude(null);
         result.getFrameworkProperties().put("bar", "X");
-        Map.Entry<String, String> md2 = new AbstractMap.SimpleEntry<String, String>(
-                "org-feature", "org.apache.sling:test-feature:1.1");
-        result.getBundles().add(BuilderUtilTest.createBundle("org.apache.sling/foo-bar/4.5.6", 3, md2));
-
+        result.getBundles().add(BuilderUtilTest.createBundle("org.apache.sling/foo-bar/4.5.6", 3));
         final Configuration co3 = new Configuration("org.apache.sling.foo");
         co3.getProperties().put("prop", "value");
         result.getConfigurations().add(co3);
-        for (final Configuration c : result.getConfigurations()) {
-            c.getProperties().put(Configuration.PROP_ORIGINAL__FEATURE, base.getId().toMvnId());
-        }
-
-        BuilderContext builderContext = new BuilderContext(provider);
 
         // assemble
-        final Feature assembled = FeatureBuilder.assemble(base, builderContext);
+        final Feature assembled = FeatureBuilder.assemble(base, new BuilderContext(provider));
 
         // and test
         equals(result, assembled);
@@ -356,16 +345,12 @@ public class FeatureBuilderTest {
 
         Feature result = new Feature(ArtifactId.parse("g:tgtart:1"));
         Artifact b0 = new Artifact(ArtifactId.fromMvnId("g:myart:1"));
-        b0.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, "g:tgtart:1");
         result.getBundles().add(b0);
         Artifact b1 = new Artifact(ArtifactId.fromMvnId("group:testmulti:1"));
-        b1.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, "g:tgtart:1");
         result.getBundles().add(b1);
         Artifact b2 = new Artifact(ArtifactId.fromMvnId("group:testmulti:3"));
-        b2.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, "g:tgtart:1");
         result.getBundles().add(b2);
         Artifact b3 = new Artifact(ArtifactId.fromMvnId("group:someart:1.2.3"));
-        b3.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, "g:tgtart:1");
         b3.setStartOrder(4);
         result.getBundles().add(b3);
 
@@ -383,18 +368,14 @@ public class FeatureBuilderTest {
 
         Feature result = new Feature(ArtifactId.parse("g:tgtart:1"));
         Artifact b0 = new Artifact(ArtifactId.fromMvnId("g:myart:1"));
-        b0.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, "g:tgtart:1");
         result.getBundles().add(b0);
         Artifact b1 = new Artifact(ArtifactId.fromMvnId("group:testmulti:1"));
-        b1.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, "g:tgtart:1");
         b1.setStartOrder(4);
         result.getBundles().add(b1);
         Artifact b2 = new Artifact(ArtifactId.fromMvnId("group:testmulti:2"));
-        b2.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, "g:tgtart:1");
         b2.setStartOrder(8);
         result.getBundles().add(b2);
         Artifact b3 = new Artifact(ArtifactId.fromMvnId("group:someart:1.2.3"));
-        b3.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, "g:tgtart:1");
         b3.setStartOrder(4);
         result.getBundles().add(b3);
 
@@ -413,13 +394,10 @@ public class FeatureBuilderTest {
 
         Feature result = new Feature(ArtifactId.parse("g:tgtart:1"));
         Artifact b0 = new Artifact(ArtifactId.fromMvnId("g:myart:1"));
-        b0.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, "g:tgtart:1");
         result.getBundles().add(b0);
         Artifact b1 = new Artifact(ArtifactId.fromMvnId("group:testmulti:1"));
-        b1.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, "g:tgtart:1");
         result.getBundles().add(b1);
         Artifact b3 = new Artifact(ArtifactId.fromMvnId("group:someart:1.2.3"));
-        b3.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, "g:tgtart:1");
         b3.setStartOrder(4);
         result.getBundles().add(b3);
 
@@ -439,16 +417,12 @@ public class FeatureBuilderTest {
 
         Feature result = new Feature(ArtifactId.parse("g:tgtart:1"));
         Artifact b0 = new Artifact(ArtifactId.fromMvnId("g:myart:1"));
-        b0.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, "g:tgtart:1");
         result.getBundles().add(b0);
         Artifact b1 = new Artifact(ArtifactId.fromMvnId("group:testmulti:1"));
-        b1.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, "g:tgtart:1");
         result.getBundles().add(b1);
         Artifact b2 = new Artifact(ArtifactId.fromMvnId("group:testmulti:3"));
-        b2.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, "g:tgtart:1");
         result.getBundles().add(b2);
         Artifact b3 = new Artifact(ArtifactId.fromMvnId("group:someart:1.2.3"));
-        b3.getMetadata().put(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE, "g:tgtart:1");
         b3.setStartOrder(4);
         result.getBundles().add(b3);
 
