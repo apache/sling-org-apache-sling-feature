@@ -16,19 +16,12 @@
  */
 package org.apache.sling.feature.builder;
 
-import org.apache.felix.utils.resource.CapabilityImpl;
-import org.apache.felix.utils.resource.RequirementImpl;
-import org.apache.sling.feature.Artifact;
-import org.apache.sling.feature.ArtifactId;
-import org.apache.sling.feature.Configuration;
-import org.apache.sling.feature.Extension;
-import org.apache.sling.feature.ExtensionType;
-import org.apache.sling.feature.Feature;
-import org.apache.sling.feature.FeatureConstants;
-import org.apache.sling.feature.Include;
-import org.junit.Test;
-import org.osgi.resource.Capability;
-import org.osgi.resource.Requirement;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,12 +32,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.apache.felix.utils.resource.CapabilityImpl;
+import org.apache.felix.utils.resource.RequirementImpl;
+import org.apache.sling.feature.Artifact;
+import org.apache.sling.feature.ArtifactId;
+import org.apache.sling.feature.Configuration;
+import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.ExtensionType;
+import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.Include;
+import org.junit.Test;
+import org.osgi.resource.Capability;
+import org.osgi.resource.Requirement;
 
 public class FeatureBuilderTest {
 
@@ -687,7 +686,7 @@ public class FeatureBuilderTest {
                 return null;
             }
                 }), a, b);
-        final Extension list = target.getExtensions().getByName(FeatureConstants.EXTENSION_NAME_ASSEMBLED_FEATURES);
+        final Extension list = target.getExtensions().getByName(Extension.EXTENSION_NAME_ASSEMBLED_FEATURES);
         assertNotNull(list);
         assertEquals(1, list.getArtifacts().size());
         assertEquals(idB, list.getArtifacts().get(0).getId());

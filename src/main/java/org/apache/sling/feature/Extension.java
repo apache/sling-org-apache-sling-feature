@@ -16,6 +16,8 @@
  */
 package org.apache.sling.feature;
 
+import org.apache.sling.feature.builder.BuilderContext;
+
 /**
  * An Extension can either be of type
  * <ul>
@@ -25,10 +27,29 @@ package org.apache.sling.feature;
  * </ul>
  *
  * This class is not thread-safe.
- * 
+ *
  * @see ExtensionType
  */
 public class Extension {
+
+    /**
+     * Common extension name to specify the repoinit part for Apache Sling. This
+     * extension is of type {@link ExtensionType#TEXT} and is required.
+     */
+    public static final String EXTENSION_NAME_REPOINIT = "repoinit";
+
+    /**
+     * Common extension name to specify the content packages for Apache Sling. This
+     * extension is of type {@link ExtensionType#ARTIFACTS} and is required.
+     */
+    public static final String EXTENSION_NAME_CONTENT_PACKAGES = "content-packages";
+
+    /**
+     * Extension name containing the assembled features as produced by
+     * {@link org.apache.sling.feature.builder.FeatureBuilder#assemble(ArtifactId, BuilderContext, Feature...)}.
+     * This extension is of type {@link ExtensionType#ARTIFACTS} and is optional.
+     */
+    public static final String EXTENSION_NAME_ASSEMBLED_FEATURES = "assembled-features";
 
     /** The extension type */
     private final ExtensionType type;

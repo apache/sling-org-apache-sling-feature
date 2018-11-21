@@ -16,16 +16,6 @@
  */
 package org.apache.sling.feature.builder;
 
-import org.apache.sling.feature.Artifact;
-import org.apache.sling.feature.ArtifactId;
-import org.apache.sling.feature.Configuration;
-import org.apache.sling.feature.Extension;
-import org.apache.sling.feature.ExtensionType;
-import org.apache.sling.feature.Feature;
-import org.apache.sling.feature.FeatureConstants;
-import org.apache.sling.feature.Include;
-import org.osgi.framework.Version;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -35,6 +25,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.sling.feature.Artifact;
+import org.apache.sling.feature.ArtifactId;
+import org.apache.sling.feature.Configuration;
+import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.ExtensionType;
+import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.Include;
+import org.osgi.framework.Version;
 
 public abstract class FeatureBuilder {
     /** This key is used to track origins while includes are merged in */
@@ -201,7 +200,8 @@ public abstract class FeatureBuilder {
         }
 
         // append feature list in extension
-        final Extension list = new Extension(ExtensionType.ARTIFACTS, FeatureConstants.EXTENSION_NAME_ASSEMBLED_FEATURES, false);
+        final Extension list = new Extension(ExtensionType.ARTIFACTS, Extension.EXTENSION_NAME_ASSEMBLED_FEATURES,
+                false);
         for(final ArtifactId id : usedFeatures) {
             list.getArtifacts().add(new Artifact(id));
         }
