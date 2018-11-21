@@ -24,8 +24,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import org.apache.sling.feature.ArtifactId;
-
 public class IOUtils {
 
     /** The extension for a reference file. */
@@ -155,18 +153,6 @@ public class IOUtils {
 
         Collections.sort(paths, FEATURE_PATH_COMP);
         return paths;
-    }
-
-    /**
-     * Get an artifact id for the Apache Felix framework
-     * @param version The version to use or {@code null} for the default version
-     * @return The artifact id
-     * @throws IllegalArgumentException If the provided version is invalid
-     */
-    public static ArtifactId getFelixFrameworkId(final String version) {
-        return new ArtifactId("org.apache.felix",
-                "org.apache.felix.framework",
-                version != null ? version : "6.0.1", null, null);
     }
 
     static final Comparator<String> FEATURE_PATH_COMP = new Comparator<String>() {

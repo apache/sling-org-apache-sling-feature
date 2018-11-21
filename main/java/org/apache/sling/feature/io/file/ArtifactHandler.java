@@ -27,15 +27,31 @@ public class ArtifactHandler {
 
     private final File file;
 
+    /**
+     * Create a new handler.
+     * 
+     * @param url  The url of the artifact
+     * @param file The file for the artifact
+     */
     public ArtifactHandler(final String url, final File file) {
         this.url = url;
         this.file = file;
     }
 
+    /**
+     * Get the url of the artifact
+     * 
+     * @return The url.
+     */
     public String getUrl() {
         return url;
     }
 
+    /**
+     * Get a file for the artifact
+     * 
+     * @return The file
+     */
     public File getFile() {
         return file;
     }
