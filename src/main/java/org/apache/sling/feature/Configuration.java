@@ -55,12 +55,6 @@ public class Configuration
      */
     public static final String PROP_ARTIFACT_ID = PROP_PREFIX + "service.bundleLocation";
 
-    /**
-     * This optional configuration property stores the artifact id (mvn id) of the
-     * feature this configuration actually originated from.
-     */
-    public static final String PROP_ORIGINAL__FEATURE = PROP_PREFIX + "org-feature";
-
     /** The pid or name for factory pids. */
     private final String pid;
 

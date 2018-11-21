@@ -46,7 +46,6 @@ import javax.json.JsonValue;
 import javax.json.stream.JsonGenerator;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 public class BuilderUtilTest {
@@ -106,17 +105,12 @@ public class BuilderUtilTest {
         final Feature orgFeat = new Feature(new ArtifactId("gid", "aid", "123", null, null));
 
         List<String> overrides = Arrays.asList("g:a:HIGHEST", "g:b:HIGHEST");
-        BuilderUtil.mergeBundles(target, source, orgFeat, overrides);
+        BuilderUtil.mergeBundles(target, source, orgFeat, overrides, null);
 
         final List<Map.Entry<Integer, Artifact>> result = getBundles(target);
         assertEquals(3, result.size());
-        int i = assertContains(result, 1, ArtifactId.parse("g/a/1.1"));
-        Map.Entry<Integer, Artifact> a1 = result.get(i);
-        assertEquals("gid:aid:123", a1.getValue().getMetadata().get("org-feature"));
-
-        int i2 = assertContains(result, 2, ArtifactId.parse("g/b/2.0"));
-        Map.Entry<Integer, Artifact> a2 = result.get(i2);
-        assertNull(a2.getValue().getMetadata().get("org-feature"));
+        assertContains(result, 1, ArtifactId.parse("g/a/1.1"));
+        assertContains(result, 2, ArtifactId.parse("g/b/2.0"));
         assertContains(result, 3, ArtifactId.parse("g/c/2.5"));
     }
 
@@ -135,7 +129,7 @@ public class BuilderUtilTest {
         final Feature orgFeat = new Feature(new ArtifactId("gid", "aid", "123", null, null));
 
         List<String> overrides = Arrays.asList("g:a:LATEST", "g:b:LATEST");
-        BuilderUtil.mergeBundles(target, source, orgFeat, overrides);
+        BuilderUtil.mergeBundles(target, source, orgFeat, overrides, null);
 
         final List<Map.Entry<Integer, Artifact>> result = getBundles(target);
         assertEquals(3, result.size());
@@ -154,7 +148,7 @@ public class BuilderUtilTest {
 
         final Feature orgFeat = new Feature(new ArtifactId("gid", "aid", "123", null, null));
         List<String> overrides = Arrays.asList("g:a:LATEST", "g:b:LATEST");
-        BuilderUtil.mergeBundles(target, source, orgFeat, overrides);
+        BuilderUtil.mergeBundles(target, source, orgFeat, overrides, null);
 
         final List<Map.Entry<Integer, Artifact>> result = getBundles(target);
         assertEquals(1, result.size());
@@ -174,7 +168,7 @@ public class BuilderUtilTest {
         source.add(createBundle("g/f/2.5", 3));
 
         final Feature orgFeat = new Feature(new ArtifactId("gid", "aid", "123", null, null));
-        BuilderUtil.mergeBundles(target, source, orgFeat, new ArrayList<>());
+        BuilderUtil.mergeBundles(target, source, orgFeat, new ArrayList<>(), null);
 
         final List<Map.Entry<Integer, Artifact>> result = getBundles(target);
         assertEquals(6, result.size());
@@ -194,18 +188,16 @@ public class BuilderUtilTest {
         source.add(createBundle("g/b/1.0", 1));
 
         final Feature orgFeat = new Feature(new ArtifactId("gid", "aid", "123", "c1", "slingfeature"));
-        BuilderUtil.mergeBundles(target, source, orgFeat, new ArrayList<>());
+        BuilderUtil.mergeBundles(target, source, orgFeat, new ArrayList<>(), null);
 
         final Bundles target2 = new Bundles();
         final Feature orgFeat2 = new Feature(new ArtifactId("g", "a", "1", null, null));
-        BuilderUtil.mergeBundles(target2, target, orgFeat2, new ArrayList<>());
+        BuilderUtil.mergeBundles(target2, target, orgFeat2, new ArrayList<>(), null);
 
         List<Entry<Integer, Artifact>> result = getBundles(target2);
         assertEquals(2, result.size());
-        int i1 = assertContains(result, 1, ArtifactId.parse("g/a/1.0"));
-        assertEquals("g:a:1", result.get(i1).getValue().getMetadata().get("org-feature"));
-        int i2 = assertContains(result, 1, ArtifactId.parse("g/b/1.0"));
-        assertEquals("gid:aid:slingfeature:c1:123", result.get(i2).getValue().getMetadata().get("org-feature"));
+        assertContains(result, 1, ArtifactId.parse("g/a/1.0"));
+        assertContains(result, 1, ArtifactId.parse("g/b/1.0"));
     }
 
     @Test public void testMergeExtensions() {
@@ -217,7 +209,7 @@ public class BuilderUtilTest {
 
         source.setJSON("[\"source1\",\"source2\"]");
 
-        BuilderUtil.mergeExtensions(target, source, null, new ArrayList<>());
+        BuilderUtil.mergeExtensions(target, source, null, new ArrayList<>(), null);
 
         assertEquals(target.getJSON(), "[\"target1\",\"target2\",\"source1\",\"source2\"]");
 
@@ -309,7 +301,7 @@ public class BuilderUtilTest {
         Feature ft = new Feature(ArtifactId.fromMvnId("g:t:1"));
 
         assertEquals("Precondition", 0, ft.getExtensions().size());
-        BuilderUtil.mergeExtensions(ft, fs, ctx, new ArrayList<>());
+        BuilderUtil.mergeExtensions(ft, fs, ctx, new ArrayList<>(), null);
         assertEquals(1, ft.getExtensions().size());
 
         Extension actual = ft.getExtensions().get(0);
@@ -333,7 +325,7 @@ public class BuilderUtilTest {
         ft.getExtensions().add(et);
 
         assertEquals("Precondition", 1, ft.getExtensions().size());
-        BuilderUtil.mergeExtensions(ft, fs, ctx, new ArrayList<>());
+        BuilderUtil.mergeExtensions(ft, fs, ctx, new ArrayList<>(), null);
         assertEquals(1, ft.getExtensions().size());
 
         Extension actual = ft.getExtensions().get(0);
@@ -360,7 +352,7 @@ public class BuilderUtilTest {
         Feature ft = new Feature(ArtifactId.fromMvnId("g:t:1"));
 
         assertEquals("Precondition", 0, ft.getExtensions().size());
-        BuilderUtil.mergeExtensions(ft, fs, ctx, new ArrayList<>());
+        BuilderUtil.mergeExtensions(ft, fs, ctx, new ArrayList<>(), null);
         assertEquals(1, ft.getExtensions().size());
 
         Extension actual = ft.getExtensions().get(0);
@@ -385,7 +377,7 @@ public class BuilderUtilTest {
         ft.getExtensions().add(et);
 
         assertEquals("Precondition", 1, ft.getExtensions().size());
-        BuilderUtil.mergeExtensions(ft, fs, ctx, new ArrayList<>());
+        BuilderUtil.mergeExtensions(ft, fs, ctx, new ArrayList<>(), null);
         assertEquals(1, ft.getExtensions().size());
 
         Extension actual = ft.getExtensions().get(0);

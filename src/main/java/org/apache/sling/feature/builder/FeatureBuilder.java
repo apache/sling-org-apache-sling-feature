@@ -16,17 +16,6 @@
  */
 package org.apache.sling.feature.builder;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Dictionary;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.apache.sling.feature.Artifact;
 import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Configuration;
@@ -37,7 +26,19 @@ import org.apache.sling.feature.FeatureConstants;
 import org.apache.sling.feature.Include;
 import org.osgi.framework.Version;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public abstract class FeatureBuilder {
+    /** This key is used to track origins while includes are merged in */
+    private static final String TRACKING_KEY = "tracking-key";
 
     /** Pattern for using variables. */
     private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\{[a-zA-Z0-9.-_]+\\}");
@@ -196,7 +197,7 @@ public abstract class FeatureBuilder {
             }
             usedFeatures.add(assembled.getId());
 
-            merge(target, assembled, context, context.getArtifactOverrides());
+            merge(target, assembled, context, context.getArtifactOverrides(), null);
         }
 
         // append feature list in extension
@@ -325,14 +326,22 @@ public abstract class FeatureBuilder {
             processInclude(includedFeature, i);
 
             // and now merge the included feature into the result. No overrides should be needed since the result is empty before
-            merge(result, includedFeature, context, Collections.emptyList());
+            merge(result, includedFeature, context, Collections.emptyList(), TRACKING_KEY);
 
             // and merge the current feature over the included feature into the result
             merge(result, feature, context, Collections.singletonList(
-                    BuilderUtil.CATCHALL_OVERRIDE + BuilderUtil.OVERRIDE_SELECT_LATEST));
+                    BuilderUtil.CATCHALL_OVERRIDE + BuilderUtil.OVERRIDE_SELECT_LATEST), TRACKING_KEY);
 
-            // set the origin of the artifacts and configurations included and part of the resulting feature back to null
-            resetOrigins(result, includedFeature);
+            for (Artifact a : result.getBundles()) {
+                a.getMetadata().remove(TRACKING_KEY);
+            }
+            for (Extension e : result.getExtensions()) {
+                if (ExtensionType.ARTIFACTS == e.getType()) {
+                    for (Artifact a : e.getArtifacts()) {
+                        a.getMetadata().remove(TRACKING_KEY);
+                    }
+                }
+            }
         }
 
         result.setAssembled(true);
@@ -345,14 +354,15 @@ public abstract class FeatureBuilder {
     private static void merge(final Feature target,
             final Feature source,
             final BuilderContext context,
-            final List<String> artifactOverrides) {
+            final List<String> artifactOverrides,
+            final String originKey) {
         BuilderUtil.mergeVariables(target.getVariables(), source.getVariables(), context);
-        BuilderUtil.mergeBundles(target.getBundles(), source.getBundles(), source, artifactOverrides);
-        BuilderUtil.mergeConfigurations(target.getConfigurations(), source.getConfigurations(), source);
+        BuilderUtil.mergeBundles(target.getBundles(), source.getBundles(), source, artifactOverrides, originKey);
+        BuilderUtil.mergeConfigurations(target.getConfigurations(), source.getConfigurations());
         BuilderUtil.mergeFrameworkProperties(target.getFrameworkProperties(), source.getFrameworkProperties(), context);
         BuilderUtil.mergeRequirements(target.getRequirements(), source.getRequirements());
         BuilderUtil.mergeCapabilities(target.getCapabilities(), source.getCapabilities());
-        BuilderUtil.mergeExtensions(target, source, context, artifactOverrides);
+        BuilderUtil.mergeExtensions(target, source, context, artifactOverrides, originKey);
     }
 
     /**
@@ -464,36 +474,6 @@ public abstract class FeatureBuilder {
                         }
                     }
                     break;
-                }
-            }
-        }
-    }
-
-    // Set the origin of elements coming from an included feature to the target feature
-    private static void resetOrigins(Feature feature, Feature includedFeature) {
-        String currentID = feature.getId().toMvnId();
-        String includedID = includedFeature.getId().toMvnId();
-
-        // As the feature is a prototype, set the origins to the target where it's going to
-        for (Artifact a : feature.getBundles()) {
-            Map<String, String> md = a.getMetadata();
-            if (currentID.equals(md.get(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE))
-                    || includedID.equals(md.get(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE)))
-                md.remove(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE);
-        }
-        for (Configuration c : feature.getConfigurations()) {
-            Dictionary<String, Object> props = c.getProperties();
-            if (currentID.equals(props.get(Configuration.PROP_ORIGINAL__FEATURE))
-                    || includedID.equals(props.get(Configuration.PROP_ORIGINAL__FEATURE)))
-                props.remove(Configuration.PROP_ORIGINAL__FEATURE);
-        }
-        for (Extension e : feature.getExtensions()) {
-            if (ExtensionType.ARTIFACTS == e.getType()) {
-                for (Artifact a : e.getArtifacts()) {
-                    Map<String, String> md = a.getMetadata();
-                    if (currentID.equals(md.get(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE))
-                            || includedID.equals(md.get(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE)))
-                        md.remove(FeatureConstants.ARTIFACT_ATTR_ORIGINAL_FEATURE);
                 }
             }
         }
