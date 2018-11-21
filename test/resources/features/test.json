@@ -2,7 +2,7 @@
     "id" : "org.apache.sling/test-feature/1.1",
     "description": "The feature description",
 
-    "include" :
+    "prototype" :
          {
              "id" : "org.apache.sling/sling/9",
              "removals" : {

@@ -37,7 +37,7 @@ import org.apache.sling.feature.Configuration;
 import org.apache.sling.feature.Configurations;
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.ExtensionType;
-import org.apache.sling.feature.Include;
+import org.apache.sling.feature.Prototype;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
 
@@ -270,7 +270,7 @@ abstract class JSONWriterBase {
         }
     }
 
-    protected void writeInclude(final JsonGenerator generator, final Include inc) {
+    protected void writePrototype(final JsonGenerator generator, final Prototype inc) {
         if (inc == null) {
             return;
         }
@@ -280,16 +280,16 @@ abstract class JSONWriterBase {
              && inc.getConfigurationRemovals().isEmpty()
              && inc.getFrameworkPropertiesRemovals().isEmpty() ) {
 
-            generator.write(JSONConstants.FEATURE_INCLUDE, inc.getId().toMvnId());
+            generator.write(JSONConstants.FEATURE_PROTOTYPE, inc.getId().toMvnId());
         } else {
-            generator.writeStartObject(JSONConstants.FEATURE_INCLUDE);
+            generator.writeStartObject(JSONConstants.FEATURE_PROTOTYPE);
             writeProperty(generator, JSONConstants.ARTIFACT_ID, inc.getId().toMvnId());
 
-            generator.writeStartObject(JSONConstants.INCLUDE_REMOVALS);
+            generator.writeStartObject(JSONConstants.PROTOTYPE_REMOVALS);
 
             if ( !inc.getArtifactExtensionRemovals().isEmpty()
                  || inc.getExtensionRemovals().isEmpty() ) {
-                generator.writeStartArray(JSONConstants.INCLUDE_EXTENSION_REMOVALS);
+                generator.writeStartArray(JSONConstants.PROTOTYPE_EXTENSION_REMOVALS);
 
                 for(final String id : inc.getExtensionRemovals()) {
                     generator.write(id);

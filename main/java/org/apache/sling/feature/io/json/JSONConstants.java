@@ -33,7 +33,7 @@ public abstract class JSONConstants {
 
     static final String FEATURE_CONFIGURATIONS = "configurations";
 
-    static final String FEATURE_INCLUDE = "include";
+    static final String FEATURE_PROTOTYPE = "prototype";
 
     static final String FEATURE_REQUIREMENTS = "requirements";
 
@@ -59,7 +59,7 @@ public abstract class JSONConstants {
             FEATURE_BUNDLES,
             FEATURE_FRAMEWORK_PROPERTIES,
             FEATURE_CONFIGURATIONS,
-            FEATURE_INCLUDE,
+            FEATURE_PROTOTYPE,
             FEATURE_REQUIREMENTS,
             FEATURE_CAPABILITIES,
             FEATURE_TITLE,
@@ -75,9 +75,9 @@ public abstract class JSONConstants {
             Configuration.PROP_ARTIFACT_ID,
             FEATURE_CONFIGURATIONS);
 
-    static final String INCLUDE_REMOVALS = "removals";
+    static final String PROTOTYPE_REMOVALS = "removals";
 
-    static final String INCLUDE_EXTENSION_REMOVALS = "extensions";
+    static final String PROTOTYPE_EXTENSION_REMOVALS = "extensions";
 
     static final String REQCAP_NAMESPACE = "namespace";
     static final String REQCAP_ATTRIBUTES = "attributes";

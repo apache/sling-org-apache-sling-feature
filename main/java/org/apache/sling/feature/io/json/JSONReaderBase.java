@@ -30,7 +30,7 @@ import org.apache.sling.feature.Configurations;
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.Extensions;
-import org.apache.sling.feature.Include;
+import org.apache.sling.feature.Prototype;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
 
@@ -279,7 +279,7 @@ abstract class JSONReaderBase {
 
         for(final Config c : configs) {
             final Configuration config = new Configuration(c.getPid());
-         
+
             final Enumeration<String> keyEnum = c.getProperties().keys();
             while ( keyEnum.hasMoreElements() ) {
                 final String key = keyEnum.nextElement();
@@ -487,87 +487,87 @@ abstract class JSONReaderBase {
         }
     }
 
-    protected Include readInclude(final Map<String, Object> map) throws IOException {
-        if ( map.containsKey(JSONConstants.FEATURE_INCLUDE)) {
-            final Object includeObj = map.get(JSONConstants.FEATURE_INCLUDE);
-            checkType(JSONConstants.FEATURE_INCLUDE, includeObj, Map.class, String.class);
+    protected Prototype readPrototype(final Map<String, Object> map) throws IOException {
+        if ( map.containsKey(JSONConstants.FEATURE_PROTOTYPE)) {
+            final Object prototypeObj = map.get(JSONConstants.FEATURE_PROTOTYPE);
+            checkType(JSONConstants.FEATURE_PROTOTYPE, prototypeObj, Map.class, String.class);
 
-            final Include include;
-            if ( includeObj instanceof String ) {
-                final ArtifactId id = ArtifactId.parse(includeObj.toString());
-                include = new Include(id);
+            final Prototype prototype;
+            if ( prototypeObj instanceof String ) {
+                final ArtifactId id = ArtifactId.parse(prototypeObj.toString());
+                prototype = new Prototype(id);
             } else {
                 @SuppressWarnings("unchecked")
-                final Map<String, Object> obj = (Map<String, Object>) includeObj;
+                final Map<String, Object> obj = (Map<String, Object>) prototypeObj;
                 if ( !obj.containsKey(JSONConstants.ARTIFACT_ID) ) {
-                    throw new IOException(exceptionPrefix + " include is missing required artifact id");
+                    throw new IOException(exceptionPrefix + " prototype is missing required artifact id");
                 }
-                checkType("Include " + JSONConstants.ARTIFACT_ID, obj.get(JSONConstants.ARTIFACT_ID), String.class);
+                checkType("Prototype " + JSONConstants.ARTIFACT_ID, obj.get(JSONConstants.ARTIFACT_ID), String.class);
                 final ArtifactId id = ArtifactId.parse(obj.get(JSONConstants.ARTIFACT_ID).toString());
-                include = new Include(id);
+                prototype = new Prototype(id);
 
-                if ( obj.containsKey(JSONConstants.INCLUDE_REMOVALS) ) {
-                    checkType("Include removals", obj.get(JSONConstants.INCLUDE_REMOVALS), Map.class);
+                if ( obj.containsKey(JSONConstants.PROTOTYPE_REMOVALS) ) {
+                    checkType("Prototype removals", obj.get(JSONConstants.PROTOTYPE_REMOVALS), Map.class);
                     @SuppressWarnings("unchecked")
-                    final Map<String, Object> removalObj = (Map<String, Object>) obj.get(JSONConstants.INCLUDE_REMOVALS);
+                    final Map<String, Object> removalObj = (Map<String, Object>) obj.get(JSONConstants.PROTOTYPE_REMOVALS);
                     if ( removalObj.containsKey(JSONConstants.FEATURE_BUNDLES) ) {
-                        checkType("Include removal bundles", removalObj.get(JSONConstants.FEATURE_BUNDLES), List.class);
+                        checkType("Prototype removal bundles", removalObj.get(JSONConstants.FEATURE_BUNDLES), List.class);
                         @SuppressWarnings("unchecked")
                         final List<Object> list = (List<Object>)removalObj.get(JSONConstants.FEATURE_BUNDLES);
                         for(final Object val : list) {
-                            checkType("Include removal bundles", val, String.class);
+                            checkType("Prototype removal bundles", val, String.class);
                             if ( val.toString().startsWith("#")) {
                                 continue;
                             }
-                            include.getBundleRemovals().add(ArtifactId.parse(val.toString()));
+                            prototype.getBundleRemovals().add(ArtifactId.parse(val.toString()));
                         }
                     }
                     if ( removalObj.containsKey(JSONConstants.FEATURE_CONFIGURATIONS) ) {
-                        checkType("Include removal configuration", removalObj.get(JSONConstants.FEATURE_CONFIGURATIONS), List.class);
+                        checkType("Prototype removal configuration", removalObj.get(JSONConstants.FEATURE_CONFIGURATIONS), List.class);
                         @SuppressWarnings("unchecked")
                         final List<Object> list = (List<Object>)removalObj.get(JSONConstants.FEATURE_CONFIGURATIONS);
                         for(final Object val : list) {
-                            checkType("Include removal configuration", val, String.class);
-                            include.getConfigurationRemovals().add(val.toString());
+                            checkType("Prototype removal configuration", val, String.class);
+                            prototype.getConfigurationRemovals().add(val.toString());
                         }
                     }
                     if ( removalObj.containsKey(JSONConstants.FEATURE_FRAMEWORK_PROPERTIES) ) {
-                        checkType("Include removal framework properties", removalObj.get(JSONConstants.FEATURE_FRAMEWORK_PROPERTIES), List.class);
+                        checkType("Prototype removal framework properties", removalObj.get(JSONConstants.FEATURE_FRAMEWORK_PROPERTIES), List.class);
                         @SuppressWarnings("unchecked")
                         final List<Object> list = (List<Object>)removalObj.get(JSONConstants.FEATURE_FRAMEWORK_PROPERTIES);
                         for(final Object val : list) {
-                            checkType("Include removal framework properties", val, String.class);
-                            include.getFrameworkPropertiesRemovals().add(val.toString());
+                            checkType("Prototype removal framework properties", val, String.class);
+                            prototype.getFrameworkPropertiesRemovals().add(val.toString());
                         }
                     }
-                    if ( removalObj.containsKey(JSONConstants.INCLUDE_EXTENSION_REMOVALS) ) {
-                        checkType("Include removal extensions", removalObj.get(JSONConstants.INCLUDE_EXTENSION_REMOVALS), List.class);
+                    if ( removalObj.containsKey(JSONConstants.PROTOTYPE_EXTENSION_REMOVALS) ) {
+                        checkType("Prototype removal extensions", removalObj.get(JSONConstants.PROTOTYPE_EXTENSION_REMOVALS), List.class);
                         @SuppressWarnings("unchecked")
-                        final List<Object> list = (List<Object>)removalObj.get(JSONConstants.INCLUDE_EXTENSION_REMOVALS);
+                        final List<Object> list = (List<Object>)removalObj.get(JSONConstants.PROTOTYPE_EXTENSION_REMOVALS);
                         for(final Object val : list) {
-                            checkType("Include removal extension", val, String.class, Map.class);
+                            checkType("Prototype removal extension", val, String.class, Map.class);
                             if ( val instanceof String ) {
                                 if ( val.toString().startsWith("#")) {
                                     continue;
                                 }
-                                include.getExtensionRemovals().add(val.toString());
+                                prototype.getExtensionRemovals().add(val.toString());
                             } else {
                                 @SuppressWarnings("unchecked")
                                 final Map<String, Object> removalMap = (Map<String, Object>)val;
                                 final Object nameObj = removalMap.get("name");
-                                checkType("Include removal extension", nameObj, String.class);
+                                checkType("Prototype removal extension", nameObj, String.class);
                                 if ( removalMap.containsKey("artifacts") ) {
-                                    checkType("Include removal extension artifacts", removalMap.get("artifacts"), List.class);
+                                    checkType("Prototype removal extension artifacts", removalMap.get("artifacts"), List.class);
                                     @SuppressWarnings("unchecked")
                                     final List<Object> artifactList = (List<Object>)removalMap.get("artifacts");
                                     final List<ArtifactId> ids = new ArrayList<>();
                                     for(final Object aid : artifactList) {
-                                        checkType("Include removal extension artifact", aid, String.class);
+                                        checkType("Prototype removal extension artifact", aid, String.class);
                                         ids.add(ArtifactId.parse(aid.toString()));
                                     }
-                                    include.getArtifactExtensionRemovals().put(nameObj.toString(), ids);
+                                    prototype.getArtifactExtensionRemovals().put(nameObj.toString(), ids);
                                 } else {
-                                    include.getExtensionRemovals().add(nameObj.toString());
+                                    prototype.getExtensionRemovals().add(nameObj.toString());
                                 }
                             }
                         }
@@ -575,7 +575,7 @@ abstract class JSONReaderBase {
 
                 }
             }
-            return include;
+            return prototype;
         }
         return null;
     }

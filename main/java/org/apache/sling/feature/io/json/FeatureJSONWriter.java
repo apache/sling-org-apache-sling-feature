@@ -71,8 +71,8 @@ public class FeatureJSONWriter extends JSONWriterBase {
         // variables
         writeVariables(generator, feature.getVariables());
 
-        // include
-        writeInclude(generator, feature.getInclude());
+        // prototype
+        writePrototype(generator, feature.getPrototype());
 
         // requirements
         writeRequirements(generator, feature.getRequirements());

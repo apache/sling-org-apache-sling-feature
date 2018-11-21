@@ -58,8 +58,8 @@
         }
       }
     },
-    "include": {
-      "$ref": "#/definitions/Include"
+    "prototype": {
+      "$ref": "#/definitions/Prototype"
     },
     "requirements": {
     " type": "array",
@@ -143,8 +143,8 @@
         }
       }
     },
-    "Include": {
-      "$id": "#Include",
+    "Prototype": {
+      "$id": "#Prototype",
       "type": "object",
       "properties": {
         "id": {

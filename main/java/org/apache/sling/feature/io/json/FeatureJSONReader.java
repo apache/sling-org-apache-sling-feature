@@ -107,7 +107,7 @@ public class FeatureJSONReader extends JSONReaderBase {
 
         this.readCapabilities(map, feature.getCapabilities());
         this.readRequirements(map, feature.getRequirements());
-        feature.setInclude(this.readInclude(map));
+        feature.setPrototype(this.readPrototype(map));
 
         this.readExtensions(map,
                 JSONConstants.FEATURE_KNOWN_PROPERTIES,
