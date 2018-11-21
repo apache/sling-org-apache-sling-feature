@@ -40,7 +40,7 @@ import org.apache.sling.feature.Configuration;
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.Feature;
-import org.apache.sling.feature.Include;
+import org.apache.sling.feature.Prototype;
 import org.junit.Test;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
@@ -217,7 +217,7 @@ public class FeatureBuilderTest {
         }
 
         // includes should always be empty
-        assertNull(actuals.getInclude());
+        assertNull(actuals.getPrototype());
     }
 
     @Test public void testNoIncludesNoUpgrade() throws Exception {
@@ -270,8 +270,8 @@ public class FeatureBuilderTest {
 
     @Test public void testSingleInclude() throws Exception {
         final Feature base = new Feature(ArtifactId.parse("org.apache.sling/test-feature/1.1"));
-        final Include i1 = new Include(ArtifactId.parse("g/a/1"));
-        base.setInclude(i1);
+        final Prototype i1 = new Prototype(ArtifactId.parse("g/a/1"));
+        base.setPrototype(i1);
 
         final Requirement r1 = new RequirementImpl(null, "osgi.contract",
                 Collections.singletonMap("filter", "(&(osgi.contract=JavaServlet)(version=3.1))"), null);
@@ -317,7 +317,7 @@ public class FeatureBuilderTest {
         // create the expected result
         final Feature result = base.copy();
         result.getVariables().put("varx", "myvalx");
-        result.setInclude(null);
+        result.setPrototype(null);
         result.getFrameworkProperties().put("bar", "X");
         result.getBundles().add(BuilderUtilTest.createBundle("org.apache.sling/foo-bar/4.5.6", 3));
         final Configuration co3 = new Configuration("org.apache.sling.foo");
@@ -333,8 +333,8 @@ public class FeatureBuilderTest {
 
     @Test public void testSingleIncludeMultiVersion() {
         Feature base = new Feature(ArtifactId.fromMvnId("g:tgtart:1"));
-        Include i1 = new Include(ArtifactId.fromMvnId("g:a:3"));
-        base.setInclude(i1);
+        Prototype i1 = new Prototype(ArtifactId.fromMvnId("g:a:3"));
+        base.setPrototype(i1);
         base.getBundles().add(new Artifact(ArtifactId.fromMvnId("g:myart:1")));
         base.getBundles().add(new Artifact(ArtifactId.fromMvnId("group:testmulti:1")));
         base.getBundles().add(new Artifact(ArtifactId.fromMvnId("group:testmulti:3")));
@@ -358,8 +358,8 @@ public class FeatureBuilderTest {
 
     @Test public void testSingleIncludeMultiVersion2() {
         Feature base = new Feature(ArtifactId.fromMvnId("g:tgtart:1"));
-        Include i1 = new Include(ArtifactId.fromMvnId("g:a:2"));
-        base.setInclude(i1);
+        Prototype i1 = new Prototype(ArtifactId.fromMvnId("g:a:2"));
+        base.setPrototype(i1);
         base.getBundles().add(new Artifact(ArtifactId.fromMvnId("g:myart:1")));
 
         BuilderContext builderContext = new BuilderContext(provider);
@@ -383,8 +383,8 @@ public class FeatureBuilderTest {
 
     @Test public void testSingleIncludeMultiVersion3() {
         Feature base = new Feature(ArtifactId.fromMvnId("g:tgtart:1"));
-        Include i1 = new Include(ArtifactId.fromMvnId("g:a:2"));
-        base.setInclude(i1);
+        Prototype i1 = new Prototype(ArtifactId.fromMvnId("g:a:2"));
+        base.setPrototype(i1);
         base.getBundles().add(new Artifact(ArtifactId.fromMvnId("g:myart:1")));
         base.getBundles().add(new Artifact(ArtifactId.fromMvnId("group:testmulti:1")));
 
@@ -405,8 +405,8 @@ public class FeatureBuilderTest {
 
     @Test public void testSingleIncludeMultiVersion4() {
         Feature base = new Feature(ArtifactId.fromMvnId("g:tgtart:1"));
-        Include i1 = new Include(ArtifactId.fromMvnId("g:a:2"));
-        base.setInclude(i1);
+        Prototype i1 = new Prototype(ArtifactId.fromMvnId("g:a:2"));
+        base.setPrototype(i1);
         base.getBundles().add(new Artifact(ArtifactId.fromMvnId("g:myart:1")));
         base.getBundles().add(new Artifact(ArtifactId.fromMvnId("group:testmulti:1")));
         base.getBundles().add(new Artifact(ArtifactId.fromMvnId("group:testmulti:3")));
@@ -435,8 +435,8 @@ public class FeatureBuilderTest {
         final Feature a = new Feature(idA);
         final Feature b = new Feature(idB);
         // feature b includes feature a
-        final Include inc = new Include(idA);
-        b.setInclude(inc);
+        final Prototype inc = new Prototype(idA);
+        b.setPrototype(inc);
 
         // assemble application, it should only contain feature b as a is included by b
         Feature[] features = FeatureBuilder.deduplicate(new BuilderContext(new FeatureProvider() {
@@ -478,9 +478,9 @@ public class FeatureBuilderTest {
         a.getBundles().add(new Artifact(bundleA2));
         a.getBundles().add(new Artifact(bundleB));
         final Feature b = new Feature(ArtifactId.fromMvnId("g:a-include:1"));
-        final Include inc = new Include(a.getId());
+        final Prototype inc = new Prototype(a.getId());
         inc.getBundleRemovals().add(bundleA2);
-        b.setInclude(inc);
+        b.setPrototype(inc);
 
         // assemble feature include
         Feature feature = FeatureBuilder.assemble(b, new BuilderContext(new FeatureProvider() {
@@ -512,9 +512,9 @@ public class FeatureBuilderTest {
         a.getBundles().add(new Artifact(bundleA2));
         a.getBundles().add(new Artifact(bundleB));
         final Feature b = new Feature(ArtifactId.fromMvnId("g:a-include:1"));
-        final Include inc = new Include(a.getId());
+        final Prototype inc = new Prototype(a.getId());
         inc.getBundleRemovals().add(ArtifactId.fromMvnId("g:a:0.0.0"));
-        b.setInclude(inc);
+        b.setPrototype(inc);
 
         // assemble feature include
         Feature feature = FeatureBuilder.assemble(b, new BuilderContext(new FeatureProvider() {
@@ -544,9 +544,9 @@ public class FeatureBuilderTest {
         a.getBundles().add(new Artifact(bundleA1));
         a.getBundles().add(new Artifact(bundleB));
         final Feature b = new Feature(ArtifactId.fromMvnId("g:a-include:1"));
-        final Include inc = new Include(a.getId());
+        final Prototype inc = new Prototype(a.getId());
         inc.getBundleRemovals().add(bundleA2);
-        b.setInclude(inc);
+        b.setPrototype(inc);
 
         try {
             FeatureBuilder.assemble(b, new BuilderContext(new FeatureProvider() {
@@ -577,9 +577,9 @@ public class FeatureBuilderTest {
         e.getArtifacts().add(new Artifact(bundleB));
         a.getExtensions().add(e);
         final Feature b = new Feature(ArtifactId.fromMvnId("g:a-include:1"));
-        final Include inc = new Include(a.getId());
+        final Prototype inc = new Prototype(a.getId());
         inc.getArtifactExtensionRemovals().put("foo", Arrays.asList(bundleA2));
-        b.setInclude(inc);
+        b.setPrototype(inc);
 
         // assemble feature include
         Feature feature = FeatureBuilder.assemble(b, new BuilderContext(new FeatureProvider() {
@@ -613,9 +613,9 @@ public class FeatureBuilderTest {
         e.getArtifacts().add(new Artifact(bundleB));
         a.getExtensions().add(e);
         final Feature b = new Feature(ArtifactId.fromMvnId("g:a-include:1"));
-        final Include inc = new Include(a.getId());
+        final Prototype inc = new Prototype(a.getId());
         inc.getArtifactExtensionRemovals().put("foo", Arrays.asList(ArtifactId.fromMvnId("g:a:0.0.0")));
-        b.setInclude(inc);
+        b.setPrototype(inc);
 
         // assemble feature include
         Feature feature = FeatureBuilder.assemble(b, new BuilderContext(new FeatureProvider() {
@@ -647,9 +647,9 @@ public class FeatureBuilderTest {
         e.getArtifacts().add(new Artifact(bundleB));
         a.getExtensions().add(e);
         final Feature b = new Feature(ArtifactId.fromMvnId("g:a-include:1"));
-        final Include inc = new Include(a.getId());
+        final Prototype inc = new Prototype(a.getId());
         inc.getArtifactExtensionRemovals().put("foo", Arrays.asList(bundleA2));
-        b.setInclude(inc);
+        b.setPrototype(inc);
 
         try {
             FeatureBuilder.assemble(b, new BuilderContext(new FeatureProvider() {
@@ -675,8 +675,8 @@ public class FeatureBuilderTest {
         final Feature a = new Feature(idA);
         final Feature b = new Feature(idB);
         // feature b includes feature a
-        final Include inc = new Include(idA);
-        b.setInclude(inc);
+        final Prototype inc = new Prototype(idA);
+        b.setPrototype(inc);
 
         // assemble feature, it should only contain feature b as a is included by b
         final Feature target = FeatureBuilder.assemble(ArtifactId.fromMvnId("g:F:1.0.0"), new BuilderContext(new FeatureProvider() {
@@ -804,8 +804,8 @@ public class FeatureBuilderTest {
         a.setFinal(true);
         final Feature b = new Feature(idB);
         // feature b includes feature a
-        final Include inc = new Include(idA);
-        b.setInclude(inc);
+        final Prototype inc = new Prototype(idA);
+        b.setPrototype(inc);
 
         // assemble feature, this should throw an exception
         try {

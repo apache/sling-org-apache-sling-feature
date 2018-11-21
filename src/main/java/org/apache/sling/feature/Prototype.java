@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A include is an inclusion of a feature with optional removals of
+ * A prototype is a blueprint of a feature with optional removals of
  * <ul>
  * <li>Configurations / configuration properties
  * <li>Bundles
@@ -35,7 +35,7 @@ import java.util.Map;
  * TODO - requirement, capabilities
  *
  */
-public class Include implements Comparable<Include> {
+public class Prototype implements Comparable<Prototype> {
 
     private final ArtifactId id;
 
@@ -54,7 +54,7 @@ public class Include implements Comparable<Include> {
      * @param id The id of the feature.
      * @throws IllegalArgumentException If id is {@code null}.
      */
-    public Include(final ArtifactId id) {
+    public Prototype(final ArtifactId id) {
         if ( id == null ) {
             throw new IllegalArgumentException("id must not be null.");
         }
@@ -90,7 +90,7 @@ public class Include implements Comparable<Include> {
     }
 
     @Override
-    public int compareTo(final Include o) {
+    public int compareTo(final Prototype o) {
         return this.id.compareTo(o.id);
     }
 
@@ -107,7 +107,7 @@ public class Include implements Comparable<Include> {
         if (obj == null || getClass() != obj.getClass()) {
             return false;
         }
-        return this.id.equals(((Include)obj).id);
+        return this.id.equals(((Prototype)obj).id);
     }
 
     @Override

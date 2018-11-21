@@ -34,7 +34,7 @@ import org.osgi.resource.Requirement;
  * <li>Configurations
  * <li>Framework properties
  * <li>Requirements and capabilities
- * <li>Includes
+ * <li>Prototype
  * <li>Extensions
  * </ul>
  *
@@ -82,8 +82,8 @@ public class Feature implements Comparable<Feature> {
     /** Flag indicating whether this is a complete feature */
     private volatile boolean completeFlag = false;
 
-    /** The optional include. */
-    private volatile Include include;
+    /** The optional prototype. */
+    private volatile Prototype prototype;
 
     /**
      * Construct a new feature.
@@ -168,19 +168,19 @@ public class Feature implements Comparable<Feature> {
     }
 
     /**
-     * Get the optionally included feature.
-     * @return The included feature or {@code null} if none.
+     * Get the optional prototype feature.
+     * @return The prototype feature or {@code null} if none.
      */
-    public Include getInclude() {
-        return include;
+    public Prototype getPrototype() {
+        return prototype;
     }
 
     /**
-     * Set the optionally included feature.
-     * @param include The included feature or {@code null} if none.
+     * Set the optional prototype feature.
+     * @param prototype The prototype feature or {@code null} if none.
      */
-    public void setInclude(Include include) {
-        this.include = include;
+    public void setPrototype(Prototype prototype) {
+        this.prototype = prototype;
     }
 
     /**
@@ -265,8 +265,8 @@ public class Feature implements Comparable<Feature> {
     }
 
     /**
-     * Check whether the feature is final. A final feature can't be included by
-     * other features.
+     * Check whether the feature is final. A final feature can't be a prototype
+     * for other features.
      *
      * @return {@code true} if it is final, {@code false} otherwise
      */
@@ -376,10 +376,10 @@ public class Feature implements Comparable<Feature> {
             result.getCapabilities().add(c);
         }
 
-        // include
-        final Include i = this.getInclude();
+        // prototype
+        final Prototype i = this.getPrototype();
         if (i != null) {
-            final Include c = new Include(i.getId());
+            final Prototype c = new Prototype(i.getId());
 
             c.getBundleRemovals().addAll(i.getBundleRemovals());
             c.getConfigurationRemovals().addAll(i.getConfigurationRemovals());
@@ -387,7 +387,7 @@ public class Feature implements Comparable<Feature> {
             c.getFrameworkPropertiesRemovals().addAll(i.getFrameworkPropertiesRemovals());
             c.getArtifactExtensionRemovals().putAll(i.getArtifactExtensionRemovals());
 
-            result.setInclude(c);
+            result.setPrototype(c);
         }
 
         // extensions

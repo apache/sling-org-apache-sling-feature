@@ -3,8 +3,7 @@
 
     "id": "org.apache.sling:my.app:feature:optional:1.0",
 
-    "# variables used in includes, requirements, capabilities and bundles sections":
-    "# are substituted at build time. Configuration and framework properties at launch time.",
+    "# variables": "used in configuration and framework properties are substitityped at launch time.",
     "variables": {
         "cfgvar": "somedefault",
         "xyz-ver": "1.2.3",
@@ -13,7 +12,7 @@
         "provisioning.model.name": ":boot"
     },
 
-    "includes": [
+    "prototype": 
         {
             "id": "org.apache.sling:sling:9",
             "removals": {
@@ -21,8 +20,7 @@
                 "bundles": [],
                 "framework-properties": []
             }
-        }
-    ],
+        },
     "requirements": [
         {
             "namespace": "osgi.contract",

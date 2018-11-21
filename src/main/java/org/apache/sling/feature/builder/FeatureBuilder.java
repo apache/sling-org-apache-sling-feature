@@ -32,24 +32,24 @@ import org.apache.sling.feature.Configuration;
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.Feature;
-import org.apache.sling.feature.Include;
+import org.apache.sling.feature.Prototype;
 import org.osgi.framework.Version;
 
 public abstract class FeatureBuilder {
-    /** This key is used to track origins while includes are merged in */
+    /** This key is used to track origins while a prototype is merged in */
     private static final String TRACKING_KEY = "tracking-key";
 
     /** Pattern for using variables. */
     private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\{[a-zA-Z0-9.-_]+\\}");
 
     /**
-     * Assemble the full feature by processing all includes.
+     * Assemble the full feature by processing its prototype.
      *
      * @param feature The feature to start
      * @param context The builder context
      * @return The assembled feature.
      * @throws IllegalArgumentException If feature or context is {@code null}
-     * @throws IllegalStateException If an included feature can't be provided or merged.
+     * @throws IllegalStateException If a prototype feature can't be provided or merged.
      */
     public static Feature assemble(final Feature feature,
             final BuilderContext context) {
@@ -79,7 +79,7 @@ public abstract class FeatureBuilder {
         for(final String id : featureIds) {
             features[index] = context.getFeatureProvider().provide(ArtifactId.parse(id));
             if ( features[index] == null ) {
-                throw new IllegalStateException("Unable to find included feature " + id);
+                throw new IllegalStateException("Unable to find prototype feature " + id);
             }
             index++;
         }
@@ -87,10 +87,10 @@ public abstract class FeatureBuilder {
     }
 
     /**
-     * Remove duplicate and included features.
+     * Remove duplicate and prototype features.
      * If a feature with the same id but different version is contained several times,
      * only the one with the highest version is kept in the result list.
-     * If a feature includes another feature from the provided set, the included feature
+     * If a feature has another feature as prototype from the provided set, the prototype feature
      * is removed from the set.
      *
      * @param context The builder context
@@ -299,7 +299,7 @@ public abstract class FeatureBuilder {
         // we copy the feature as we set the assembled flag on the result
         final Feature result = feature.copy();
 
-        if ( result.getInclude() != null) {
+        if ( result.getPrototype() != null) {
             // clear everything in the result, will be added in the process
             result.getVariables().clear();
             result.getBundles().clear();
@@ -307,28 +307,28 @@ public abstract class FeatureBuilder {
             result.getConfigurations().clear();
             result.getRequirements().clear();
             result.getCapabilities().clear();
-            result.setInclude(null);
+            result.setPrototype(null);
             result.getExtensions().clear();
 
-            final Include i = feature.getInclude();
+            final Prototype i = feature.getPrototype();
 
             final Feature f = context.getFeatureProvider().provide(i.getId());
             if ( f == null ) {
-                throw new IllegalStateException("Unable to find included feature " + i.getId());
+                throw new IllegalStateException("Unable to find prototype feature " + i.getId());
             }
             if (f.isFinal()) {
                 throw new IllegalStateException(
-                        "Included feature " + i.getId() + " is marked as final and can't be used in an include.");
+                        "Prototype feature " + i.getId() + " is marked as final and can't be used in a prototype.");
             }
-            final Feature includedFeature = internalAssemble(processedFeatures, f, context);
+            final Feature prototypeFeature = internalAssemble(processedFeatures, f, context);
 
-            // process include instructions
-            processInclude(includedFeature, i);
+            // process prototype instructions
+            processPrototype(prototypeFeature, i);
 
-            // and now merge the included feature into the result. No overrides should be needed since the result is empty before
-            merge(result, includedFeature, context, Collections.emptyList(), TRACKING_KEY);
+            // and now merge the prototype feature into the result. No overrides should be needed since the result is empty before
+            merge(result, prototypeFeature, context, Collections.emptyList(), TRACKING_KEY);
 
-            // and merge the current feature over the included feature into the result
+            // and merge the current feature over the prototype feature into the result
             merge(result, feature, context, Collections.singletonList(
                     BuilderUtil.CATCHALL_OVERRIDE + BuilderUtil.OVERRIDE_SELECT_LATEST), TRACKING_KEY);
 
@@ -366,15 +366,14 @@ public abstract class FeatureBuilder {
     }
 
     /**
-     * Process the include statement Process all the removals contained in the
-     * include
+     * Process all the removals contained in the prototype
      *
      * @param feature The feature
-     * @param include The include
+     * @param prototype The prototype
      */
-    private static void processInclude(final Feature feature, final Include include) {
+    private static void processPrototype(final Feature feature, final Prototype prototype) {
         // process bundles removals
-        for (final ArtifactId a : include.getBundleRemovals()) {
+        for (final ArtifactId a : prototype.getBundleRemovals()) {
             boolean removed = false;
             final boolean ignoreVersion = a.getOSGiVersion().equals(Version.emptyVersion);
             if ( ignoreVersion ) {
@@ -409,7 +408,7 @@ public abstract class FeatureBuilder {
         }
 
         // process configuration removals
-        for (final String c : include.getConfigurationRemovals()) {
+        for (final String c : prototype.getConfigurationRemovals()) {
             final int attrPos = c.indexOf('@');
             final String pid = (attrPos == -1 ? c : c.substring(0, attrPos));
             final String attr = (attrPos == -1 ? null : c.substring(attrPos + 1));
@@ -425,12 +424,12 @@ public abstract class FeatureBuilder {
         }
 
         // process framework properties removals
-        for (final String p : include.getFrameworkPropertiesRemovals()) {
+        for (final String p : prototype.getFrameworkPropertiesRemovals()) {
             feature.getFrameworkProperties().remove(p);
         }
 
         // process extensions removals
-        for (final String name : include.getExtensionRemovals()) {
+        for (final String name : prototype.getExtensionRemovals()) {
             for (final Extension ext : feature.getExtensions()) {
                 if ( ext.getName().equals(name) ) {
                     feature.getExtensions().remove(ext);
@@ -439,7 +438,7 @@ public abstract class FeatureBuilder {
             }
         }
         // process artifact extensions removals
-        for (final Map.Entry<String, List<ArtifactId>> entry : include.getArtifactExtensionRemovals().entrySet()) {
+        for (final Map.Entry<String, List<ArtifactId>> entry : prototype.getArtifactExtensionRemovals().entrySet()) {
             for (final Extension ext : feature.getExtensions()) {
                 if ( ext.getName().equals(entry.getKey()) ) {
                     for(final ArtifactId toRemove : entry.getValue() ) {
