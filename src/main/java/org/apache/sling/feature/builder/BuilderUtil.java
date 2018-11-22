@@ -17,6 +17,7 @@
 package org.apache.sling.feature.builder;
 
 import org.apache.sling.feature.Artifact;
+import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Bundles;
 import org.apache.sling.feature.Configuration;
 import org.apache.sling.feature.Configurations;
@@ -33,8 +34,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import javax.json.Json;
@@ -151,7 +154,7 @@ class BuilderUtil {
                         }
                     }
                 } else {
-                    selectedArtifacts = Collections.singletonList(a);
+                    selectedArtifacts = selectArtifactOverride(a, null, artifactOverrides);
                 }
 
                 for (Artifact sa : selectedArtifacts) {
@@ -170,48 +173,72 @@ class BuilderUtil {
     }
 
     static List<Artifact> selectArtifactOverride(Artifact a1, Artifact a2, List<String> artifactOverrides) {
-        if (a1.getId().equals(a2.getId())) {
-            // They're the same so return one of them
-            return Collections.singletonList(a2);
-        }
-
         String a1gid = a1.getId().getGroupId();
         String a1aid = a1.getId().getArtifactId();
-        String a2gid = a2.getId().getGroupId();
-        String a2aid = a2.getId().getArtifactId();
 
-        if (!a1gid.equals(a2gid))
-            throw new IllegalStateException("Artifacts must have the same group ID: " + a1 + " and " + a2);
-        if (!a1aid.equals(a2aid))
-            throw new IllegalStateException("Artifacts must have the same artifact ID: " + a1 + " and " + a2);
+        Artifact effectiveA2;
+        if (a2 != null) {
+            if (a1.getId().equals(a2.getId())) {
+                // They're the same so return one of them
+                return Collections.singletonList(a2);
+            }
+
+            String a2gid = a2.getId().getGroupId();
+            String a2aid = a2.getId().getArtifactId();
+
+            if (!a1gid.equals(a2gid))
+                throw new IllegalStateException("Artifacts must have the same group ID: " + a1 + " and " + a2);
+            if (!a1aid.equals(a2aid))
+                throw new IllegalStateException("Artifacts must have the same artifact ID: " + a1 + " and " + a2);
+            effectiveA2 = a2;
+        } else {
+            // if a2 is not specified, use a1 as the effective a2 in the selection algorithm
+            effectiveA2 = a1;
+        }
 
         String prefix = a1gid + ":" + a1aid + ":";
+        Set<Artifact> result = new LinkedHashSet<>();
         for (String o : artifactOverrides) {
+            o = o.trim();
             if (o.startsWith(prefix) || o.startsWith(CATCHALL_OVERRIDE)) {
                 int idx = o.lastIndexOf(':');
                 if (idx <= 0 || o.length() <= idx)
                     continue;
 
-                String rule = o.substring(idx+1).trim();
+                String rule = o.substring(idx+1);
 
                 if (OVERRIDE_SELECT_ALL.equals(rule)) {
-                    return Arrays.asList(a1, a2);
+                    return new ArrayList<>(new LinkedHashSet<>(Arrays.asList(a1, effectiveA2)));
                 } else if (OVERRIDE_SELECT_HIGHEST.equals(rule)) {
                     Version a1v = a1.getId().getOSGiVersion();
-                    Version a2v = a2.getId().getOSGiVersion();
-                    return a1v.compareTo(a2v) > 0 ? Collections.singletonList(a1) : Collections.singletonList(a2);
+                    Version a2v = effectiveA2.getId().getOSGiVersion();
+                    return a1v.compareTo(a2v) > 0 ? Collections.singletonList(a1) : Collections.singletonList(effectiveA2);
                 } else if (OVERRIDE_SELECT_LATEST.equals(rule)) {
-                    return Collections.singletonList(a2);
-                } else if (a1.getId().getVersion().equals(rule)) {
-                    return Collections.singletonList(a1);
-                } else if (a2.getId().getVersion().equals(rule)) {
-                    return Collections.singletonList(a2);
+                    return Collections.singletonList(effectiveA2);
                 }
-                throw new IllegalStateException("Override rule " + o + " not applicable to artifacts " + a1 + " and " + a2);
+
+                // The rule must represent a version
+                // See if its one of the existing artifact. If so use those, as they may have additional metadata
+                if (a1.getId().getVersion().equals(rule)) {
+                    result.add(a1);
+                } else if (effectiveA2.getId().getVersion().equals(rule)) {
+                    result.add(effectiveA2);
+                } else {
+                    // It's a completely new artifact
+                    result.add(new Artifact(ArtifactId.fromMvnId(o)));
+                }
             }
         }
-        throw new IllegalStateException("Artifact override rule required to select between these two artifacts " +
-                a1 + " and " + a2);
+        if (result.size() > 0) {
+            return new ArrayList<>(result);
+        }
+
+        if (a2 != null) {
+            throw new IllegalStateException("Artifact override rule required to select between these two artifacts " +
+                    a1 + " and " + a2);
+        } else {
+            return Collections.singletonList(a1);
+        }
     }
 
     // configurations - merge / override
