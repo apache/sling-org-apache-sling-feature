@@ -178,11 +178,6 @@ class BuilderUtil {
 
         Artifact effectiveA2;
         if (a2 != null) {
-            if (a1.getId().equals(a2.getId())) {
-                // They're the same so return one of them
-                return Collections.singletonList(a2);
-            }
-
             String a2gid = a2.getId().getGroupId();
             String a2aid = a2.getId().getArtifactId();
 
@@ -234,6 +229,11 @@ class BuilderUtil {
         }
 
         if (a2 != null) {
+            if (a1.getId().equals(a2.getId())) {
+                // They're the same so return one of them
+                return Collections.singletonList(a2);
+            }
+
             throw new IllegalStateException("Artifact override rule required to select between these two artifacts " +
                     a1 + " and " + a2);
         } else {
