@@ -427,17 +427,9 @@ public class BuilderUtilTest {
     @Test
     public void testSelectArtifactOverrideWithoutClash() {
         Artifact a1 = new Artifact(ArtifactId.fromMvnId("gid:aid:1"));
-        List<String> overrides = Collections.singletonList("gid:aid:3");
-        assertEquals(Collections.singletonList(new Artifact(ArtifactId.fromMvnId("gid:aid:3"))),
-                BuilderUtil.selectArtifactOverride(a1, null, overrides));
-    }
-
-    @Test
-    public void testSelectArtifactOverrideWithoutClash2() {
-        Artifact a1 = new Artifact(ArtifactId.fromMvnId("gid:aid:1"));
         Artifact a2 = new Artifact(ArtifactId.fromMvnId("gid:aid:1"));
         List<String> overrides = Collections.singletonList("gid:aid:3");
-        assertEquals(Collections.singletonList(new Artifact(ArtifactId.fromMvnId("gid:aid:3"))),
+        assertEquals(Collections.singletonList(new Artifact(ArtifactId.fromMvnId("gid:aid:1"))),
                 BuilderUtil.selectArtifactOverride(a1, a2, overrides));
     }
 
