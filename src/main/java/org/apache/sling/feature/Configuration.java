@@ -153,8 +153,8 @@ public class Configuration
 
     /**
      * Create a copy of the configuration with a provided PID.
-     * 
-     * @param pid The pid of the configuration
+     *
+     * @param aPid The pid of the configuration
      * @return A copy of this configuration with the given PID
      */
     public Configuration copy(final String aPid) {

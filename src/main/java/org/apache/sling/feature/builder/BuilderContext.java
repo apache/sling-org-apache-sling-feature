@@ -125,8 +125,8 @@ public class BuilderContext {
     /**
      * Set a handler configuration
      *
-     * @param The name of the handler
-     * @param The configuration for the handler
+     * @param name The name of the handler
+     * @param cfg The configuration for the handler
      * @return The builder context
      */
     public BuilderContext setHandlerConfiguration(final String name, final Map<String,String> cfg) {
