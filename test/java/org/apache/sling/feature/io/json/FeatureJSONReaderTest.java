@@ -16,20 +16,22 @@
  */
 package org.apache.sling.feature.io.json;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Arrays;
-
+import org.apache.sling.feature.ArtifactId;
+import org.apache.sling.feature.Bundles;
 import org.apache.sling.feature.Configuration;
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.Extensions;
 import org.apache.sling.feature.Feature;
 import org.junit.Test;
 import org.osgi.resource.Capability;
+
+import java.util.Arrays;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class FeatureJSONReaderTest {
 
@@ -85,5 +87,15 @@ public class FeatureJSONReaderTest {
 
         final Feature featureB = U.readFeature("final");
         assertTrue(featureB.isFinal());
+    }
+
+    @Test
+    public void testReadMultiBSNVer() throws Exception {
+        final Feature f = U.readFeature("test3");
+        Bundles fb = f.getBundles();
+        assertEquals(2, fb.size());
+        assertTrue(fb.containsExact(ArtifactId.fromMvnId("org.apache.sling:foo:1.2.3")));
+        assertTrue(fb.containsExact(ArtifactId.fromMvnId("org.apache.sling:foo:4.5.6")));
+        assertFalse(fb.containsExact(ArtifactId.fromMvnId("org.apache.sling:foo:7.8.9")));
     }
 }

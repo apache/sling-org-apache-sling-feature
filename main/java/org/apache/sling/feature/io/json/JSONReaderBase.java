@@ -196,9 +196,8 @@ abstract class JSONReaderBase {
             readArtifacts(JSONConstants.FEATURE_BUNDLES, "bundle", list, bundlesObj, configContainer);
 
             for(final Artifact a : list) {
-                Artifact sameFound = container.getSame(a.getId());
-                if ( sameFound != null) {
-                    throw new IOException(exceptionPrefix + "Duplicate bundle " + a.getId().toMvnId());
+                if ( container.containsExact(a.getId())) {
+                    throw new IOException(exceptionPrefix + "Duplicate identical bundle " + a.getId().toMvnId());
                 }
                 try {
                     // check start order
