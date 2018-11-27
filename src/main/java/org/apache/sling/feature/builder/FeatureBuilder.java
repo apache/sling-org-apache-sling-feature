@@ -394,15 +394,17 @@ public abstract class FeatureBuilder {
             while ( iter.hasNext() ) {
                 final Configuration cfg = iter.next();
                 final String bundleId = (String)cfg.getProperties().get(Configuration.PROP_ARTIFACT_ID);
-                final ArtifactId bundleArtifactId = ArtifactId.fromMvnId(bundleId);
-                boolean remove = false;
-                if ( ignoreVersion ) {
-                    remove = bundleArtifactId.isSame(a);
-                } else {
-                    remove = bundleArtifactId.equals(a);
-                }
-                if (  remove) {
-                    iter.remove();
+                if (bundleId != null) {
+                    final ArtifactId bundleArtifactId = ArtifactId.fromMvnId(bundleId);
+                    boolean remove = false;
+                    if ( ignoreVersion ) {
+                        remove = bundleArtifactId.isSame(a);
+                    } else {
+                        remove = bundleArtifactId.equals(a);
+                    }
+                    if (  remove) {
+                        iter.remove();
+                    }
                 }
             }
         }
