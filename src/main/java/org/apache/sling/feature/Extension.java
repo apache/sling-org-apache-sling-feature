@@ -181,6 +181,30 @@ public class Extension {
         return artifacts;
     }
 
+    /**
+     * Create a copy of the Extension
+     * @return A copy of the Extension
+     */
+    public Extension copy() {
+        Extension c = new Extension(type, name, required);
+        switch(type) {
+        case TEXT:
+            c.setText(text);
+            break;
+        case JSON:
+            c.setJSON(text);
+            break;
+        case ARTIFACTS:
+            if (artifacts != null) {
+                for (Artifact a : artifacts) {
+                    c.getArtifacts().add(a.copy(a.getId()));
+                }
+            }
+            break;
+        }
+        return c;
+    }
+
     @Override
     public int hashCode() {
         return name.hashCode();
