@@ -63,4 +63,6 @@ If a feature exports no packages and only wants to have visibility of packages f
         }
     ]
 
-To support feature inheritance, the custom extension handler must be registered which will merge the extension.
+To support feature inheritance, the custom extension handler must be registered which will merge the extension: https://github.com/apache/sling-org-apache-sling-feature-extension-apiregions .
+
+A number of API region related analysers/validators exist. Documentation can be found here: https://github.com/apache/sling-org-apache-sling-feature-analyser . These can be run as part of the analyse-features goal with the slingfeature-maven-plugin: https://github.com/apache/sling-slingfeature-maven-plugin#analyse-features  
