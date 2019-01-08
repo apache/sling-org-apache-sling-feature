@@ -7,7 +7,7 @@
 This project aims to define a common OSGi feature model to build an OSGi application out of higher level modules.
 
 * [Requirements](requirements.md)
-* [File format](design/feature-model.json)
+* [File format](https://github.com/apache/sling-org-apache-sling-feature-io/blob/master/design/feature-model.json)
 
 * [Prototype](prototype.md)
 * [API Controller Proposal](apicontroller.md)
