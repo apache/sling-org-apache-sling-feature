@@ -44,7 +44,13 @@ Features can also be marked as `final` and/or `complete`.
 A `final` feature cannot be used as a prototype for another feature. A feature marked as `complete` indicates
 that all its dependencies are met by capabilities inside the feature, i.e. it has no external dependencies. 
 
-aggregates - launching
+A Feature Launcher can be used to launch features into a running process with an OSGi Framework. 
+The launcher can typically be provided with a number of feature files that should be launched together.
+Overrides for variables defined in the feature models can be provided on the launcher commandline. 
+
+Tooling exists to analyze and validate features, and to aggregate and merge multiple features into a single
+feature, which can be used to create higher level features from a combination of lower-level ones. Most of 
+the tooling is accessible through the slingfeature-maven-plugin: https://github.com/apache/sling-slingfeature-maven-plugin  
   
 ## Feature Identity
 
