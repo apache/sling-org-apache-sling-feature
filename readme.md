@@ -70,15 +70,70 @@ In some cases only the coordinates are specified as a string in one of the above
 
 ## Bundles
 
+A feature normally declares a number of bundles that are contained in the feature. The bundles are not stored inside the feature
+but referenced via their Maven Coordinates in the `bundles` section of the feature model.
+
+Individual bundles are either referenced as a string value in the `bundles` array in the feature model, or they can be specified 
+as objects in the `bundles` array. In that case the `id` for the bundle must be specified. Additional metadata can also be placed 
+here. 
+
+Multiple versions of a bundle with the same group ID and artifact ID are allowed. In this case both must be specified in the 
+`bundles` section.
+
 ## Configuration
+
+OSGi Configuration Admin configuration is specified in the `configurations` section of the feature model.
+
+The configurations are specified following the format defined by the OSGi Configurator 
+specification: https://osgi.org/specification/osgi.cmpn/7.0.0/service.configurator.html 
+Variables declared in the Feature Model variables section can be used for late binding of variables, 
+they can be specified with the Launcher, or the default from the variables section is used.
+Factory configurations can be specified using the named factory syntax, which separates
+the factory PID and the name with a tilde '~'.
+
 
 ## Requirements and Capabilities
 
+In order to avoid a concept like "Require-Bundle" a feature does not explicitly declare dependencies to other features. These are declared by the required capabilities, either explicit or implicit. The implicit requirements are calculated by inspecting the contained bundles (and potentially other artifacts like content packages).
+
+Features can also explicitly declare additional requirements the have over and above the ones coming from the bundles. This is done
+in the `requirements` section of the Feature Model.
+
+Features can also declare additional capabilities that are provided by the feature in addition to the capabilities provided by 
+the bundles. For example a number of bundles might together provide an `osgi.implementation` capability, which is not provided
+by any of those bundles individually. The Feature can be used to add this capability to the provided set. 
+
+Additional capabilities are specified in the `capabilities` section of the Feature Model. 
+
+## Prototype
+
+A feature can be defined based on a prototype. This means that the feature is effectively a copy of the feature marked as its
+prototype. Everything in the prototype is copied to the new feature, except for its `id`. The new feature will get a new ID.
+Then the prototype is processed with regard to the defined elements of the feature itself. 
+
+This processing happens as follows:
+* Removal instructions for an include are handled first
+* A clash of artifacts (such as bundles) between the prototype and the feature is resolved by picking the version defined last, which
+is the one defined by the feature, not its prototype. Artifact clashes are detected based on Maven Coordinates, not on the content
+of the artifact. So if a prototype defines a bundle with artifact ID `org.sling:somebundle:1.2.0` and the feature itself declares 
+`org.sling:somebundle:1.0.1` in its `bundles` section, the bundle with version `1.0.1` is used, i.e. the definition in the feature
+overrides the one coming from the prototype.
+* Configurations will be merged by default, later ones potentially overriding newer ones:
+  * If the same property is declared in more than one feature, the last one wins - in case of an array value, this requires redeclaring all values (if they are meant to be kept)
+* Later framework properties overwrite newer ones.
+* Capabilities and requirements are appended - this might result in duplicates, but that doesn't really hurt in practice.
+* Extensions are handled in an extension specific way, by default the contents are appended. In the case of extensions of type 
+`Artifact` these are handled just like bundles. Extension merge plugins can be configured to perform custom merging.
+
+Prototypes can provide an important concept for manipulating existing features. For example to replace a bundle in an existing feature and deliver this as a modified feature.
+
 # Extensions
+
+TBD
 
 # References
 
-This project aims to define a common OSGi feature model to build an OSGi application out of higher level modules.
+The links below provide additional information regarding the Feature Model.
 
 * [Requirements](requirements.md)
 * [File format](https://github.com/apache/sling-org-apache-sling-feature-io/blob/master/design/feature-model.json)
