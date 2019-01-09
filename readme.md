@@ -131,6 +131,15 @@ Prototypes can provide an important concept for manipulating existing features. 
 
 TBD
 
+# Launching
+
+A launcher for feature models is available in this project: https://github.com/apache/sling-org-apache-sling-feature-launcher
+
+# Tooling
+
+The primary tooling around the feature model is provided through Maven by the Sling Feature Maven Plugin: https://github.com/apache/sling-slingfeature-maven-plugin
+See the readme of the plugin for more information.  
+
 # References
 
 The links below provide additional information regarding the Feature Model.
