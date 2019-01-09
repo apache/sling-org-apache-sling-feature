@@ -19,7 +19,7 @@ requirements and custom artifacts.
 
 # Features
 
-Features are the central concept of the Feature Model. Features are normally defined in a Feature file which is
+Features are the central concept of the Feature Model. Features are typically defined in a Feature file which is
 a JSON file. An example feature file can be found here: https://github.com/apache/sling-org-apache-sling-feature-io/blob/master/design/feature-model.json
 and the JSON Schema for feature files is available from here: https://github.com/apache/sling-org-apache-sling-feature-io/blob/master/src/main/resources/META-INF/feature/Feature-1.0.0.schema.json
 
@@ -51,6 +51,21 @@ Overrides for variables defined in the feature models can be provided on the lau
 Tooling exists to analyze and validate features, and to aggregate and merge multiple features into a single
 feature, which can be used to create higher level features from a combination of lower-level ones. Most of 
 the tooling is accessible through the slingfeature-maven-plugin: https://github.com/apache/sling-slingfeature-maven-plugin  
+
+The following diagrams show a typical workflow when working with feature files:
+
+<img src="diagrams/Develop.jpg" width="700"/>
+
+Features are authored as JSON Feature Files. 
+The slingfeature-maven-plugin provides analyzers and aggregators that check features and can combine them into larger features. The maven plugin can also be used to publish features to a Maven Repository.
+
+<img src="diagrams/RunningSystem.jpg" width="700"/>
+
+To create a running system from a number of feature files, features are selected from a Maven Repository,
+they are validated for completeness and optionally additional features are pulled in through the OSGi Resolver 
+(not yet implemented). A final system feature has no unresolved dependencies. It is passed to the Feature Launcher
+along with optional additional features the provide functionality on top of what is defined in the system feature. 
+The Feature Launcher creates a running process containing an OSGi Framework provisioned with the feature's contents.
   
 ## Feature Identity
 
