@@ -144,7 +144,67 @@ Prototypes can provide an important concept for manipulating existing features. 
 
 # Extensions
 
-TBD
+The Feature Model is extensible, meaning that it can be augmented with custom content in a number of ways.
+
+Custom content can have one of the following formats:
+
+* Plain text
+* a JSON array
+* An array of Artifacts
+
+Custom content be useful to co-locate metadata with its associated feature or
+to enhance the feature model with new functionality. The API Regions described 
+in [apicontroller.md](apicontroller.md) is an example of enhancing the feature
+functionality.
+
+When creating aggregates, extensions are merged into the aggregates. There are 
+default rules for aggregating extension content, which essentially is appending
+all the extension content of a given type. However custom merge plugins can also
+be provided. After the merge a postprocessor is always run which can perform
+additional operations based on the extension content. Note that both the 
+aggregate task of the `slingfeature-maven-plugin` as well as the launcher perform 
+merge operations on all the feature models these are provided with.
+
+Extensions are declared in the JSON Feature file using the following syntax:
+
+```
+"extention-name:<type>|mandatory{true|false}": [ json array ]
+```
+
+For example, the following declaration defines an extension with name `api-regions`
+which is specified as JSON. The declaration also states that if no plugin is
+present that knows about this extension it should be ignored and execution 
+should continue.
+
+```
+"api-regions:JSON|false" : [
+   {"name": "global"}
+]
+```
+
+## Built-in extension: content-packages
+
+This extension of type `ARTIFACTS` allows listing content packages which will
+be installed by the launcher. Example:
+
+```
+"content-packages:ARTIFACTS|true":[
+    "org.apache.sling.myapp:my-content-package:zip:1.0.0"
+]
+```
+
+## Built-in extension: repoinit
+
+This extension is of type `TEXT`. It allows the specification of Sling Repository
+Initialization statements which will be executed on the repository at startup. 
+Example:
+
+```
+"repoinit:TEXT|true":[
+  "create path /content/example.com(mixin mix:referenceable)",
+  "create path (nt:unstructured) /var"
+]
+```
 
 # Launching
 
