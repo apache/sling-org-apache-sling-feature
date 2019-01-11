@@ -26,17 +26,17 @@ and the JSON Schema for feature files is available from here: https://github.com
 All features have a unique identity.
 Features can have an optional `title`, `description`, `vendor` name, `license`.
 
-Features typically reference one or more bundles that declare the behaviour provided by the feature. These
-bundles may have dependencies on other bundles or capabilities in the feature, e.g. defined by other features or bundles.
+Features typically reference one or more bundles that provide the behaviour of the feature. These
+bundles may have external dependencies. Dependencies can be satisfied by other features or bundles.
 
-Features can define OSGi Configurations that will be provided into the runtime with the feature and features can also declare additional requirements and capabilities over and above the ones coming from the bundles
+Features can define OSGi Configurations that will be provided into the runtime and features can also declare additional requirements and capabilities over and above the ones coming from the bundles
 that are part of the feature.  
 
-Features can be declared _from scratch_ or can use another pre-existing feature as a prototype. In this case
+Features can be declared _from scratch_ or they can use another pre-existing feature as a prototype. In this case
 the new feature starts off as a feature identical to its prototype, with some exceptions:
 
 * it does not get the prototype's identity. 
-* bundles, configurations and framework properties can be removed from the prototypel, in the `removals` section.
+* bundles, configurations and framework properties can be removed from the prototype, in the `removals` section.
 * anything declared in the feature definition of a feature based on a prototype adds or overrides to 
 what came from the prototype. 
 
@@ -45,7 +45,7 @@ A `final` feature cannot be used as a prototype for another feature. A feature m
 that all its dependencies are met by capabilities inside the feature, i.e. it has no external dependencies. 
 
 A Feature Launcher can be used to launch features into a running process with an OSGi Framework. 
-The launcher can typically be provided with a number of feature files that should be launched together.
+The launcher is typically fed with a number of feature files that should be launched together.
 Overrides for variables defined in the feature models can be provided on the launcher commandline. 
 
 Tooling exists to analyze and validate features, and to aggregate and merge multiple features into a single
@@ -85,7 +85,7 @@ In some cases only the coordinates are specified as a string in one of the above
 
 ## Bundles
 
-A feature normally declares a number of bundles that are contained in the feature. The bundles are not stored inside the feature
+A feature normally declares a number of bundles that are provided through the feature. The bundles are not stored inside the feature
 but referenced via their Maven Coordinates in the `bundles` section of the feature model.
 
 Individual bundles are either referenced as a string value in the `bundles` array in the feature model, or they can be specified 
@@ -101,8 +101,10 @@ OSGi Configuration Admin configuration is specified in the `configurations` sect
 
 The configurations are specified following the format defined by the OSGi Configurator 
 specification: https://osgi.org/specification/osgi.cmpn/7.0.0/service.configurator.html 
+
 Variables declared in the Feature Model variables section can be used for late binding of variables, 
 they can be specified with the Launcher, or the default from the variables section is used.
+
 Factory configurations can be specified using the named factory syntax, which separates
 the factory PID and the name with a tilde '~'.
 
@@ -111,10 +113,10 @@ the factory PID and the name with a tilde '~'.
 
 In order to avoid a concept like "Require-Bundle" a feature does not explicitly declare dependencies to other features. These are declared by the required capabilities, either explicit or implicit. The implicit requirements are calculated by inspecting the contained bundles (and potentially other artifacts like content packages).
 
-Features can also explicitly declare additional requirements the have over and above the ones coming from the bundles. This is done
+Features can also explicitly declare additional requirements they have over and above the ones coming from the bundles. This is done
 in the `requirements` section of the Feature Model.
 
-Features can also declare additional capabilities that are provided by the feature in addition to the capabilities provided by 
+Features can declare additional capabilities that are provided by the feature in addition to the capabilities provided by 
 the bundles. For example a number of bundles might together provide an `osgi.implementation` capability, which is not provided
 by any of those bundles individually. The Feature can be used to add this capability to the provided set. 
 
@@ -122,25 +124,25 @@ Additional capabilities are specified in the `capabilities` section of the Featu
 
 ## Prototype
 
-A feature can be defined based on a prototype. This means that the feature is effectively a copy of the feature marked as its
-prototype. Everything in the prototype is copied to the new feature, except for its `id`. The new feature will get a new ID.
-Then the prototype is processed with regard to the defined elements of the feature itself. 
+A feature can be defined based on a prototype. This means that the feature starts out as a copy of the feature prototype.
+Everything in the prototype is copied to the new feature, except for its `id`. The new feature will get a new, different ID.
+The prototype is processed with regard to the defined elements of the feature itself. 
 
 This processing happens as follows:
-* Removal instructions for an include are handled first
+* Removal instructions for a prototype are handled first.
 * A clash of artifacts (such as bundles) between the prototype and the feature is resolved by picking the version defined last, which
 is the one defined by the feature, not its prototype. Artifact clashes are detected based on Maven Coordinates, not on the content
 of the artifact. So if a prototype defines a bundle with artifact ID `org.sling:somebundle:1.2.0` and the feature itself declares 
 `org.sling:somebundle:1.0.1` in its `bundles` section, the bundle with version `1.0.1` is used, i.e. the definition in the feature
 overrides the one coming from the prototype.
 * Configurations will be merged by default, later ones potentially overriding newer ones:
-  * If the same property is declared in more than one feature, the last one wins - in case of an array value, this requires redeclaring all values (if they are meant to be kept)
+  * If the same property is declared in more than one feature, the last one wins - in case of an array value, this requires redeclaring all values (if they are meant to be kept).
 * Later framework properties overwrite newer ones.
 * Capabilities and requirements are appended - this might result in duplicates, but that doesn't really hurt in practice.
 * Extensions are handled in an extension specific way, by default the contents are appended. In the case of extensions of type 
 `Artifact` these are handled just like bundles. Extension merge plugins can be configured to perform custom merging.
 
-Prototypes can provide an important concept for manipulating existing features. For example to replace a bundle in an existing feature and deliver this as a modified feature.
+Prototypes can provide a useful way to manipulate existing features. For example to replace a bundle in an existing feature and deliver this as a modified feature.
 
 # Extensions
 
@@ -157,7 +159,7 @@ to enhance the feature model with new functionality. The API Regions described
 in [apicontroller.md](apicontroller.md) is an example of enhancing the feature
 functionality.
 
-When creating aggregates, extensions are merged into the aggregates. There are 
+When creating aggregates, extensions are merged into the resulting aggregate feature. There are 
 default rules for aggregating extension content, which essentially is appending
 all the extension content of a given type. However custom merge plugins can also
 be provided. After the merge a postprocessor is always run which can perform
@@ -213,6 +215,7 @@ A launcher for feature models is available in this project: https://github.com/a
 # Tooling
 
 The primary tooling around the feature model is provided through Maven by the Sling Feature Maven Plugin: https://github.com/apache/sling-slingfeature-maven-plugin
+
 See the readme of the plugin for more information.  
 
 # References
