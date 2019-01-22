@@ -46,6 +46,7 @@ import javax.json.JsonValue;
 import javax.json.stream.JsonGenerator;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class BuilderUtilTest {
@@ -136,6 +137,46 @@ public class BuilderUtilTest {
         assertContains(result, 1, ArtifactId.parse("g/a/1.1"));
         assertContains(result, 2, ArtifactId.parse("g/b/1.9"));
         assertContains(result, 3, ArtifactId.parse("g/c/2.5"));
+    }
+
+    @Test public void testMergeBundlesWithAliasNoRule() {
+        final Bundles target = new Bundles();
+        Artifact b = createBundle("g/b/2.0", 2);
+        b.getMetadata().put("alias", "x:z:1,a:a");
+        target.add(b);
+
+        final Bundles source = new Bundles();
+        source.add(createBundle("x/z/1.9", 2));
+
+        final Feature orgFeat = new Feature(new ArtifactId("gid", "aid", "123", null, null));
+        try {
+            BuilderUtil.mergeBundles(target, source, orgFeat, Collections.emptyList(), null);
+            fail("Expected exception ");
+        } catch (Exception e) {
+            String msg = e.getMessage();
+            assertTrue(msg.contains("override rule required"));
+            assertTrue(msg.contains("g:b:"));
+            assertTrue(msg.contains("x:z:"));
+        }
+    }
+
+    @Test public void testMergeBundlesWithAlias() {
+        final Bundles target = new Bundles();
+        Artifact b = createBundle("g/b/2.0", 2);
+        b.getMetadata().put("alias", "x:z:1,a:a");
+        target.add(b);
+
+        final Bundles source = new Bundles();
+        source.add(createBundle("x/z/1.9", 2));
+
+        final Feature orgFeat = new Feature(new ArtifactId("gid", "aid", "123", null, null));
+        List<String> overrides = new ArrayList<>();
+        overrides.add("x:z:HIGHEST");
+        BuilderUtil.mergeBundles(target, source, orgFeat, overrides, null);
+
+        final List<Map.Entry<Integer, Artifact>> result = getBundles(target);
+        assertEquals(1, result.size());
+        assertContains(result, 2, ArtifactId.parse("g/b/2.0"));
     }
 
     @Test public void testMergeBundlesDifferentStartlevel() {

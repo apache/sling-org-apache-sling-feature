@@ -17,19 +17,24 @@
 package org.apache.sling.feature;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * An artifact consists of
  * <ul>
  * <li>An id
  * <li>metadata
- * <li>an optional start order property (which is part of the metadata)
+ * <li>optional alias and start order properties (which are part of the metadata)
  * </ul>
  *
  * This class is not thread-safe.
  */
 public class Artifact implements Comparable<Artifact> {
+    /** Can be used in artifact metadata to specify an alias. Multiple aliases can be comma-separated. */
+    public static final String KEY_ALIAS = "alias";
+
 
     /** This key might be used by bundles to define the start order. */
     public static final String KEY_START_ORDER = "start-order";
@@ -67,6 +72,30 @@ public class Artifact implements Comparable<Artifact> {
      */
     public Map<String,String> getMetadata() {
         return this.metadata;
+    }
+
+    /**
+     * Obtain the alias or aliases for the artifact.
+     * @param includeMain Whether to include the main ID in the result.
+     * @return The aliases or an empty set if there are none.
+     */
+    public Set<ArtifactId> getAliases(boolean includeMain) {
+        Set<ArtifactId> artifactIds = new HashSet<>();
+        if (includeMain)
+            artifactIds.add(getId());
+
+        String aliases = getMetadata().get(KEY_ALIAS);
+        if (aliases != null) {
+            for (String alias : aliases.split(",")) {
+                alias = alias.trim();
+                if (alias.indexOf(':') == alias.lastIndexOf(':')) {
+                    // No version provided, set to version zero
+                    alias += ":0.0.0";
+                }
+                artifactIds.add(ArtifactId.fromMvnId(alias));
+            }
+        }
+        return artifactIds;
     }
 
     /**

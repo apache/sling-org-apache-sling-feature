@@ -18,6 +18,7 @@ package org.apache.sling.feature.builder;
 
 import org.apache.sling.feature.Artifact;
 import org.apache.sling.feature.ArtifactId;
+import org.apache.sling.feature.Artifacts;
 import org.apache.sling.feature.Bundles;
 import org.apache.sling.feature.Configuration;
 import org.apache.sling.feature.Configurations;
@@ -34,6 +35,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -141,20 +143,34 @@ class BuilderUtil {
         final String originKey) {
         for(final Map.Entry<Integer, List<Artifact>> entry : source.getBundlesByStartOrder().entrySet()) {
             for(final Artifact a : entry.getValue()) {
-                Artifact existing = target.getSame(a.getId());
-                List<Artifact> selectedArtifacts = null;
-                if (existing != null) {
+                Set<ArtifactId> artifactIds = a.getAliases(true);
+
+                List<Artifact> allExisting = new ArrayList<>();
+                for (final ArtifactId id : artifactIds) {
+                    Artifact s = target.getSame(id);
+                    // Find aliased bundles in target
+                    if (s != null) {
+                        allExisting.add(s);
+                    }
+
+                    allExisting.addAll(findAliasedArtifacts(id, target));
+                }
+
+                final List<Artifact> selectedArtifacts = new ArrayList<>();
+                for (final Artifact existing : allExisting) {
                     if (sourceFeature.getId().toMvnId().equals(existing.getMetadata().get(originKey))) {
                         // If the source artifact came from the same feature, keep them side-by-side
-                        selectedArtifacts = Arrays.asList(existing, a);
+                        selectedArtifacts.addAll(Arrays.asList(existing, a));
                     } else {
-                        selectedArtifacts = selectArtifactOverride(existing, a, artifactOverrides);
+                        selectedArtifacts.addAll(selectArtifactOverride(existing, a, artifactOverrides));
                         while(target.removeSame(existing.getId())) {
                             // Keep executing removeSame() which ignores the version until last one was removed
                         }
                     }
-                } else {
-                    selectedArtifacts = Collections.singletonList(a);
+                }
+
+                if (selectedArtifacts.isEmpty()) {
+                    selectedArtifacts.add(a);
                 }
 
                 for (Artifact sa : selectedArtifacts) {
@@ -178,45 +194,41 @@ class BuilderUtil {
             return Collections.singletonList(a2);
         }
 
-        String a1gid = a1.getId().getGroupId();
-        String a1aid = a1.getId().getArtifactId();
-        String a2gid = a2.getId().getGroupId();
-        String a2aid = a2.getId().getArtifactId();
+        Set<String> commonPrefixes = getCommonPrefixes(a1, a2);
+        if (commonPrefixes.isEmpty()) {
+            throw new IllegalStateException("Internal error selecting override. No common prefix between " + a1 + " and " + a2);
+        }
 
-        if (!a1gid.equals(a2gid))
-            throw new IllegalStateException("Artifacts must have the same group ID: " + a1 + " and " + a2);
-        if (!a1aid.equals(a2aid))
-            throw new IllegalStateException("Artifacts must have the same artifact ID: " + a1 + " and " + a2);
-
-        String prefix = a1gid + ":" + a1aid + ":";
         Set<Artifact> result = new LinkedHashSet<>();
-        for (String o : artifactOverrides) {
-            if (o.startsWith(prefix) || o.startsWith(CATCHALL_OVERRIDE)) {
-                int idx = o.lastIndexOf(':');
-                if (idx <= 0 || o.length() <= idx)
-                    continue;
+        for (String prefix : commonPrefixes) {
+            for (String o : artifactOverrides) {
+                if (o.startsWith(prefix) || o.startsWith(CATCHALL_OVERRIDE)) {
+                    int idx = o.lastIndexOf(':');
+                    if (idx <= 0 || o.length() <= idx)
+                        continue;
 
-                String rule = o.substring(idx+1).trim();
+                    String rule = o.substring(idx+1).trim();
 
-                if (OVERRIDE_SELECT_ALL.equals(rule)) {
-                    return Arrays.asList(a1, a2);
-                } else if (OVERRIDE_SELECT_HIGHEST.equals(rule)) {
-                    Version a1v = a1.getId().getOSGiVersion();
-                    Version a2v = a2.getId().getOSGiVersion();
-                    return a1v.compareTo(a2v) > 0 ? Collections.singletonList(a1) : Collections.singletonList(a2);
-                } else if (OVERRIDE_SELECT_LATEST.equals(rule)) {
-                    return Collections.singletonList(a2);
-                }
+                    if (OVERRIDE_SELECT_ALL.equals(rule)) {
+                        return Arrays.asList(a1, a2);
+                    } else if (OVERRIDE_SELECT_HIGHEST.equals(rule)) {
+                        Version a1v = a1.getId().getOSGiVersion();
+                        Version a2v = a2.getId().getOSGiVersion();
+                        return a1v.compareTo(a2v) > 0 ? Collections.singletonList(a1) : Collections.singletonList(a2);
+                    } else if (OVERRIDE_SELECT_LATEST.equals(rule)) {
+                        return Collections.singletonList(a2);
+                    }
 
-                // The rule must represent a version
-                // See if its one of the existing artifact. If so use those, as they may have additional metadata
-                if (a1.getId().getVersion().equals(rule)) {
-                    result.add(a1);
-                } else if (a2.getId().getVersion().equals(rule)) {
-                    result.add(a2);
-                } else {
-                    // It's a completely new artifact
-                    result.add(new Artifact(ArtifactId.fromMvnId(o)));
+                    // The rule must represent a version
+                    // See if its one of the existing artifact. If so use those, as they may have additional metadata
+                    if (a1.getId().getVersion().equals(rule)) {
+                        result.add(a1);
+                    } else if (a2.getId().getVersion().equals(rule)) {
+                        result.add(a2);
+                    } else {
+                        // It's a completely new artifact
+                        result.add(new Artifact(ArtifactId.fromMvnId(o)));
+                    }
                 }
             }
         }
@@ -225,7 +237,38 @@ class BuilderUtil {
         }
 
         throw new IllegalStateException("Artifact override rule required to select between these two artifacts " +
-                a1 + " and " + a2);
+            a1 + " and " + a2 + ". The rule must be specified for " + commonPrefixes);
+    }
+
+    private static Set<String> getCommonPrefixes(Artifact a1, Artifact a2) {
+        Set<String> a1Prefixes = getPrefixesIncludingAliases(a1);
+        Set<String> a2Prefixes = getPrefixesIncludingAliases(a2);
+
+        a1Prefixes.retainAll(a2Prefixes);
+        return a1Prefixes;
+    }
+
+    private static Set<String> getPrefixesIncludingAliases(Artifact a) {
+        Set<String> prefixes = new HashSet<>();
+        for (ArtifactId aid : a.getAliases(true)) {
+            String id = aid.toMvnId();
+            prefixes.add(id.substring(0, id.lastIndexOf(':') + 1));
+        }
+        return prefixes;
+    }
+
+    private static List<Artifact> findAliasedArtifacts(ArtifactId id, Artifacts bundles) {
+        List<Artifact> result = new ArrayList<>();
+
+        String prefix = id.getGroupId() + ":" + id.getArtifactId() + ":";
+        for (Artifact a : bundles) {
+            for (ArtifactId aid : a.getAliases(false)) {
+                if (aid.toMvnId().startsWith(prefix)) {
+                    result.add(a);
+                }
+            }
+        }
+        return result;
     }
 
     // configurations - merge / override
@@ -328,20 +371,34 @@ class BuilderUtil {
 
         case ARTIFACTS:
             for(final Artifact a : source.getArtifacts()) {
-                Artifact existing = target.getArtifacts().getSame(a.getId());
-                List<Artifact> selectedArtifacts = null;
-                if (existing != null) {
+                Set<ArtifactId> artifactIds = a.getAliases(true);
+
+                List<Artifact> allExisting = new ArrayList<>();
+                for (final ArtifactId id : artifactIds) {
+                    Artifact s = target.getArtifacts().getSame(id);
+                    // Find aliased bundles in target
+                    if (s != null) {
+                        allExisting.add(s);
+                    }
+
+                    allExisting.addAll(findAliasedArtifacts(id, target.getArtifacts()));
+                }
+
+                final List<Artifact> selectedArtifacts = new ArrayList<>();
+                for (final Artifact existing : allExisting) {
                     if (sourceFeature.getId().toMvnId().equals(existing.getMetadata().get(originKey))) {
                         // If the source artifact came from the same feature, keep them side-by-side
-                        selectedArtifacts = Arrays.asList(existing, a);
+                        selectedArtifacts.addAll(Arrays.asList(existing, a));
                     } else {
-                        selectedArtifacts = selectArtifactOverride(existing, a, artifactOverrides);
+                        selectedArtifacts.addAll(selectArtifactOverride(existing, a, artifactOverrides));
                         while(target.getArtifacts().removeSame(existing.getId())) {
                             // Keep executing removeSame() which ignores the version until last one was removed
                         }
                     }
-                } else {
-                    selectedArtifacts = Collections.singletonList(a);
+                }
+
+                if (selectedArtifacts.isEmpty()) {
+                    selectedArtifacts.add(a);
                 }
 
                 for (Artifact sa : selectedArtifacts) {
