@@ -90,6 +90,15 @@ public class FeatureJSONReaderTest {
     }
 
     @Test
+    public void testCompleteFlag() throws Exception {
+        final Feature featureA = U.readFeature("test");
+        assertFalse(featureA.isComplete());
+
+        final Feature featureB = U.readFeature("complete");
+        assertTrue(featureB.isComplete());
+    }
+
+    @Test
     public void testReadMultiBSNVer() throws Exception {
         final Feature f = U.readFeature("test3");
         Bundles fb = f.getBundles();
