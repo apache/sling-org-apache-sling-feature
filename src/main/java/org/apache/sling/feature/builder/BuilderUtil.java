@@ -509,16 +509,16 @@ class BuilderUtil {
         return builder.build();
     }
 
-    private static class HandlerContextImpl implements HandlerContext {
+    static class HandlerContextImpl implements HandlerContext {
         private final ArtifactProvider artifactProvider;
         private final Map<String,String> configuration;
 
-        public HandlerContextImpl(BuilderContext bc, MergeHandler handler) {
+        HandlerContextImpl(BuilderContext bc, MergeHandler handler) {
             artifactProvider = bc.getArtifactProvider();
             configuration = getHandlerConfiguration(bc, handler);
         }
 
-        public HandlerContextImpl(BuilderContext bc, PostProcessHandler handler) {
+        HandlerContextImpl(BuilderContext bc, PostProcessHandler handler) {
             artifactProvider = bc.getArtifactProvider();
             configuration = getHandlerConfiguration(bc, handler);
         }

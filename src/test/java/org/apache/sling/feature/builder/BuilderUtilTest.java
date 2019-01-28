@@ -22,6 +22,7 @@ import org.apache.sling.feature.Bundles;
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.builder.BuilderUtil.HandlerContextImpl;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -520,6 +521,42 @@ public class BuilderUtilTest {
         List<String> overrides = Collections.singletonList("gid:aid:LATEST");
         assertEquals(Collections.singletonList(a2), BuilderUtil.selectArtifactOverride(a1, a2, overrides));
         assertEquals(Collections.singletonList(a1), BuilderUtil.selectArtifactOverride(a2, a1, overrides));
+    }
+
+    @Test public void testHandlerConfiguration() {
+        Map<String, String> cfg1 = Collections.singletonMap("a", "b");
+        Map<String, String> cfg2 = Collections.singletonMap("c", "d");
+        Map<String, String> allCfg = Collections.singletonMap("f", "g");
+
+        Map<String, Map<String, String>> cm = new HashMap<>();
+        cm.put("all", allCfg);
+        cm.put("OtherConfig", cfg1);
+        cm.put("TestMergeHandler", cfg2);
+
+        BuilderContext bc = Mockito.mock(BuilderContext.class);
+        Mockito.when(bc.getHandlerConfigurations()).thenReturn(cm);
+        TestMergeHandler mh = new TestMergeHandler();
+        HandlerContextImpl hc = new BuilderUtil.HandlerContextImpl(bc, mh);
+        Map<String, String> cfg = hc.getConfiguration();
+        assertEquals(2, cfg.size());
+        assertEquals("d", cfg.get("c"));
+        assertEquals("g", cfg.get("f"));
+    }
+
+    @Test public void testHandlerConfiguration2() {
+        Map<String, String> cfg1 = Collections.singletonMap("a", "b");
+        Map<String, String> allCfg = Collections.singletonMap("f", "g");
+
+        Map<String, Map<String, String>> cm = new HashMap<>();
+        cm.put("none", allCfg);
+        cm.put("OtherConfig", cfg1);
+
+        BuilderContext bc = Mockito.mock(BuilderContext.class);
+        Mockito.when(bc.getHandlerConfigurations()).thenReturn(cm);
+        PostProcessHandler pph = Mockito.mock(PostProcessHandler.class);
+        HandlerContextImpl hc = new BuilderUtil.HandlerContextImpl(bc, pph);
+        Map<String, String> cfg = hc.getConfiguration();
+        assertEquals(0, cfg.size());
     }
 
     @SafeVarargs
