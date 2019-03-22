@@ -16,22 +16,6 @@
  */
 package org.apache.sling.feature.builder;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.felix.utils.resource.CapabilityImpl;
 import org.apache.felix.utils.resource.RequirementImpl;
 import org.apache.sling.feature.Artifact;
@@ -44,6 +28,22 @@ import org.apache.sling.feature.Prototype;
 import org.junit.Test;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class FeatureBuilderTest {
 
@@ -466,6 +466,39 @@ public class FeatureBuilderTest {
         }), a, b);
         assertEquals(1, features.length);
         assertEquals(idB, features[0].getId());
+    }
+
+    @Test public void testMergeIncludeDedup() throws Exception {
+        final ArtifactId idA = ArtifactId.fromMvnId("g:a:1.0.0");
+        final ArtifactId idB = ArtifactId.fromMvnId("g:b:1.0.0");
+
+        final Feature a = new Feature(idA);
+        ArtifactId b1ID = ArtifactId.fromMvnId("g:bundle1:1.2.3");
+        ArtifactId b2ID = ArtifactId.fromMvnId("g:bundle2:4.5.6");
+        Artifact b1 = new Artifact(b1ID);
+        Artifact b2 = new Artifact(b2ID);
+        a.getBundles().add(b1);
+        a.getBundles().add(b2);
+
+        final Feature b = new Feature(idB);
+        // feature b includes feature a and removes a bundle
+        final Prototype inc = new Prototype(idA);
+        b.setPrototype(inc);
+        inc.getBundleRemovals().add(b1ID);
+
+        // Merge all features together
+        ArtifactId c = ArtifactId.fromMvnId("g:c:1.0.0");
+        Feature fc = FeatureBuilder.assemble(c, new BuilderContext(new FeatureProvider() {
+
+            @Override
+            public Feature provide(ArtifactId id) {
+                return null;
+            }
+        }), a, b);
+
+        // Test that the feature that acted as a prototype is not included in the merge.
+        assertEquals(1, fc.getBundles().size());
+        assertEquals(b2, fc.getBundles().iterator().next());
     }
 
     @Test public void testBundleRemoveWithExactVersion() throws Exception {
