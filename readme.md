@@ -10,7 +10,7 @@ server-side systems and cloud and container based architectures.
 As these applications are generally based on many bundles, describing each bundle individually in the application 
 definition becomes unwieldy once the number of bundles reaches a certain level. 
 
-Addinally, OSGi has no mechanism to describe other elements of the application definition, such as configuration or custom artifacts.
+Additionally, OSGi has no mechanism to describe other elements of the application definition, such as configuration or custom artifacts.
 
 The Sling OSGi Feature Model introduces a higher level to describe OSGi applications that encapsulates the details of the various 
 components that the application is built up from. It allows the description of an entire OSGi-based application based on reusable 
