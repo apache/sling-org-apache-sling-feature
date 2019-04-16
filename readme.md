@@ -226,5 +226,5 @@ The links below provide additional information regarding the Feature Model.
 * [File format](https://github.com/apache/sling-org-apache-sling-feature-io/blob/master/design/feature-model.json)
 
 * [Prototype](prototype.md)
-* [API Controller Proposal](apicontroller.md)
+* [API Controller and API Regions](apicontroller.md)
 * [Application Configuration Proposal](appconf.md)
