@@ -186,7 +186,13 @@ public abstract class FeatureBuilder {
 
         final Feature[] assembledFeatures = FeatureBuilder.deduplicate(context, features);
 
-        final Set<ArtifactId> usedFeatures = new HashSet<>();
+        // append feature list in extension
+        final Extension list = new Extension(ExtensionType.ARTIFACTS, Extension.EXTENSION_NAME_ASSEMBLED_FEATURES,
+            false);
+        for(final Feature feature : assembledFeatures) {
+            list.getArtifacts().add(new Artifact(feature.getId()));
+        }
+        target.getExtensions().add(list);
 
         // assemble feature
         boolean targetIsComplete = true;
@@ -194,18 +200,9 @@ public abstract class FeatureBuilder {
             if (!assembled.isComplete()) {
                 targetIsComplete = false;
             }
-            usedFeatures.add(assembled.getId());
 
             merge(target, assembled, context, context.getArtifactOverrides(), null);
         }
-
-        // append feature list in extension
-        final Extension list = new Extension(ExtensionType.ARTIFACTS, Extension.EXTENSION_NAME_ASSEMBLED_FEATURES,
-                false);
-        for(final ArtifactId id : usedFeatures) {
-            list.getArtifacts().add(new Artifact(id));
-        }
-        target.getExtensions().add(list);
 
         // check complete flag
         if (targetIsComplete) {
