@@ -35,16 +35,16 @@ public interface MergeHandler {
     /**
      * Merge the source extension into the target extension.
      *
-     * Only called if {@link #canMerge(Extension)} for the
-     * extension returned {@code true}.
-     * If the target does not yet contain this extension,
-     * then the targetEx argument is {@code null}. In that case
-     * the handler should the extension to the target.
+     * Only called if {@link #canMerge(Extension)} for the extension returned
+     * {@code true}. If the target does not yet contain this extension, then the
+     * targetEx argument is {@code null}. In that case the handler should add the
+     * extension to the target.
      *
-     * @param context Context for the handler
-     * @param target The target feature
-     * @param source The source feature
-     * @param targetEx The target extension or {@code null} if the extension does not exist in the target.
+     * @param context  Context for the handler
+     * @param target   The target feature
+     * @param source   The source feature
+     * @param targetEx The target extension or {@code null} if the extension does
+     *                 not exist in the target.
      * @param sourceEx The source extension
      * @throws IllegalStateException If the extensions can't be merged
      */

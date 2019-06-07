@@ -16,18 +16,6 @@
  */
 package org.apache.sling.feature.builder;
 
-import org.apache.sling.feature.Artifact;
-import org.apache.sling.feature.ArtifactId;
-import org.apache.sling.feature.Artifacts;
-import org.apache.sling.feature.Bundles;
-import org.apache.sling.feature.Configuration;
-import org.apache.sling.feature.Configurations;
-import org.apache.sling.feature.Extension;
-import org.apache.sling.feature.Feature;
-import org.osgi.framework.Version;
-import org.osgi.resource.Capability;
-import org.osgi.resource.Requirement;
-
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -51,6 +39,18 @@ import javax.json.JsonStructure;
 import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
 import javax.json.JsonWriter;
+
+import org.apache.sling.feature.Artifact;
+import org.apache.sling.feature.ArtifactId;
+import org.apache.sling.feature.Artifacts;
+import org.apache.sling.feature.Bundles;
+import org.apache.sling.feature.Configuration;
+import org.apache.sling.feature.Configurations;
+import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.MatchingRequirement;
+import org.osgi.framework.Version;
+import org.osgi.resource.Capability;
 
 /**
  * Utility methods for the builders
@@ -304,8 +304,8 @@ class BuilderUtil {
     }
 
     // requirements (add)
-    static void mergeRequirements(final List<Requirement> target, final List<Requirement> source) {
-        for(final Requirement req : source) {
+    static void mergeRequirements(final List<MatchingRequirement> target, final List<MatchingRequirement> source) {
+        for (final MatchingRequirement req : source) {
             if ( !target.contains(req) ) {
                 target.add(req);
             }

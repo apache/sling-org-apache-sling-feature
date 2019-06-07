@@ -20,11 +20,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.felix.utils.resource.CapabilityImpl;
 import org.apache.felix.utils.resource.RequirementImpl;
 import org.osgi.resource.Capability;
-import org.osgi.resource.Requirement;
+import org.osgi.resource.Resource;
 
 /**
  * A feature consists of
@@ -50,7 +51,7 @@ public class Feature implements Comparable<Feature> {
 
     private final Map<String,String> frameworkProperties = new HashMap<>();
 
-    private final List<Requirement> requirements = new ArrayList<>();
+    private final List<MatchingRequirement> requirements = new ArrayList<>();
 
     private final List<Capability> capabilities = new ArrayList<>();
 
@@ -154,7 +155,7 @@ public class Feature implements Comparable<Feature> {
      * The returned object is modifiable.
      * @return The list of requirements
      */
-    public List<Requirement> getRequirements() {
+    public List<MatchingRequirement> getRequirements() {
         return requirements;
     }
 
@@ -365,8 +366,9 @@ public class Feature implements Comparable<Feature> {
         result.getFrameworkProperties().putAll(this.getFrameworkProperties());
 
         // requirements
-        for(final Requirement r : this.getRequirements()) {
-            final Requirement c = new RequirementImpl(null, r.getNamespace(), r.getDirectives(), r.getAttributes());
+        for (final MatchingRequirement r : this.getRequirements()) {
+            final MatchingRequirement c = new MatchingRequirementImpl(null, r.getNamespace(), r.getDirectives(),
+                    r.getAttributes());
             result.getRequirements().add(c);
         }
 
@@ -438,4 +440,24 @@ public class Feature implements Comparable<Feature> {
                 + "]";
     }
 
+    private static class MatchingRequirementImpl extends RequirementImpl implements MatchingRequirement {
+
+        public MatchingRequirementImpl(Resource res, String ns, Map<String, String> dirs, Map<String, Object> attrs) {
+            super(res, ns, dirs, attrs);
+        }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || !(o instanceof RequirementImpl)) {
+                return false;
+            }
+            final RequirementImpl that = (RequirementImpl) o;
+            return Objects.equals(resource, that.getResource()) && Objects.equals(namespace, that.getNamespace())
+                    && Objects.equals(attributes, that.getAttributes())
+                    && Objects.equals(directives, that.getDirectives());
+        }
+    }
 }

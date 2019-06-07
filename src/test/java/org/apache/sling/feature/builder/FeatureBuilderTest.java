@@ -16,18 +16,12 @@
  */
 package org.apache.sling.feature.builder;
 
-import org.apache.felix.utils.resource.CapabilityImpl;
-import org.apache.felix.utils.resource.RequirementImpl;
-import org.apache.sling.feature.Artifact;
-import org.apache.sling.feature.ArtifactId;
-import org.apache.sling.feature.Configuration;
-import org.apache.sling.feature.Extension;
-import org.apache.sling.feature.ExtensionType;
-import org.apache.sling.feature.Feature;
-import org.apache.sling.feature.Prototype;
-import org.junit.Test;
-import org.osgi.resource.Capability;
-import org.osgi.resource.Requirement;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,14 +30,23 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.apache.felix.utils.resource.CapabilityImpl;
+import org.apache.felix.utils.resource.RequirementImpl;
+import org.apache.sling.feature.Artifact;
+import org.apache.sling.feature.ArtifactId;
+import org.apache.sling.feature.Configuration;
+import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.ExtensionType;
+import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.MatchingRequirement;
+import org.apache.sling.feature.Prototype;
+import org.junit.Test;
+import org.osgi.resource.Capability;
+import org.osgi.resource.Requirement;
+import org.osgi.resource.Resource;
 
 public class FeatureBuilderTest {
 
@@ -223,7 +226,7 @@ public class FeatureBuilderTest {
     @Test public void testNoIncludesNoUpgrade() throws Exception {
         final Feature base = new Feature(ArtifactId.parse("org.apache.sling/test-feature/1.1"));
 
-        final Requirement r1 = new RequirementImpl(null, "osgi.contract",
+        final MatchingRequirement r1 = new MatchingRequirementImpl(null, "osgi.contract",
                 Collections.singletonMap("filter", "(&(osgi.contract=JavaServlet)(version=3.1))"), null);
         base.getRequirements().add(r1);
 
@@ -273,7 +276,7 @@ public class FeatureBuilderTest {
         final Prototype i1 = new Prototype(ArtifactId.parse("g/a/1"));
         base.setPrototype(i1);
 
-        final Requirement r1 = new RequirementImpl(null, "osgi.contract",
+        final MatchingRequirement r1 = new MatchingRequirementImpl(null, "osgi.contract",
                 Collections.singletonMap("filter", "(&(osgi.contract=JavaServlet)(version=3.1))"), null);
         base.getRequirements().add(r1);
 
@@ -855,6 +858,27 @@ public class FeatureBuilderTest {
             fail();
         } catch (final IllegalStateException ise) {
             assertTrue(ise.getMessage().contains(" final "));
+        }
+    }
+
+    private static class MatchingRequirementImpl extends RequirementImpl implements MatchingRequirement {
+
+        public MatchingRequirementImpl(Resource res, String ns, Map<String, String> dirs, Map<String, Object> attrs) {
+            super(res, ns, dirs, attrs);
+        }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || !(o instanceof RequirementImpl)) {
+                return false;
+            }
+            final RequirementImpl that = (RequirementImpl) o;
+            return Objects.equals(resource, that.getResource()) && Objects.equals(namespace, that.getNamespace())
+                    && Objects.equals(attributes, that.getAttributes())
+                    && Objects.equals(directives, that.getDirectives());
         }
     }
 }
