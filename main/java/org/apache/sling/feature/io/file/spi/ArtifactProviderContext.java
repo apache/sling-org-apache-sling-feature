@@ -18,9 +18,12 @@ package org.apache.sling.feature.io.file.spi;
 
 import java.io.File;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * This is the context for the artifact providers
  */
+@ProviderType
 public interface ArtifactProviderContext {
 
     /**

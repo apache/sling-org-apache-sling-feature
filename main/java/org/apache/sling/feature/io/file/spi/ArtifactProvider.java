@@ -19,10 +19,13 @@ package org.apache.sling.feature.io.file.spi;
 import java.io.File;
 import java.io.IOException;
 
+import org.osgi.annotation.versioning.ConsumerType;
+
 /**
  * The artifact provider is an extension point for providing artifacts
  * from different sources, like for example s3.
  */
+@ConsumerType
 public interface ArtifactProvider {
 
     /**
