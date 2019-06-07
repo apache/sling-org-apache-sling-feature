@@ -16,7 +16,7 @@
  */
 package org.apache.sling.feature.builder;
 
-import java.io.File;
+import java.net.URL;
 
 import org.apache.sling.feature.ArtifactId;
 import org.osgi.annotation.versioning.ConsumerType;
@@ -32,5 +32,5 @@ public interface ArtifactProvider {
      * @param id The artifact id
      * @return The file or {@code null}
      */
-    File provide(ArtifactId id);
+    URL provide(ArtifactId id);
 }
