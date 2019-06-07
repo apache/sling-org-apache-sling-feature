@@ -19,9 +19,12 @@ package org.apache.sling.feature.builder;
 
 import java.util.Map;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * Context for an extension handler.
  */
+@ProviderType
 public interface HandlerContext {
     /**
      * Provide the artifact provider.

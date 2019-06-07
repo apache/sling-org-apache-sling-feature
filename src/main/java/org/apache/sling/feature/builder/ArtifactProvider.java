@@ -19,10 +19,12 @@ package org.apache.sling.feature.builder;
 import java.io.File;
 
 import org.apache.sling.feature.ArtifactId;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * The artifact provider provides a file for an artifact.
  */
+@ConsumerType
 public interface ArtifactProvider {
 
     /**
