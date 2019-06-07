@@ -16,24 +16,6 @@
  */
 package org.apache.sling.feature.io.json;
 
-import org.apache.felix.configurator.impl.json.JSMin;
-import org.apache.felix.configurator.impl.json.JSONUtil;
-import org.apache.felix.configurator.impl.json.TypeConverter;
-import org.apache.felix.configurator.impl.model.Config;
-import org.apache.felix.utils.resource.CapabilityImpl;
-import org.apache.felix.utils.resource.RequirementImpl;
-import org.apache.sling.feature.Artifact;
-import org.apache.sling.feature.ArtifactId;
-import org.apache.sling.feature.Bundles;
-import org.apache.sling.feature.Configuration;
-import org.apache.sling.feature.Configurations;
-import org.apache.sling.feature.Extension;
-import org.apache.sling.feature.ExtensionType;
-import org.apache.sling.feature.Extensions;
-import org.apache.sling.feature.Prototype;
-import org.osgi.resource.Capability;
-import org.osgi.resource.Requirement;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringWriter;
@@ -48,6 +30,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
@@ -57,6 +40,25 @@ import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonStructure;
 import javax.json.JsonWriter;
+
+import org.apache.felix.configurator.impl.json.JSMin;
+import org.apache.felix.configurator.impl.json.JSONUtil;
+import org.apache.felix.configurator.impl.json.TypeConverter;
+import org.apache.felix.configurator.impl.model.Config;
+import org.apache.felix.utils.resource.CapabilityImpl;
+import org.apache.felix.utils.resource.RequirementImpl;
+import org.apache.sling.feature.Artifact;
+import org.apache.sling.feature.ArtifactId;
+import org.apache.sling.feature.Bundles;
+import org.apache.sling.feature.Configuration;
+import org.apache.sling.feature.Configurations;
+import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.ExtensionType;
+import org.apache.sling.feature.Extensions;
+import org.apache.sling.feature.MatchingRequirement;
+import org.apache.sling.feature.Prototype;
+import org.osgi.resource.Capability;
+import org.osgi.resource.Resource;
 
 /**
  * Common methods for JSON reading.
@@ -579,7 +581,8 @@ abstract class JSONReaderBase {
         return null;
     }
 
-    protected void readRequirements(Map<String, Object> map, final List<Requirement> container) throws IOException {
+    protected void readRequirements(Map<String, Object> map, final List<MatchingRequirement> container)
+            throws IOException {
         if ( map.containsKey(JSONConstants.FEATURE_REQUIREMENTS)) {
             final Object reqObj = map.get(JSONConstants.FEATURE_REQUIREMENTS);
             checkType(JSONConstants.FEATURE_REQUIREMENTS, reqObj, List.class);
@@ -612,7 +615,8 @@ abstract class JSONReaderBase {
                     dirs.forEach(rethrowBiConsumer((key, value) -> ManifestUtils.unmarshalDirective(key, value, dirMap::put)));
                 }
 
-                final Requirement r = new RequirementImpl(null, obj.get(JSONConstants.REQCAP_NAMESPACE).toString(), dirMap, attrMap);
+                final MatchingRequirement r = new MatchingRequirementImpl(null,
+                        obj.get(JSONConstants.REQCAP_NAMESPACE).toString(), dirMap, attrMap);
                 container.add(r);
             }
         }
@@ -675,5 +679,26 @@ abstract class JSONReaderBase {
     @SuppressWarnings ("unchecked")
     private static <E extends Throwable> void throwAsUnchecked(Exception exception) throws E {
         throw (E) exception;
+    }
+
+    private static class MatchingRequirementImpl extends RequirementImpl implements MatchingRequirement {
+
+        public MatchingRequirementImpl(Resource res, String ns, Map<String, String> dirs, Map<String, Object> attrs) {
+            super(res, ns, dirs, attrs);
+        }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || !(o instanceof RequirementImpl)) {
+                return false;
+            }
+            final RequirementImpl that = (RequirementImpl) o;
+            return Objects.equals(resource, that.getResource()) && Objects.equals(namespace, that.getNamespace())
+                    && Objects.equals(attributes, that.getAttributes())
+                    && Objects.equals(directives, that.getDirectives());
+        }
     }
 }

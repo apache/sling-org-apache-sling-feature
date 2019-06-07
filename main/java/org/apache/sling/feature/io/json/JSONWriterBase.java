@@ -37,6 +37,7 @@ import org.apache.sling.feature.Configuration;
 import org.apache.sling.feature.Configurations;
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.ExtensionType;
+import org.apache.sling.feature.MatchingRequirement;
 import org.apache.sling.feature.Prototype;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
@@ -312,7 +313,7 @@ abstract class JSONWriterBase {
         }
     }
 
-    protected void writeRequirements(final JsonGenerator generator, final List<Requirement> requirements) {
+    protected void writeRequirements(final JsonGenerator generator, final List<MatchingRequirement> requirements) {
         if (requirements.isEmpty()) {
             return;
         }
