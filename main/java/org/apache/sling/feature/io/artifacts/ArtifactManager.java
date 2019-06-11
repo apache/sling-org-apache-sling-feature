@@ -14,26 +14,27 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.sling.feature.io.file;
+package org.apache.sling.feature.io.artifacts;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.nio.file.Files;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ServiceLoader;
 
 import org.apache.sling.feature.ArtifactId;
-import org.apache.sling.feature.io.file.spi.ArtifactProvider;
-import org.apache.sling.feature.io.file.spi.ArtifactProviderContext;
+import org.apache.sling.feature.io.artifacts.spi.ArtifactProvider;
+import org.apache.sling.feature.io.artifacts.spi.ArtifactProviderContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,7 +110,7 @@ public class ArtifactManager implements AutoCloseable {
         shutdown();
     }
 
-    private final File getArtifactFromProviders(final String url, final String relativeCachePath) throws IOException {
+    private final URL getArtifactFromProviders(final String url, final String relativeCachePath) throws IOException {
         final int pos = url.indexOf(":");
         final String scheme = url.substring(0, pos);
 
@@ -149,8 +150,8 @@ public class ArtifactManager implements AutoCloseable {
             while ( url.charAt(pos) == '/') {
                 pos++;
             }
-            final File file = this.getArtifactFromProviders(url, url.substring(pos));
-            if ( file == null || !file.exists()) {
+            final URL file = this.getArtifactFromProviders(url, url.substring(pos));
+            if ( file == null ) {
                 throw new IOException("Artifact " + url + " not found.");
             }
             return new ArtifactHandler(url, file);
@@ -161,7 +162,7 @@ public class ArtifactManager implements AutoCloseable {
             if ( !f.exists()) {
                 throw new IOException("Artifact " + url + " not found.");
             }
-            return new ArtifactHandler(f.toURI().toString(), f);
+            return new ArtifactHandler(f.toURI().toString(), f.toURI().toURL());
         }
         logger.debug("Querying repositories for {}", path);
 
@@ -185,7 +186,7 @@ public class ArtifactManager implements AutoCloseable {
 
             logger.debug("Checking {} to get artifact from {}", handler, artifactUrl);
 
-            final File file = handler.getArtifact(artifactUrl, path);
+            final URL file = handler.getArtifact(artifactUrl, path);
             if ( file != null ) {
                 logger.debug("Found artifact {}", artifactUrl);
                 return new ArtifactHandler(artifactUrl, file);
@@ -211,8 +212,8 @@ public class ArtifactManager implements AutoCloseable {
                         while ( fullURL.charAt(pos2) == '/') {
                             pos2++;
                         }
-                        final File file2 = this.getArtifactFromProviders(fullURL, path);
-                        if ( file2 == null || !file2.exists()) {
+                        final URL file2 = this.getArtifactFromProviders(fullURL, path);
+                        if ( file2 == null ) {
                             throw new IOException("Artifact " + fullURL + " not found.");
                         }
                         return new ArtifactHandler(artifactUrl, file2);
@@ -228,8 +229,10 @@ public class ArtifactManager implements AutoCloseable {
 
     protected String getFileContents(final ArtifactHandler handler) throws IOException {
         final StringBuilder sb = new StringBuilder();
-        for(final String line : Files.readAllLines(handler.getFile().toPath())) {
-            sb.append(line).append('\n');
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(handler.getLocalURL().openStream(), "UTF-8"))) {
+            for(String line = reader.readLine(); line != null; line = reader.readLine()) {
+                sb.append(line).append('\n');
+            }
         }
 
         return sb.toString();
@@ -296,14 +299,14 @@ public class ArtifactManager implements AutoCloseable {
         }
 
         @Override
-        public File getArtifact(final String url, final String relativeCachePath) {
+        public URL getArtifact(final String url, final String relativeCachePath) {
             logger.debug("Checking url to be local file {}", url);
             // check if this is already a local file
             try {
                 final File f = new File(new URL(url).toURI());
                 if ( f.exists() ) {
                     this.config.incLocalArtifacts();
-                    return f;
+                    return f.toURI().toURL();
                 }
                 return null;
             } catch ( final URISyntaxException ise) {
@@ -361,7 +364,7 @@ public class ArtifactManager implements AutoCloseable {
                 } else {
                     this.config.incCachedArtifacts();
                 }
-                return cacheFile;
+                return cacheFile.toURI().toURL();
             } catch ( final Exception e) {
                 logger.info("Artifact not found in one repository", e);
                 // ignore for now

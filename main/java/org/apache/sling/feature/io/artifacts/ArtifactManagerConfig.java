@@ -14,13 +14,13 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.sling.feature.io.file;
+package org.apache.sling.feature.io.artifacts;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
-import org.apache.sling.feature.io.file.spi.ArtifactProviderContext;
+import org.apache.sling.feature.io.artifacts.spi.ArtifactProviderContext;
 
 /**
  * This class holds the configuration of artifact manager.

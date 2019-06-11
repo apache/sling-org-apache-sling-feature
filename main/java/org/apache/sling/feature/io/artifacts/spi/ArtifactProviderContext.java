@@ -14,45 +14,36 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.sling.feature.io.file;
+package org.apache.sling.feature.io.artifacts.spi;
 
 import java.io.File;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
- * A handler provides a file object for an artifact.
+ * This is the context for the artifact providers
  */
-public class ArtifactHandler {
-
-    private final String url;
-
-    private final File file;
+@ProviderType
+public interface ArtifactProviderContext {
 
     /**
-     * Create a new handler.
-     * 
-     * @param url  The url of the artifact
-     * @param file The file for the artifact
+     * Get the cache directory
+     * @return The cache directory.
      */
-    public ArtifactHandler(final String url, final File file) {
-        this.url = url;
-        this.file = file;
-    }
+    File getCacheDirectory();
 
     /**
-     * Get the url of the artifact
-     * 
-     * @return The url.
+     * Inform about an artifact found in the cache.
      */
-    public String getUrl() {
-        return url;
-    }
+    void incCachedArtifacts();
 
     /**
-     * Get a file for the artifact
-     * 
-     * @return The file
+     * Inform about an artifact being downloaded
      */
-    public File getFile() {
-        return file;
-    }
+    void incDownloadedArtifacts();
+
+    /**
+     * Inform about an artifact found locally.
+     */
+    void incLocalArtifacts();
 }

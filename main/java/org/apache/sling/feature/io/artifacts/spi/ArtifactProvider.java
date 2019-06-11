@@ -14,10 +14,11 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.sling.feature.io.file.spi;
+package org.apache.sling.feature.io.artifacts.spi;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 
 import org.osgi.annotation.versioning.ConsumerType;
 
@@ -52,7 +53,7 @@ public interface ArtifactProvider {
      * @param url Artifact url
      * @param relativeCachePath A relative path that can be used as a cache path
      *                          by the provider. The path does not start with a slash.
-     * @return A file if the artifact exists or {@code null}
+     * @return A local url if the artifact exists or {@code null}
      */
-    File getArtifact(String url, String relativeCachePath);
+    URL getArtifact(String url, String relativeCachePath);
 }

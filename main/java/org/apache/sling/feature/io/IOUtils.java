@@ -17,12 +17,20 @@
 package org.apache.sling.feature.io;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.JarURLConnection;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.jar.JarFile;
 
 public class IOUtils {
 
@@ -155,6 +163,94 @@ public class IOUtils {
         return paths;
     }
 
+    /**
+     * Get a File from a local URL (if possible)
+     *
+     * @param url a local url (like a file: url or a jar:file: url
+     * @param cache if an attempt should be made to download the content of the url locally
+     *              if it can not be presented as a file directly
+     * @param tmpDir the tmpDir to use (null for default)
+     * @return the file the url points to (or null if none) - or a tmp file if cache is true and the url could be cached
+     * @throws IOException
+     */
+    public static File getFileFromURL(URL url, boolean cache, File tmpDir) throws IOException {
+        File result;
+        if (url.getProtocol().equals("file")) {
+            try {
+                result = new File(url.toURI());
+            } catch (URISyntaxException e) {
+                result = new File(url.getPath());
+            }
+        } else if (url.getProtocol().equals("jar")) {
+            String innerURL = url.getPath();
+            if (innerURL.endsWith("!/") && innerURL.indexOf("!/") == innerURL.lastIndexOf("!/")) {
+                innerURL = innerURL.substring(0, innerURL.indexOf("!/"));
+                try {
+                    result = getFileFromURL(new URL(innerURL), cache, tmpDir);
+                } catch (IOException ex) {
+                    result = null;
+                }
+            }
+            else {
+                result = null;
+            }
+        }
+        else {
+            result = null;
+        }
+
+        if ((result == null || !result.exists()) && cache) {
+            File tmp = File.createTempFile("jar", ".jar", tmpDir);
+            try (InputStream input = url.openStream(); OutputStream output = new FileOutputStream(tmp)) {
+                byte[] buffer =new byte[64 * 1024];
+                for (int i = input.read(buffer); i != -1;i = input.read(buffer)) {
+                    output.write(buffer, 0, i);
+                }
+            }
+            result = tmp;
+        }
+        return result;
+    }
+
+    /**
+     * Get a JarFile from a local URL (if possible)
+     *
+     * @param url a local url (like a file: url or a jar:file: url
+     * @param cache if an attempt should be made to download the content of the url locally
+     *              if it can not be presented as a jarfile directly
+     * @param tmpDir the tmpDir to use (null for default)
+     *
+     * @return the jarfile the url points to
+     * @throws IOException if the url can't be represented as a jarfile
+     */
+    public static JarFile getJarFileFromURL(URL url, boolean cache, File tmpDir) throws IOException {
+        try {
+            URL targetURL = url;
+            if (!url.getProtocol().equals("jar")) {
+                targetURL = new URL("jar:" + toURLString(url) + "!/");
+            }
+            else if (!url.getPath().endsWith("!/")) {
+                targetURL = new URL(toURLString(url) + "!/");
+            }
+            return ((JarURLConnection) targetURL.openConnection()).getJarFile();
+        } catch (IOException ex) {
+            File file = getFileFromURL(url, cache, tmpDir);
+            if (file != null) {
+                return new JarFile(file);
+            }
+            else {
+                throw ex;
+            }
+        }
+    }
+
+    private static String toURLString(URL url) {
+        try {
+            return url.toURI().toURL().toString();
+        } catch (URISyntaxException | MalformedURLException e) {
+            return url.toString();
+        }
+    }
     static final Comparator<String> FEATURE_PATH_COMP = new Comparator<String>() {
         @Override
         public int compare(final String o1, final String o2) {
