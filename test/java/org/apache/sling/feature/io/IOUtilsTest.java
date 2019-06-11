@@ -23,15 +23,12 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.URL;
@@ -45,7 +42,6 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 
-import org.apache.sling.feature.io.IOUtils;
 import org.junit.Test;
 
 public class IOUtilsTest {
@@ -69,8 +65,7 @@ public class IOUtilsTest {
         }
     }
 
-    @Test public void testGetFileFromURL() throws IOException
-    {
+    @Test public void testGetFileFromURL() throws IOException {
         File file = File.createTempFile("IOUtilsTest \\\\+%23öäü^^^°$::", ".test");
 
         try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"))) {
@@ -81,15 +76,12 @@ public class IOUtilsTest {
 
         assertEquals(file, IOUtils.getFileFromURL(file.toURI().toURL(), false, null));
 
-        URL url = new URL(null,"bla:" + file.toURI().toURL(), new URLStreamHandler()
-        {
+        URL url = new URL(null,"bla:" + file.toURI().toURL(), new URLStreamHandler() {
             @Override
-            protected URLConnection openConnection(URL u) throws IOException
-            {
-                return new URLConnection(u)
-                {
+            protected URLConnection openConnection(URL u){
+                return new URLConnection(u) {
                     @Override
-                    public void connect() throws IOException
+                    public void connect()
                     {
 
                     }
@@ -135,8 +127,7 @@ public class IOUtilsTest {
             output.write("Hello".getBytes());
             output.closeEntry();
             output.putNextEntry(new JarEntry("test.jar"));
-            try (JarOutputStream inner = new JarOutputStream(output))
-            {
+            try (JarOutputStream inner = new JarOutputStream(output)) {
                 inner.putNextEntry(new JarEntry("inner"));
                 inner.write("Hello".getBytes());
                 inner.closeEntry();
@@ -154,16 +145,14 @@ public class IOUtilsTest {
         assertNotNull(tmpJar);
         assertNotNull(tmpJar.getEntry("inner"));
 
-        try
-        {
+        try {
             IOUtils.getJarFileFromURL(new URL("jar:" + jarFile.toURI().toURL() + "!/test"), true, null);
             fail();
         } catch (IOException ex) {
             // Expected
         }
 
-        try
-        {
+        try {
             IOUtils.getJarFileFromURL(new URL("jar:" + jarFile.toURI().toURL() + "!/test.jar"), false, null);
             fail();
         } catch (IOException ex) {

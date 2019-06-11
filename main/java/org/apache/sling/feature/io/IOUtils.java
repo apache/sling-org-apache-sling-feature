@@ -185,8 +185,7 @@ public class IOUtils {
             String innerURL = url.getPath();
             if (innerURL.endsWith("!/") && innerURL.indexOf("!/") == innerURL.lastIndexOf("!/")) {
                 innerURL = innerURL.substring(0, innerURL.indexOf("!/"));
-                try
-                {
+                try {
                     result = getFileFromURL(new URL(innerURL), cache, tmpDir);
                 } catch (IOException ex) {
                     result = null;
@@ -225,15 +224,12 @@ public class IOUtils {
      * @throws IOException if the url can't be represented as a jarfile
      */
     public static JarFile getJarFileFromURL(URL url, boolean cache, File tmpDir) throws IOException {
-        try
-        {
+        try {
             URL targetURL = url;
-            if (!url.getProtocol().equals("jar"))
-            {
+            if (!url.getProtocol().equals("jar")) {
                 targetURL = new URL("jar:" + toURLString(url) + "!/");
             }
-            else if (!url.getPath().endsWith("!/"))
-            {
+            else if (!url.getPath().endsWith("!/")) {
                 targetURL = new URL(toURLString(url) + "!/");
             }
             return ((JarURLConnection) targetURL.openConnection()).getJarFile();
@@ -249,12 +245,9 @@ public class IOUtils {
     }
 
     private static String toURLString(URL url) {
-        try
-        {
+        try {
             return url.toURI().toURL().toString();
-        }
-        catch (URISyntaxException | MalformedURLException e)
-        {
+        } catch (URISyntaxException | MalformedURLException e) {
             return url.toString();
         }
     }
