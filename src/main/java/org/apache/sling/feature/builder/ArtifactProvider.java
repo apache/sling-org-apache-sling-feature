@@ -22,15 +22,16 @@ import org.apache.sling.feature.ArtifactId;
 import org.osgi.annotation.versioning.ConsumerType;
 
 /**
- * The artifact provider provides a file for an artifact.
+ * The artifact provider provides a URL for an artifact.
  */
 @ConsumerType
 public interface ArtifactProvider {
 
     /**
      * Provide the artifact with the given id.
+     *
      * @param id The artifact id
-     * @return The file or {@code null}
+     * @return The URL or {@code null}
      */
     URL provide(ArtifactId id);
 }
