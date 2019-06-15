@@ -172,7 +172,10 @@ public class FeatureBuilderTest {
         for(final Requirement r : expected.getRequirements()) {
             boolean found = false;
             for(final Requirement i : actuals.getRequirements()) {
-                if ( r.equals(i) ) {
+                if (Objects.equals(r.getResource(), i.getResource())
+                        && Objects.equals(r.getNamespace(), i.getNamespace())
+                        && Objects.equals(r.getAttributes(), i.getAttributes())
+                        && Objects.equals(i.getDirectives(), i.getDirectives())) {
                     found = true;
                     break;
                 }
@@ -185,7 +188,10 @@ public class FeatureBuilderTest {
         for(final Capability r : expected.getCapabilities()) {
             boolean found = false;
             for(final Capability i : actuals.getCapabilities()) {
-                if ( r.equals(i) ) {
+                if (Objects.equals(r.getResource(), i.getResource())
+                        && Objects.equals(r.getNamespace(), i.getNamespace())
+                        && Objects.equals(r.getAttributes(), i.getAttributes())
+                        && Objects.equals(i.getDirectives(), i.getDirectives())) {
                     found = true;
                     break;
                 }
@@ -865,20 +871,6 @@ public class FeatureBuilderTest {
 
         public MatchingRequirementImpl(Resource res, String ns, Map<String, String> dirs, Map<String, Object> attrs) {
             super(res, ns, dirs, attrs);
-        }
-
-        @Override
-        public boolean equals(final Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || !(o instanceof RequirementImpl)) {
-                return false;
-            }
-            final RequirementImpl that = (RequirementImpl) o;
-            return Objects.equals(resource, that.getResource()) && Objects.equals(namespace, that.getNamespace())
-                    && Objects.equals(attributes, that.getAttributes())
-                    && Objects.equals(directives, that.getDirectives());
         }
     }
 }
