@@ -30,7 +30,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
@@ -685,20 +684,6 @@ abstract class JSONReaderBase {
 
         public MatchingRequirementImpl(Resource res, String ns, Map<String, String> dirs, Map<String, Object> attrs) {
             super(res, ns, dirs, attrs);
-        }
-
-        @Override
-        public boolean equals(final Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || !(o instanceof RequirementImpl)) {
-                return false;
-            }
-            final RequirementImpl that = (RequirementImpl) o;
-            return Objects.equals(resource, that.getResource()) && Objects.equals(namespace, that.getNamespace())
-                    && Objects.equals(attributes, that.getAttributes())
-                    && Objects.equals(directives, that.getDirectives());
         }
     }
 }
