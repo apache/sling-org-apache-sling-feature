@@ -327,7 +327,8 @@ public abstract class FeatureBuilder {
 
             // and merge the current feature over the prototype feature into the result
             merge(result, feature, context, Collections.singletonList(
-                    BuilderUtil.CATCHALL_OVERRIDE + BuilderUtil.OVERRIDE_SELECT_LATEST), TRACKING_KEY);
+                    ArtifactId.parse(BuilderUtil.CATCHALL_OVERRIDE + BuilderContext.VERSION_OVERRIDE_LATEST)),
+                    TRACKING_KEY);
 
             for (Artifact a : result.getBundles()) {
                 a.getMetadata().remove(TRACKING_KEY);
@@ -351,7 +352,7 @@ public abstract class FeatureBuilder {
     private static void merge(final Feature target,
             final Feature source,
             final BuilderContext context,
-            final List<String> artifactOverrides,
+            final List<ArtifactId> artifactOverrides,
             final String originKey) {
         BuilderUtil.mergeVariables(target.getVariables(), source.getVariables(), context);
         BuilderUtil.mergeBundles(target.getBundles(), source.getBundles(), source, artifactOverrides, originKey);

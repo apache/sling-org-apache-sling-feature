@@ -23,7 +23,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -83,12 +82,12 @@ public class FeatureBuilderTest {
     }
 
     static {
-        final Feature f2 = new Feature(ArtifactId.parse("g/a/3"));
+        final Feature f3 = new Feature(ArtifactId.parse("g/a/3"));
 
-        f2.getBundles().add(BuilderUtilTest.createBundle("group/testmulti/2", 8));
-        f2.getBundles().add(BuilderUtilTest.createBundle("group/someart/1.2.3", 4));
+        f3.getBundles().add(BuilderUtilTest.createBundle("group/testmulti/2", 8));
+        f3.getBundles().add(BuilderUtilTest.createBundle("group/someart/1.2.3", 4));
 
-        FEATURES.put(f2.getId().toMvnId(), f2);
+        FEATURES.put(f3.getId().toMvnId(), f3);
     }
 
     private final FeatureProvider provider = new FeatureProvider() {
@@ -98,33 +97,6 @@ public class FeatureBuilderTest {
             return FEATURES.get(id.getGroupId() + ":" + id.getArtifactId() + ":" + id.getVersion());
         }
     };
-
-    private List<Map.Entry<Integer, Artifact>> getBundles(final Feature f) {
-        final List<Map.Entry<Integer, Artifact>> result = new ArrayList<>();
-        for(final Map.Entry<Integer, List<Artifact>> entry : f.getBundles().getBundlesByStartOrder().entrySet()) {
-            for(final Artifact artifact : entry.getValue()) {
-                result.add(new Map.Entry<Integer, Artifact>() {
-
-                    @Override
-                    public Integer getKey() {
-                        return entry.getKey();
-                    }
-
-                    @Override
-                    public Artifact getValue() {
-                        return artifact;
-                    }
-
-                    @Override
-                    public Artifact setValue(Artifact value) {
-                        return null;
-                    }
-                });
-            }
-        }
-
-        return result;
-    }
 
     private void equals(final Feature expected, final Feature actuals) {
         assertFalse(expected.isAssembled());
@@ -140,20 +112,15 @@ public class FeatureBuilderTest {
         assertEquals(expected.getVariables(), actuals.getVariables());
 
         // bundles
-        final List<Map.Entry<Integer, Artifact>> expectedBundles = getBundles(expected);
-        final List<Map.Entry<Integer, Artifact>> actualsBundles = getBundles(actuals);
+        final List<Artifact> expectedBundles = expected.getBundles();
+        final List<Artifact> actualsBundles = actuals.getBundles();
         assertEquals(expectedBundles.size(), actualsBundles.size());
-        for(final Map.Entry<Integer, Artifact> entry : expectedBundles) {
-            boolean found = false;
-            for(final Map.Entry<Integer, Artifact> inner : actualsBundles) {
-                if ( inner.getValue().getId().equals(entry.getValue().getId()) ) {
-                    found = true;
-                    assertEquals("Startlevel of bundle " + entry.getValue(), entry.getKey(), inner.getKey());
-                    assertEquals("Metadata of bundle " + entry.getValue(), entry.getValue().getMetadata(), inner.getValue().getMetadata());
-                    break;
-                }
-            }
-            assertTrue("Bundle " + entry.getValue() + " in level " + entry.getKey(), found);
+        for (int i = 0; i < expectedBundles.size(); i++) {
+            final Artifact eb = expectedBundles.get(i);
+            final Artifact ab = actualsBundles.get(i);
+            assertEquals(eb.getId(), ab.getId());
+            assertEquals("Start order of bundle " + eb, eb.getStartOrder(), ab.getStartOrder());
+            assertEquals("Metadata of bundle " + eb, eb.getMetadata(), ab.getMetadata());
         }
 
         // configurations
@@ -325,10 +292,20 @@ public class FeatureBuilderTest {
 
         // create the expected result
         final Feature result = base.copy();
-        result.getVariables().put("varx", "myvalx");
         result.setPrototype(null);
-        result.getFrameworkProperties().put("bar", "X");
+        result.getBundles().clear();
         result.getBundles().add(BuilderUtilTest.createBundle("org.apache.sling/foo-bar/4.5.6", 3));
+        result.getBundles().add(BuilderUtilTest.createBundle("group/testnewversion_low/1", 5));
+        result.getBundles().add(BuilderUtilTest.createBundle("group/testnewversion_high/5", 5));
+        result.getBundles().add(BuilderUtilTest.createBundle("group/testnewstartlevel/1", 10));
+        result.getBundles().add(BuilderUtilTest.createBundle("group/testnewstartlevelandversion/2", 10));
+        result.getBundles().add(a1.copy(a1.getId()));
+        result.getBundles().add(BuilderUtilTest.createBundle("org.apache.sling/application-bundle/2.0.0", 1));
+        result.getBundles().add(BuilderUtilTest.createBundle("org.apache.sling/another-bundle/2.1.0", 1));
+        result.getBundles().add(BuilderUtilTest.createBundle("org.apache.sling/foo-xyz/1.2.3", 2));
+
+        result.getVariables().put("varx", "myvalx");
+        result.getFrameworkProperties().put("bar", "X");
         final Configuration co3 = new Configuration("org.apache.sling.foo");
         co3.getProperties().put("prop", "value");
         result.getConfigurations().add(co3);
@@ -352,15 +329,15 @@ public class FeatureBuilderTest {
         Feature assembled = FeatureBuilder.assemble(base, builderContext);
 
         Feature result = new Feature(ArtifactId.parse("g:tgtart:1"));
-        Artifact b0 = new Artifact(ArtifactId.fromMvnId("g:myart:1"));
-        result.getBundles().add(b0);
         Artifact b1 = new Artifact(ArtifactId.fromMvnId("group:testmulti:1"));
         result.getBundles().add(b1);
-        Artifact b2 = new Artifact(ArtifactId.fromMvnId("group:testmulti:3"));
-        result.getBundles().add(b2);
         Artifact b3 = new Artifact(ArtifactId.fromMvnId("group:someart:1.2.3"));
         b3.setStartOrder(4);
         result.getBundles().add(b3);
+        Artifact b0 = new Artifact(ArtifactId.fromMvnId("g:myart:1"));
+        result.getBundles().add(b0);
+        Artifact b2 = new Artifact(ArtifactId.fromMvnId("group:testmulti:3"));
+        result.getBundles().add(b2);
 
         equals(result, assembled);
     }
@@ -375,8 +352,6 @@ public class FeatureBuilderTest {
         Feature assembled = FeatureBuilder.assemble(base, builderContext);
 
         Feature result = new Feature(ArtifactId.parse("g:tgtart:1"));
-        Artifact b0 = new Artifact(ArtifactId.fromMvnId("g:myart:1"));
-        result.getBundles().add(b0);
         Artifact b1 = new Artifact(ArtifactId.fromMvnId("group:testmulti:1"));
         b1.setStartOrder(4);
         result.getBundles().add(b1);
@@ -386,6 +361,8 @@ public class FeatureBuilderTest {
         Artifact b3 = new Artifact(ArtifactId.fromMvnId("group:someart:1.2.3"));
         b3.setStartOrder(4);
         result.getBundles().add(b3);
+        Artifact b0 = new Artifact(ArtifactId.fromMvnId("g:myart:1"));
+        result.getBundles().add(b0);
 
         equals(result, assembled);
     }
@@ -401,13 +378,13 @@ public class FeatureBuilderTest {
         Feature assembled = FeatureBuilder.assemble(base, builderContext);
 
         Feature result = new Feature(ArtifactId.parse("g:tgtart:1"));
-        Artifact b0 = new Artifact(ArtifactId.fromMvnId("g:myart:1"));
-        result.getBundles().add(b0);
         Artifact b1 = new Artifact(ArtifactId.fromMvnId("group:testmulti:1"));
         result.getBundles().add(b1);
         Artifact b3 = new Artifact(ArtifactId.fromMvnId("group:someart:1.2.3"));
         b3.setStartOrder(4);
         result.getBundles().add(b3);
+        Artifact b0 = new Artifact(ArtifactId.fromMvnId("g:myart:1"));
+        result.getBundles().add(b0);
 
         equals(result, assembled);
     }
@@ -424,15 +401,15 @@ public class FeatureBuilderTest {
         Feature assembled = FeatureBuilder.assemble(base, builderContext);
 
         Feature result = new Feature(ArtifactId.parse("g:tgtart:1"));
-        Artifact b0 = new Artifact(ArtifactId.fromMvnId("g:myart:1"));
-        result.getBundles().add(b0);
         Artifact b1 = new Artifact(ArtifactId.fromMvnId("group:testmulti:1"));
         result.getBundles().add(b1);
-        Artifact b2 = new Artifact(ArtifactId.fromMvnId("group:testmulti:3"));
-        result.getBundles().add(b2);
         Artifact b3 = new Artifact(ArtifactId.fromMvnId("group:someart:1.2.3"));
         b3.setStartOrder(4);
         result.getBundles().add(b3);
+        Artifact b0 = new Artifact(ArtifactId.fromMvnId("g:myart:1"));
+        result.getBundles().add(b0);
+        Artifact b2 = new Artifact(ArtifactId.fromMvnId("group:testmulti:3"));
+        result.getBundles().add(b2);
 
         equals(result, assembled);
     }

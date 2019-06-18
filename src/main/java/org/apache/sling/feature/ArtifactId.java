@@ -165,11 +165,11 @@ public class ArtifactId implements Comparable<ArtifactId> {
         if ( parts.length < 3 || parts.length > 5) {
             throw new IllegalArgumentException("Invalid mvn coordinates: " + coordinates);
         }
-        final String gId = parts[0];
-        final String aId = parts[1];
-        final String version = parts[parts.length - 1];
-        final String type = parts.length > 3 ? parts[2] : null;
-        final String classifier = parts.length > 4 ? parts[3] : null;
+        final String gId = parts[0].trim();
+        final String aId = parts[1].trim();
+        final String version = parts[parts.length - 1].trim();
+        final String type = parts.length > 3 ? parts[2].trim() : null;
+        final String classifier = parts.length > 4 ? parts[3].trim() : null;
 
         return new ArtifactId(gId, aId, version, classifier, type);
     }
@@ -281,7 +281,10 @@ public class ArtifactId implements Comparable<ArtifactId> {
 
     /**
      * Return the OSGi version
+     *
      * @return The OSGi version
+     * @throws IllegalArgumentException If the numerical components are negative or
+     *                                  the qualifier string is invalid.
      */
     public Version getOSGiVersion() {
         String parts[] = version.split("\\.");

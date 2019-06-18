@@ -21,13 +21,48 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.apache.sling.feature.ArtifactId;
 
 /**
- * Builder context holds services used by {@link FeatureBuilder}.
+ * Builder context holds services used by {@link FeatureBuilder} and controls
+ * how features are assembled and aggregated.
  *
+ * <p>
+ * When two features are merged, being it a prototype with the feature using the
+ * prototype or two features, there might be a clash with bundles or artifacts.
+ * A clash occurs when there is an artifact in the source and the target with
+ * different versions. If the version is the same, the source artifact will
+ * override the target artifact. However, all other cases need instructions on
+ * how to proceed.
+ * <p>
+ * An override rule is an artifact id. As the version for the rule, one of
+ * {@link BuilderContext#VERSON_OVERRIDE_ALL},
+ * {@link BuilderContext#VERSION_OVERRIDE_LATEST} or
+ * {@link BuilderContext#VERSION_OVERRIDE_HIGHEST} as well as any version can be
+ * specified. If the artifact id should match more than a single artifact
+ * {@link BuilderContext#COORDINATE_MATCH_ALL} can be specified as group id,
+ * artifact id, type and/or classifier.
+ * <p>
  * This class is not thread-safe.
  */
 public class BuilderContext {
+
+    /** Used in override rule to select all candidates. */
+    public static final String VERSION_OVERRIDE_ALL = "ALL";
+
+    /**
+     * Used in override rule to select the candidate with the highest version (OSGi
+     * version comparison rules).
+     */
+    public static final String VERSION_OVERRIDE_HIGHEST = "HIGHEST";
+
+    /** Used in override rule to select the last candidate applied. */
+    public static final String VERSION_OVERRIDE_LATEST = "LATEST";
+
+    /** Used in override rule to match all coordinates */
+    public static final String COORDINATE_MATCH_ALL = "*";
 
     /** The required feature provider */
     private final FeatureProvider provider;
@@ -38,7 +73,7 @@ public class BuilderContext {
     private final Map<String, Map<String,String>> extensionConfiguration = new HashMap<>();
     private final List<MergeHandler> mergeExtensions = new ArrayList<>();
     private final List<PostProcessHandler> postProcessExtensions = new ArrayList<>();
-    private final List<String> artifactsOverrides = new ArrayList<>();
+    private final List<ArtifactId> artifactsOverrides = new ArrayList<>();
     private final Map<String,String> variables = new HashMap<>();
     private final Map<String,String> frameworkProperties = new HashMap<>();
 
@@ -94,9 +129,24 @@ public class BuilderContext {
      *
      * @param overrides The overrides
      * @return The builder context
+     * @throws IllegalArgumentException If the provided overrides are not following
+     *                                  the artifact id syntax
+     * @deprecated Use {@link #addArtifactsOverride(ArtifactId)} instead.
      */
+    @Deprecated
     public BuilderContext addArtifactsOverrides(final List<String> overrides) {
-        this.artifactsOverrides.addAll(overrides);
+        this.artifactsOverrides.addAll(overrides.stream().map(f -> ArtifactId.parse(f)).collect(Collectors.toList()));
+        return this;
+    }
+
+    /**
+     * Add an override for artifact clashes
+     *
+     * @param override The override
+     * @return The builder context
+     */
+    public BuilderContext addArtifactsOverride(final ArtifactId override) {
+        this.artifactsOverrides.add(override);
         return this;
     }
 
@@ -148,7 +198,7 @@ public class BuilderContext {
         return this.artifactProvider;
     }
 
-    List<String> getArtifactOverrides() {
+    List<ArtifactId> getArtifactOverrides() {
         return this.artifactsOverrides;
     }
 
@@ -195,6 +245,7 @@ public class BuilderContext {
         ctx.artifactsOverrides.addAll(this.artifactsOverrides);
         ctx.variables.putAll(this.variables);
         ctx.frameworkProperties.putAll(this.frameworkProperties);
+        ctx.extensionConfiguration.putAll(this.extensionConfiguration);
         ctx.mergeExtensions.addAll(mergeExtensions);
         ctx.postProcessExtensions.addAll(postProcessExtensions);
         return ctx;
