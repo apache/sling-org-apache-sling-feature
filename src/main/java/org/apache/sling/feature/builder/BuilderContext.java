@@ -38,7 +38,7 @@ import org.apache.sling.feature.ArtifactId;
  * how to proceed.
  * <p>
  * An override rule is an artifact id. As the version for the rule, one of
- * {@link BuilderContext#VERSON_OVERRIDE_ALL},
+ * {@link BuilderContext#VERSION_OVERRIDE_ALL},
  * {@link BuilderContext#VERSION_OVERRIDE_LATEST} or
  * {@link BuilderContext#VERSION_OVERRIDE_HIGHEST} as well as any version can be
  * specified. If the artifact id should match more than a single artifact
