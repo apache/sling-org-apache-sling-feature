@@ -60,9 +60,6 @@ class BuilderUtil {
     /** Used in override rule to have it apply to all artifacts. */
     static final String CATCHALL_OVERRIDE = "*:*:";
 
-    /** Configuration key for configuration for all handlers */
-    static final String ALL_HANDLERS_KEY = "all";
-
     static boolean contains(String key, Iterable<Map.Entry<String, String>> iterable) {
         if (iterable != null) {
             for (Map.Entry<String, String> entry : iterable) {
@@ -571,7 +568,8 @@ class BuilderUtil {
         private Map<String,String> getHandlerConfiguration(BuilderContext bc, Object handler) {
             final Map<String,String> result = new HashMap<>();
 
-            Map<String, String> overall = bc.getHandlerConfigurations().get(ALL_HANDLERS_KEY);
+            Map<String, String> overall = bc.getHandlerConfigurations()
+                    .get(BuilderContext.CONFIGURATION_ALL_HANDLERS_KEY);
             if (overall != null)
                 result.putAll(overall);
             final String name = getHandlerName(handler);

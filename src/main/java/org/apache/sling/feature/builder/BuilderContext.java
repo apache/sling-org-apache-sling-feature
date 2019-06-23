@@ -64,6 +64,9 @@ public class BuilderContext {
     /** Used in override rule to match all coordinates */
     public static final String COORDINATE_MATCH_ALL = "*";
 
+    /** Configuration key for configuration for all handlers */
+    static final String CONFIGURATION_ALL_HANDLERS_KEY = "all";
+
     /** The required feature provider */
     private final FeatureProvider provider;
 
@@ -79,9 +82,9 @@ public class BuilderContext {
 
 
     /**
-     * Create a new context
+     * Create a new context.
      *
-     * @param provider A provider providing the included features
+     * @param provider A provider providing the prototype features
      * @throws IllegalArgumentException If feature provider is {@code null}
      */
     public BuilderContext(final FeatureProvider provider) {
@@ -92,9 +95,11 @@ public class BuilderContext {
     }
 
     /**
-     * Set the artifact provider
+     * Set the artifact provider. While the artifact provider is not required by the
+     * general assembly and merging algorithms, handlers for extensions might need
+     * it.
      *
-     * @param ap An ArtifactProvider to resolve artifact IDs to files
+     * @param ap An ArtifactProvider to resolve artifact IDs to URLs
      * @return The builder context
      */
     public BuilderContext setArtifactProvider(final ArtifactProvider ap) {
@@ -103,7 +108,7 @@ public class BuilderContext {
     }
 
     /**
-     * Add overrides for the variables
+     * Add overrides for the variables.
      *
      * @param vars The overrides
      * @return The builder context
@@ -114,7 +119,7 @@ public class BuilderContext {
     }
 
     /**
-     * Add overrides for the framework properties
+     * Add overrides for the framework properties.
      *
      * @param props The overrides
      * @return The builder context
@@ -125,7 +130,7 @@ public class BuilderContext {
     }
 
     /**
-     * Add overrides for artifact clashes
+     * Add overrides for artifact clashes.
      *
      * @param overrides The overrides
      * @return The builder context
@@ -140,7 +145,7 @@ public class BuilderContext {
     }
 
     /**
-     * Add an override for artifact clashes
+     * Add an override for artifact clashes.
      *
      * @param override The override
      * @return The builder context
@@ -153,7 +158,7 @@ public class BuilderContext {
     /**
      * Add merge extensions
      *
-     * @param extensions A list of merge extensions
+     * @param extensions A list of merge extensions.
      * @return The builder context
      */
     public BuilderContext addMergeExtensions(final MergeHandler... extensions) {
@@ -173,10 +178,14 @@ public class BuilderContext {
     }
 
     /**
-     * Set a handler configuration
+     * Set a handler configuration. A configuration can be set for both
+     * {@link MergeHandler}s and {@link PostProcessHandler}s. The name of a handler
+     * is the simple class name of the class implementing the handler. To pass the
+     * same configuration to all handlers, use the
+     * {@link #CONFIGURATION_ALL_HANDLERS_KEY} name.
      *
      * @param name The name of the handler
-     * @param cfg The configuration for the handler
+     * @param cfg  The configuration for the handler
      * @return The builder context
      */
     public BuilderContext setHandlerConfiguration(final String name, final Map<String,String> cfg) {

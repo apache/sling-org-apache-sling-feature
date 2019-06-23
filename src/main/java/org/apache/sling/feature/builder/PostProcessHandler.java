@@ -21,7 +21,11 @@ import org.apache.sling.feature.Feature;
 import org.osgi.annotation.versioning.ConsumerType;
 
 /**
- * A Post Process Handler processes features after a merge operation.
+ * A Post Process Handler processes features after a merge operation. The
+ * handlers are passed in to the {@link FeatureBuilder} via
+ * {@link BuilderContext#addPostProcessExtensions(PostProcessHandler...)}. Once
+ * all extensions are merged, all post processor handlers are called for each
+ * extension in the target feature.
  */
 @ConsumerType
 public interface PostProcessHandler {

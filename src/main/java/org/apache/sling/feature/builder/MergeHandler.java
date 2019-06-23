@@ -21,12 +21,18 @@ import org.apache.sling.feature.Feature;
 import org.osgi.annotation.versioning.ConsumerType;
 
 /**
- * A feature merge handler can merge a feature of a particular type.
+ * A merge handler can merge an extension of a particular type. The handlers are
+ * passed in to the {@link FeatureBuilder} via
+ * {@link BuilderContext#addMergeExtensions(MergeHandler...)}. When the feature
+ * builder is merging features, the first handler that returns {@code true} for
+ * an extension in {@link #canMerge(Extension)} merges the extension. Further
+ * handlers are not tested anymore.
  */
 @ConsumerType
 public interface MergeHandler {
     /**
-     * Checks whether this merger can merge extensions with that name
+     * Checks whether this merger can merge the given extension.
+     *
      * @param extension The extension
      * @return {@code true} if merger can handle this
      */
