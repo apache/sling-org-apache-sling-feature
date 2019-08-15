@@ -16,14 +16,14 @@
  */
 package org.apache.sling.feature;
 
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
 
 public class ExtensionTest {
     @Test
     public void testCopyTextExtension() {
-        Extension ex = new Extension(ExtensionType.TEXT, "t1", false);
+        Extension ex = new Extension(ExtensionType.TEXT, "t1", ExtensionState.OPTIONAL);
         ex.setText("foo");
         Extension ex2 = ex.copy();
 
@@ -33,7 +33,7 @@ public class ExtensionTest {
 
     @Test
     public void testCopyJSONExtension() {
-        Extension ex = new Extension(ExtensionType.JSON, "t1", false);
+        Extension ex = new Extension(ExtensionType.JSON, "t1", ExtensionState.OPTIONAL);
         ex.setJSON("[123]");
         Extension ex2 = ex.copy();
 
@@ -43,7 +43,7 @@ public class ExtensionTest {
 
     @Test
     public void testCopyArtifactsExtension() {
-        Extension ex = new Extension(ExtensionType.ARTIFACTS, "t1", false);
+        Extension ex = new Extension(ExtensionType.ARTIFACTS, "t1", ExtensionState.OPTIONAL);
         Artifact art = new Artifact(ArtifactId.fromMvnId("g:a:123"));
         art.getMetadata().put("test", "blah");
         ex.getArtifacts().add(art);

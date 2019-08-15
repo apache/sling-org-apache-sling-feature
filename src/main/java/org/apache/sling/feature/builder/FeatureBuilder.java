@@ -30,6 +30,7 @@ import org.apache.sling.feature.Artifact;
 import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Configuration;
 import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.ExtensionState;
 import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.Feature;
 import org.apache.sling.feature.Prototype;
@@ -188,7 +189,7 @@ public abstract class FeatureBuilder {
 
         // append feature list in extension
         final Extension list = new Extension(ExtensionType.ARTIFACTS, Extension.EXTENSION_NAME_ASSEMBLED_FEATURES,
-            false);
+                ExtensionState.TRANSIENT);
         for(final Feature feature : assembledFeatures) {
             list.getArtifacts().add(new Artifact(feature.getId()));
         }

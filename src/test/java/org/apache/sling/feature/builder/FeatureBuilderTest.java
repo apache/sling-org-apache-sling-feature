@@ -38,6 +38,7 @@ import org.apache.sling.feature.Artifact;
 import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Configuration;
 import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.ExtensionState;
 import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.Feature;
 import org.apache.sling.feature.MatchingRequirement;
@@ -590,7 +591,7 @@ public class FeatureBuilderTest {
         final ArtifactId bundleB = ArtifactId.fromMvnId("g:b:1.1.0");
 
         final Feature a = new Feature(ArtifactId.fromMvnId("g:a-base:1"));
-        final Extension e = new Extension(ExtensionType.ARTIFACTS, "foo", false);
+        final Extension e = new Extension(ExtensionType.ARTIFACTS, "foo", ExtensionState.OPTIONAL);
         e.getArtifacts().add(new Artifact(bundleA1));
         e.getArtifacts().add(new Artifact(bundleA2));
         e.getArtifacts().add(new Artifact(bundleB));
@@ -626,7 +627,7 @@ public class FeatureBuilderTest {
         final ArtifactId bundleB = ArtifactId.fromMvnId("g:b:1.1.0");
 
         final Feature a = new Feature(ArtifactId.fromMvnId("g:a-base:1"));
-        final Extension e = new Extension(ExtensionType.ARTIFACTS, "foo", false);
+        final Extension e = new Extension(ExtensionType.ARTIFACTS, "foo", ExtensionState.OPTIONAL);
         e.getArtifacts().add(new Artifact(bundleA1));
         e.getArtifacts().add(new Artifact(bundleA2));
         e.getArtifacts().add(new Artifact(bundleB));
@@ -661,7 +662,7 @@ public class FeatureBuilderTest {
         final ArtifactId bundleB = ArtifactId.fromMvnId("g:b:1.1.0");
 
         final Feature a = new Feature(ArtifactId.fromMvnId("g:a-base:1"));
-        final Extension e = new Extension(ExtensionType.ARTIFACTS, "foo", false);
+        final Extension e = new Extension(ExtensionType.ARTIFACTS, "foo", ExtensionState.OPTIONAL);
         e.getArtifacts().add(new Artifact(bundleA1));
         e.getArtifacts().add(new Artifact(bundleB));
         a.getExtensions().add(e);

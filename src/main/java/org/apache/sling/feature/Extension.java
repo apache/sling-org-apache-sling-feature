@@ -25,7 +25,18 @@ import org.apache.sling.feature.builder.BuilderContext;
  * <li>Text : it contains text
  * <li>JSON : it contains a blob of JSON
  * </ul>
- *
+ * <p>
+ * An extension can be in one of these states
+ * <ul>
+ * <li>Required : Required extensions need to be processed by tooling
+ * <li>Optional : Optional extensions might be processed by tooling, for example
+ * they might contain environment specific parts
+ * <li>Transient: Transient extensions are cache like extensions where tooling
+ * can store additional information to avoid reprocessing of down stream
+ * tooling. However such tooling must work without the transient extension being
+ * available.
+ * </ul>
+ * <p>
  * This class is not thread-safe.
  *
  * @see ExtensionType
@@ -63,26 +74,42 @@ public class Extension {
     /** The text or json (if corresponding type) */
     private String text;
 
-    /** Whether the artifact is required. */
-    private final boolean required;
+    /** Extension state. */
+    private final ExtensionState state;
 
     /**
      * Create a new extension
-     * @param t The type of the extension
-     * @param name The name of the extension
+     *
+     * @param t        The type of the extension
+     * @param name     The name of the extension
      * @param required Whether the extension is required or optional
      * @throws IllegalArgumentException If name or t are {@code null}
+     * @deprecated Use {@link #Extension(ExtensionType, String, ExtensionState)}
      */
+    @Deprecated
     public Extension(final ExtensionType t,
             final String name,
             final boolean required) {
-        if ( t == null || name == null ) {
+        this(t, name, required ? ExtensionState.REQUIRED : ExtensionState.OPTIONAL);
+    }
+
+    /**
+     * Create a new extension
+     *
+     * @param type  The type of the extension
+     * @param name  The name of the extension
+     * @param state The state of the extension
+     * @throws IllegalArgumentException If name, type or state is {@code null}
+     * @since 1.1
+     */
+    public Extension(final ExtensionType type, final String name, final ExtensionState state) {
+        if (type == null || name == null || state == null) {
             throw new IllegalArgumentException("Argument must not be null");
         }
-        this.type = t;
+        this.type = type;
         this.name = name;
-        this.required = required;
-        if ( t == ExtensionType.ARTIFACTS ) {
+        this.state = state;
+        if (type == ExtensionType.ARTIFACTS) {
             this.artifacts = new Artifacts();
         } else {
             this.artifacts = null;
@@ -98,7 +125,18 @@ public class Extension {
     }
 
     /**
+     * Get the extension state
+     *
+     * @return The state
+     * @since 1.1
+     */
+    public ExtensionState getState() {
+        return this.state;
+    }
+
+    /**
      * Get the extension name
+     *
      * @return The name
      */
     public String getName() {
@@ -107,16 +145,22 @@ public class Extension {
 
     /**
      * Return whether the extension is required or optional
+     *
      * @return Return {@code true} if the extension is required.
+     * @deprecated Use {@link #getState()}
      */
+    @Deprecated
     public boolean isRequired() {
-        return this.required;
+        return this.state == ExtensionState.REQUIRED;
     }
 
     /**
      * Return whether the extension is required or optional
+     *
      * @return Return {@code true} if the extension is optional.
+     * @deprecated Use {@link #getState()}
      */
+    @Deprecated
     public boolean isOptional() {
         return !this.isRequired();
     }
@@ -147,7 +191,8 @@ public class Extension {
 
     /**
      * Get the JSON of the extension
-     * @return The JSON
+     * 
+     * @return The JSON or {@code null}
      * @throws IllegalStateException if the type is not {@code ExtensionType#JSON}
      */
     public String getJSON() {
@@ -186,7 +231,7 @@ public class Extension {
      * @return A copy of the Extension
      */
     public Extension copy() {
-        Extension c = new Extension(type, name, required);
+        Extension c = new Extension(type, name, state);
         switch(type) {
         case TEXT:
             c.setText(text);

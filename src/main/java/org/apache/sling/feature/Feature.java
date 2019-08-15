@@ -393,7 +393,7 @@ public class Feature implements Comparable<Feature> {
 
         // extensions
         for(final Extension e : this.getExtensions()) {
-            final Extension c = new Extension(e.getType(), e.getName(), e.isRequired());
+            final Extension c = new Extension(e.getType(), e.getName(), e.getState());
             switch ( c.getType() ) {
                 case ARTIFACTS : for(final Artifact a : e.getArtifacts()) {
                                     c.getArtifacts().add(a.copy(a.getId()));

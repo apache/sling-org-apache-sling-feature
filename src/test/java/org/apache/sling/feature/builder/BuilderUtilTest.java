@@ -44,6 +44,7 @@ import org.apache.sling.feature.Artifact;
 import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Bundles;
 import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.ExtensionState;
 import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.Feature;
 import org.apache.sling.feature.builder.BuilderUtil.HandlerContextImpl;
@@ -244,11 +245,11 @@ public class BuilderUtilTest {
     }
 
     @Test public void testMergeExtensions() {
-        Extension target = new Extension(ExtensionType.JSON, "target", true);
+        Extension target = new Extension(ExtensionType.JSON, "target", ExtensionState.REQUIRED);
 
         target.setJSON("[\"target1\", \"target2\"]");
 
-        Extension source = new Extension(ExtensionType.JSON, "source", true);
+        Extension source = new Extension(ExtensionType.JSON, "source", ExtensionState.REQUIRED);
 
         source.setJSON("[\"source1\",\"source2\"]");
 
@@ -317,7 +318,7 @@ public class BuilderUtilTest {
             gen.writeEnd();
             gen.close();
 
-            Extension tex = new Extension(ExtensionType.JSON, "foo", false);
+            Extension tex = new Extension(ExtensionType.JSON, "foo", ExtensionState.OPTIONAL);
             tex.setJSON(sw.toString());
             target.getExtensions().remove(targetEx);
             target.getExtensions().add(tex);
@@ -338,7 +339,7 @@ public class BuilderUtilTest {
         FeatureProvider fp = Mockito.mock(FeatureProvider.class);
         BuilderContext ctx = new BuilderContext(fp);
         Feature fs = new Feature(ArtifactId.fromMvnId("g:s:1"));
-        Extension e = new Extension(ExtensionType.JSON, "foo", false);
+        Extension e = new Extension(ExtensionType.JSON, "foo", ExtensionState.OPTIONAL);
         e.setJSON("{\"a\": 123}");
         fs.getExtensions().add(e);
         Feature ft = new Feature(ArtifactId.fromMvnId("g:t:1"));
@@ -359,11 +360,11 @@ public class BuilderUtilTest {
         FeatureProvider fp = Mockito.mock(FeatureProvider.class);
         BuilderContext ctx = new BuilderContext(fp);
         Feature fs = new Feature(ArtifactId.fromMvnId("g:s:1"));
-        Extension e = new Extension(ExtensionType.JSON, "foo", false);
+        Extension e = new Extension(ExtensionType.JSON, "foo", ExtensionState.OPTIONAL);
         e.setJSON("[{\"a\": 123}]");
         fs.getExtensions().add(e);
         Feature ft = new Feature(ArtifactId.fromMvnId("g:t:1"));
-        Extension et = new Extension(ExtensionType.JSON, "foo", false);
+        Extension et = new Extension(ExtensionType.JSON, "foo", ExtensionState.OPTIONAL);
         et.setJSON("[{\"a\": 456}]");
         ft.getExtensions().add(et);
 
@@ -389,7 +390,7 @@ public class BuilderUtilTest {
         ctx.setHandlerConfiguration("TestMergeHandler", m);
         ctx.addMergeExtensions(new TestMergeHandler());
         Feature fs = new Feature(ArtifactId.fromMvnId("g:s:1"));
-        Extension e = new Extension(ExtensionType.JSON, "foo", false);
+        Extension e = new Extension(ExtensionType.JSON, "foo", ExtensionState.OPTIONAL);
         e.setJSON("{\"a\": 123}");
         fs.getExtensions().add(e);
         Feature ft = new Feature(ArtifactId.fromMvnId("g:t:1"));
@@ -411,11 +412,11 @@ public class BuilderUtilTest {
         BuilderContext ctx = new BuilderContext(fp);
         ctx.addMergeExtensions(new TestMergeHandler());
         Feature fs = new Feature(ArtifactId.fromMvnId("g:s:1"));
-        Extension e = new Extension(ExtensionType.JSON, "foo", false);
+        Extension e = new Extension(ExtensionType.JSON, "foo", ExtensionState.OPTIONAL);
         e.setJSON("{\"a\": 123}");
         fs.getExtensions().add(e);
         Feature ft = new Feature(ArtifactId.fromMvnId("g:t:1"));
-        Extension et = new Extension(ExtensionType.JSON, "foo", false);
+        Extension et = new Extension(ExtensionType.JSON, "foo", ExtensionState.OPTIONAL);
         et.setJSON("{\"a\": 123, \"org\": [\"g:s2:2\"]}");
         ft.getExtensions().add(et);
 
