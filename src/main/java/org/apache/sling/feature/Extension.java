@@ -16,6 +16,14 @@
  */
 package org.apache.sling.feature;
 
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
+
+import javax.json.Json;
+import javax.json.JsonStructure;
+import javax.json.JsonWriter;
+
 import org.apache.sling.feature.builder.BuilderContext;
 
 /**
@@ -72,7 +80,10 @@ public class Extension {
     private final Artifacts artifacts;
 
     /** The text or json (if corresponding type) */
-    private String text;
+    private volatile String text;
+
+    /** The json structure (if corresponding type) */
+    private volatile JsonStructure json;
 
     /** Extension state. */
     private final ExtensionState state;
@@ -191,7 +202,7 @@ public class Extension {
 
     /**
      * Get the JSON of the extension
-     * 
+     *
      * @return The JSON or {@code null}
      * @throws IllegalStateException if the type is not {@code ExtensionType#JSON}
      */
@@ -204,20 +215,66 @@ public class Extension {
 
     /**
      * Set the JSON of the extension
+     * 
      * @param text The JSON
-     * @throws IllegalStateException if the type is not {@code ExtensionType#JSON}
+     * @throws IllegalStateException    if the type is not
+     *                                  {@code ExtensionType#JSON}
+     * @throws IllegalArgumentException If the structure is not valid
      */
     public void setJSON(String text) {
         if ( type != ExtensionType.JSON ) {
             throw new IllegalStateException();
         }
         this.text = text;
+        try (final StringReader reader = new StringReader(text)) {
+            this.json = Json.createReader(reader).read();
+        }
+    }
+
+    /**
+     * Get the JSON structure of the extension
+     *
+     * @return The JSON object or {@code null}
+     * @throws IllegalStateException if the type is not {@code ExtensionType#JSON}
+     * @since 1.1
+     */
+    public JsonStructure getJSONStructure() {
+        if (type != ExtensionType.JSON) {
+            throw new IllegalStateException();
+        }
+        return json;
+    }
+
+    /**
+     * Set the JSON structure of the extension
+     *
+     * @param obj The JSON object
+     * @throws IllegalStateException    if the type is not
+     *                                  {@code ExtensionType#JSON}
+     * @throws IllegalArgumentException If the structure is not valid
+     * @since 1.1
+     */
+    public void setJSONStructure(JsonStructure struct) {
+        if (type != ExtensionType.JSON) {
+            throw new IllegalStateException();
+        }
+        this.json = struct;
+        try (final StringWriter w = new StringWriter()) {
+            final JsonWriter jw = Json.createWriter(w);
+            jw.write(struct);
+            w.flush();
+            this.text = w.toString();
+        } catch (IOException ioe) {
+            throw new IllegalArgumentException("Not a json structure: " + struct, ioe);
+        }
     }
 
     /**
      * Get the artifacts of the extension
+     *
      * @return The artifacts
-     * @throws IllegalStateException if the type is not {@code ExtensionType#ARTIFACTS}
+     * @throws IllegalStateException if the type is not
+     *                               {@code ExtensionType#ARTIFACTS}
      */
     public Artifacts getArtifacts() {
         if ( type != ExtensionType.ARTIFACTS ) {
