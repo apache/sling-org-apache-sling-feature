@@ -16,7 +16,6 @@
  */
 package org.apache.sling.feature.io.json;
 
-import java.io.StringReader;
 import java.io.Writer;
 import java.lang.reflect.Array;
 import java.util.Collection;
@@ -26,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.json.Json;
-import javax.json.JsonStructure;
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonGeneratorFactory;
 
@@ -225,11 +223,7 @@ abstract class JSONWriterBase {
             }
             final String key = ext.getName().concat(":").concat(ext.getType().name()).concat("|").concat(state);
             if ( ext.getType() == ExtensionType.JSON ) {
-                final JsonStructure struct;
-                try ( final StringReader reader = new StringReader(ext.getJSON()) ) {
-                    struct = Json.createReader(reader).read();
-                }
-                generator.write(key, struct);
+                generator.write(key, ext.getJSONStructure());
             } else if ( ext.getType() == ExtensionType.TEXT ) {
                 generator.writeStartArray(key);
                 for(String line : ext.getText().split("\n")) {

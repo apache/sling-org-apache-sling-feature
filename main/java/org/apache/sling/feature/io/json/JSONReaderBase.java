@@ -38,7 +38,6 @@ import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonStructure;
-import javax.json.JsonWriter;
 
 import org.apache.felix.configurator.impl.json.JSMin;
 import org.apache.felix.configurator.impl.json.JSONUtil;
@@ -397,12 +396,7 @@ abstract class JSONReaderBase {
                                  break;
                 case JSON : checkType("JSON Extension " + name, value, Map.class, List.class);
                             final JsonStructure struct = build(value);
-                            try ( final StringWriter w = new StringWriter()) {
-                                final JsonWriter jw = Json.createWriter(w);
-                                jw.write(struct);
-                                w.flush();
-                                ext.setJSON(w.toString());
-                            }
+                            ext.setJSONStructure(struct);
                             break;
                 case TEXT : checkType("Text Extension " + name, value, String.class, List.class);
                             if ( value instanceof String ) {
