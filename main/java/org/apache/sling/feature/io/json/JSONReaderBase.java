@@ -52,6 +52,7 @@ import org.apache.sling.feature.Bundles;
 import org.apache.sling.feature.Configuration;
 import org.apache.sling.feature.Configurations;
 import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.ExtensionState;
 import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.Extensions;
 import org.apache.sling.feature.MatchingRequirement;
@@ -342,24 +343,24 @@ abstract class JSONReaderBase {
             final int sep = (postfix == null ? key.indexOf('|') : postfix.indexOf('|'));
             final String name;
             final String type;
-            final String optional;
+            final String state;
             if ( pos == -1 ) {
                 type = ExtensionType.ARTIFACTS.name();
                 if ( sep == -1 ) {
                     name = key;
-                    optional = Boolean.FALSE.toString();
+                    state = ExtensionState.OPTIONAL.name();
                 } else {
                     name = key.substring(0, sep);
-                    optional = key.substring(sep + 1);
+                    state = key.substring(sep + 1);
                 }
             } else {
                 name = key.substring(0, pos);
                 if ( sep == -1 ) {
                     type = postfix;
-                    optional = Boolean.FALSE.toString();
+                    state = ExtensionState.OPTIONAL.name();
                 } else {
                     type = postfix.substring(0, sep);
-                    optional = postfix.substring(sep + 1);
+                    state = postfix.substring(sep + 1);
                 }
             }
             if ( JSONConstants.FEATURE_KNOWN_PROPERTIES.contains(name) ) {
@@ -370,9 +371,19 @@ abstract class JSONReaderBase {
             }
 
             final ExtensionType extType = ExtensionType.valueOf(type);
-            final boolean opt = Boolean.valueOf(optional).booleanValue();
+            final ExtensionState extState;
+            if (ExtensionState.OPTIONAL.name().equalsIgnoreCase(state)) {
+                extState = ExtensionState.OPTIONAL;
+            } else if (ExtensionState.REQUIRED.name().equalsIgnoreCase(state)) {
+                extState = ExtensionState.REQUIRED;
+            } else if (ExtensionState.TRANSIENT.name().equalsIgnoreCase(state)) {
+                extState = ExtensionState.TRANSIENT;
+            } else {
+                final boolean opt = Boolean.valueOf(state).booleanValue();
+                extState = opt ? ExtensionState.REQUIRED : ExtensionState.OPTIONAL;
+            }
 
-            final Extension ext = new Extension(extType, name, opt);
+            final Extension ext = new Extension(extType, name, extState);
             final Object value = map.get(key);
             switch ( extType ) {
                 case ARTIFACTS : final List<Artifact> list = new ArrayList<>();

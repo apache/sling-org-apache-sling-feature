@@ -1,12 +1,13 @@
 package org.apache.sling.feature.io.json;
 
-import org.apache.sling.feature.ArtifactId;
-import org.apache.sling.feature.Extension;
-import org.apache.sling.feature.Extensions;
-import org.apache.sling.feature.Feature;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+
+import org.apache.sling.feature.ArtifactId;
+import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.ExtensionState;
+import org.apache.sling.feature.Extensions;
+import org.apache.sling.feature.Feature;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
@@ -34,7 +35,7 @@ public class ArtifactsExtensions {
         Extension extension1 = extensions.getByName("my-extension1");
         assertNotNull(extension1);
         assertEquals(extension1.getName(), "my-extension1");
-        assertEquals(extension1.isRequired(), false);
+        assertEquals(extension1.getState(), ExtensionState.OPTIONAL);
         assertEquals(1, extension1.getArtifacts().size());
 
         ArtifactId artifactId1 = extension1.getArtifacts().get(0).getId();
@@ -45,7 +46,7 @@ public class ArtifactsExtensions {
         Extension extension2 = extensions.getByName("my-extension2");
         assertNotNull(extension2);
         assertEquals(extension2.getName(), "my-extension2");
-        assertEquals(extension2.isRequired(), true);
+        assertEquals(extension2.getState(), ExtensionState.REQUIRED);
         assertEquals(1, extension2.getArtifacts().size());
 
         ArtifactId artifactId2 = extension2.getArtifacts().get(0).getId();

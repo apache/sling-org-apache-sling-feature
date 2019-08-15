@@ -212,7 +212,18 @@ abstract class JSONWriterBase {
             final List<Extension> extensions,
             final Configurations allConfigs) {
         for(final Extension ext : extensions) {
-            final String key = ext.getName() + ":" + ext.getType().name() + "|" + ext.isRequired();
+            final String state;
+            switch (ext.getState()) {
+            case OPTIONAL:
+                state = "false";
+                break;
+            case REQUIRED:
+                state = "true";
+                break;
+            default:
+                state = ext.getState().name();
+            }
+            final String key = ext.getName().concat(":").concat(ext.getType().name()).concat("|").concat(state);
             if ( ext.getType() == ExtensionType.JSON ) {
                 final JsonStructure struct;
                 try ( final StringReader reader = new StringReader(ext.getJSON()) ) {
