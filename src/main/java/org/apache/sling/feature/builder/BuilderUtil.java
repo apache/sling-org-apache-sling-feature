@@ -139,6 +139,7 @@ class BuilderUtil {
         for (final Artifact artifactFromSource : source) {
 
             // set of artifacts in target, matching the artifact from source
+            // the artifacts are kept in the order of the target - hence the linked hash set.
             final Set<Artifact> allExistingInTarget = new LinkedHashSet<>();
             for (final ArtifactId id : artifactFromSource.getAliases(true)) {
                 for (Artifact targetArtifact : target) {
@@ -161,10 +162,12 @@ class BuilderUtil {
             for (final Artifact existing : allExistingInTarget) {
                 if (sourceFeature.getId().toMvnId().equals(existing.getMetadata().get(originKey))) {
                     // If the source artifact came from the same feature, keep them side-by-side
+                    // but make sure we add the target ones first - hence, the count
                     selectedArtifacts.add(count++, existing);
                     selectedArtifacts.add(artifactFromSource);
                 } else {
                     List<Artifact> artifacts = selectArtifactOverride(existing, artifactFromSource, artifactOverrides);
+                    // if we have an all policy we might have more then one artifact - we put the target one first
                     if (artifacts.size() > 1) {
                         selectedArtifacts.add(count++, artifacts.remove(0));
                     }
