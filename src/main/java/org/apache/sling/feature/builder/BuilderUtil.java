@@ -206,7 +206,7 @@ class BuilderUtil {
             List<ArtifactId> artifactOverrides) {
         if (fromTarget.getId().equals(fromSource.getId())) {
             // They're the same so return the source (latest)
-            return Collections.singletonList(selectStartOder(fromTarget, fromSource, fromSource));
+            return Collections.singletonList(selectStartOrder(fromTarget, fromSource, fromSource));
         }
 
         final Set<ArtifactId> commonPrefixes = getCommonArtifactIds(fromTarget, fromSource);
@@ -227,21 +227,21 @@ class BuilderUtil {
                     } else if (BuilderContext.VERSION_OVERRIDE_HIGHEST.equalsIgnoreCase(rule)) {
                         Version a1v = fromTarget.getId().getOSGiVersion();
                         Version a2v = fromSource.getId().getOSGiVersion();
-                        result.add(selectStartOder(fromTarget, fromSource, a1v.compareTo(a2v) > 0 ? fromTarget : fromSource));
+                        result.add(selectStartOrder(fromTarget, fromSource, a1v.compareTo(a2v) > 0 ? fromTarget : fromSource));
                     } else if (BuilderContext.VERSION_OVERRIDE_LATEST.equalsIgnoreCase(rule)) {
-                        result.add(selectStartOder(fromTarget, fromSource, fromSource));
+                        result.add(selectStartOrder(fromTarget, fromSource, fromSource));
                     } else {
 
                         // The rule must represent a version
                         // See if its one of the existing artifact. If so use those, as they may have
                         // additional metadata
                         if (fromTarget.getId().getVersion().equals(rule)) {
-                            result.add(selectStartOder(fromTarget, fromSource, fromTarget));
+                            result.add(selectStartOrder(fromTarget, fromSource, fromTarget));
                         } else if (fromSource.getId().getVersion().equals(rule)) {
-                            result.add(selectStartOder(fromTarget, fromSource, fromSource));
+                            result.add(selectStartOrder(fromTarget, fromSource, fromSource));
                         } else {
                             // It's a completely new artifact
-                            result.add(selectStartOder(fromTarget, fromSource, new Artifact(override)));
+                            result.add(selectStartOrder(fromTarget, fromSource, new Artifact(override)));
                         }
                     }
                 }
@@ -255,7 +255,7 @@ class BuilderUtil {
                 fromTarget + " and " + fromSource + ". The rule must be specified for " + commonPrefixes);
     }
 
-    private static Artifact selectStartOder(Artifact a, Artifact b, Artifact target) {
+    private static Artifact selectStartOrder(Artifact a, Artifact b, Artifact target) {
         int startOrderA = a.getStartOrder();
         int startOrderB = b.getStartOrder();
         int startOrderNew;
