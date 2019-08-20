@@ -197,6 +197,63 @@ public class FeatureBuilderTest {
         assertNull(actuals.getPrototype());
     }
 
+    @Test public void testMergeMultipleVersions() {
+        Feature a = new Feature(ArtifactId.fromMvnId("g:a:1"));
+        Feature b = new Feature(ArtifactId.fromMvnId("g:b:1"));
+
+
+        a.getBundles().add(BuilderUtilTest.createBundle("o/a/1.0.0", 10));
+        a.getBundles().add(BuilderUtilTest.createBundle("o/a/2.0.0", 9));
+        a.getBundles().add(BuilderUtilTest.createBundle("o/a/3.0.0", 11));
+
+        b.getBundles().add(BuilderUtilTest.createBundle("o/a/4.0.0", 8));
+        b.getBundles().add(BuilderUtilTest.createBundle("o/a/5.0.0", 12));
+        b.getBundles().add(BuilderUtilTest.createBundle("o/a/6.0.0", 10));
+
+        Feature ab = new Feature(ArtifactId.fromMvnId("g:ab:1"));
+        ab.getBundles().add(BuilderUtilTest.createBundle("o/a/6.0.0", 8));
+
+        Feature assembled = FeatureBuilder.assemble(ArtifactId.fromMvnId("g:ab:1"), new BuilderContext(provider)
+                .addArtifactsOverride(ArtifactId.fromMvnId("o:a:HIGHEST")), a, b);
+        assembled.getExtensions().clear();
+
+        equals(ab, assembled );
+
+        ab = new Feature(ArtifactId.fromMvnId("g:ab:1"));
+        ab.getBundles().add(BuilderUtilTest.createBundle("o/a/6.0.0", 8));
+
+        assembled = FeatureBuilder.assemble(ArtifactId.fromMvnId("g:ab:1"), new BuilderContext(provider)
+            .addArtifactsOverride(ArtifactId.fromMvnId("o:a:LATEST")), a, b);
+        assembled.getExtensions().clear();
+
+        equals(ab, assembled );
+
+        ab = new Feature(ArtifactId.fromMvnId("g:ab:1"));
+        ab.getBundles().addAll(a.getBundles());
+        ab.getBundles().addAll(b.getBundles());
+
+        assembled = FeatureBuilder.assemble(ArtifactId.fromMvnId("g:ab:1"), new BuilderContext(provider)
+            .addArtifactsOverride(ArtifactId.fromMvnId("o:a:ALL")), a, b);
+        assembled.getExtensions().clear();
+
+
+        equals(ab, assembled );
+
+        a.getBundles().get(1).setStartOrder(1);
+
+        ab = new Feature(ArtifactId.fromMvnId("g:ab:1"));
+        ab.getBundles().add(BuilderUtilTest.createBundle("o/a/6.0.0", 1));
+        ab.getBundles().get(0).setStartOrder(1);
+
+        assembled = FeatureBuilder.assemble(ArtifactId.fromMvnId("g:ab:1"), new BuilderContext(provider)
+            .addArtifactsOverride(ArtifactId.fromMvnId("o:a:LATEST")), a, b);
+        assembled.getExtensions().clear();
+
+
+        equals(ab, assembled);
+    }
+
+
     @Test public void testNoIncludesNoUpgrade() throws Exception {
         final Feature base = new Feature(ArtifactId.parse("org.apache.sling/test-feature/1.1"));
 
@@ -295,10 +352,14 @@ public class FeatureBuilderTest {
         final Feature result = base.copy();
         result.setPrototype(null);
         result.getBundles().clear();
+
         result.getBundles().add(BuilderUtilTest.createBundle("org.apache.sling/foo-bar/4.5.6", 3));
+        result.getBundles().add(BuilderUtilTest.createBundle("group/testnewversion_low/2", 5));
         result.getBundles().add(BuilderUtilTest.createBundle("group/testnewversion_low/1", 5));
+        result.getBundles().add(BuilderUtilTest.createBundle("group/testnewversion_high/2", 5));
         result.getBundles().add(BuilderUtilTest.createBundle("group/testnewversion_high/5", 5));
-        result.getBundles().add(BuilderUtilTest.createBundle("group/testnewstartlevel/1", 10));
+        result.getBundles().add(BuilderUtilTest.createBundle("group/testnewstartlevel/1", 5));
+        result.getBundles().add(BuilderUtilTest.createBundle("group/testnewstartlevelandversion/1", 5));
         result.getBundles().add(BuilderUtilTest.createBundle("group/testnewstartlevelandversion/2", 10));
         result.getBundles().add(a1.copy(a1.getId()));
         result.getBundles().add(BuilderUtilTest.createBundle("org.apache.sling/application-bundle/2.0.0", 1));
@@ -330,15 +391,23 @@ public class FeatureBuilderTest {
         Feature assembled = FeatureBuilder.assemble(base, builderContext);
 
         Feature result = new Feature(ArtifactId.parse("g:tgtart:1"));
+
+        result.getBundles().add(BuilderUtilTest.createBundle("group/testmulti/2", 8));
+
+
         Artifact b1 = new Artifact(ArtifactId.fromMvnId("group:testmulti:1"));
         result.getBundles().add(b1);
+
+
+        Artifact b2 = new Artifact(ArtifactId.fromMvnId("group:testmulti:3"));
+        result.getBundles().add(b2);
+
         Artifact b3 = new Artifact(ArtifactId.fromMvnId("group:someart:1.2.3"));
         b3.setStartOrder(4);
         result.getBundles().add(b3);
         Artifact b0 = new Artifact(ArtifactId.fromMvnId("g:myart:1"));
         result.getBundles().add(b0);
-        Artifact b2 = new Artifact(ArtifactId.fromMvnId("group:testmulti:3"));
-        result.getBundles().add(b2);
+
 
         equals(result, assembled);
     }
@@ -379,7 +448,11 @@ public class FeatureBuilderTest {
         Feature assembled = FeatureBuilder.assemble(base, builderContext);
 
         Feature result = new Feature(ArtifactId.parse("g:tgtart:1"));
+
+        result.getBundles().add(BuilderUtilTest.createBundle("group/testmulti/2", 8));
+
         Artifact b1 = new Artifact(ArtifactId.fromMvnId("group:testmulti:1"));
+        b1.setStartOrder(4);
         result.getBundles().add(b1);
         Artifact b3 = new Artifact(ArtifactId.fromMvnId("group:someart:1.2.3"));
         b3.setStartOrder(4);
@@ -402,15 +475,21 @@ public class FeatureBuilderTest {
         Feature assembled = FeatureBuilder.assemble(base, builderContext);
 
         Feature result = new Feature(ArtifactId.parse("g:tgtart:1"));
+
+        result.getBundles().add(BuilderUtilTest.createBundle("group/testmulti/2", 8));
+
         Artifact b1 = new Artifact(ArtifactId.fromMvnId("group:testmulti:1"));
+        b1.setStartOrder(4);
         result.getBundles().add(b1);
+
+        Artifact b2 = new Artifact(ArtifactId.fromMvnId("group:testmulti:3"));
+        result.getBundles().add(b2);
+
         Artifact b3 = new Artifact(ArtifactId.fromMvnId("group:someart:1.2.3"));
         b3.setStartOrder(4);
         result.getBundles().add(b3);
         Artifact b0 = new Artifact(ArtifactId.fromMvnId("g:myart:1"));
         result.getBundles().add(b0);
-        Artifact b2 = new Artifact(ArtifactId.fromMvnId("group:testmulti:3"));
-        result.getBundles().add(b2);
 
         equals(result, assembled);
     }
