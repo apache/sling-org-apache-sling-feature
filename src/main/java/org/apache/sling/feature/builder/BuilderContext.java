@@ -73,8 +73,14 @@ public class BuilderContext {
     /** Used to handle configuration merging - use the latest configuration, but don't merge */
     public static final String CONFIG_USE_LATEST = "USE_LATEST";
 
+    /** Used to handle configuration merging - use the first configuration, don't merge */
+    public static final String CONFIG_USE_FIRST = "USE_FIRST";
+
     /** Used to handle configuration merging - merge the latest configuration in, latest props might override previous values */
     public static final String CONFIG_MERGE_LATEST = "MERGE_LATEST";
+
+    /** Used to handle configuration merging - merge the first configuration in, latest props will not override previous values */
+    public static final String CONFIG_MERGE_FIRST = "MERGE_FIRST";
 
     /** Configuration key for configuration for all handlers */
     static final String CONFIGURATION_ALL_HANDLERS_KEY = "all";

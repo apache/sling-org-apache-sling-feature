@@ -413,6 +413,18 @@ class BuilderUtil {
                                 }
                                 handled = true;
                             }
+                            else if (BuilderContext.CONFIG_USE_FIRST.equals(override.getValue())) {
+                                handled = true;
+                            }
+                            else if (BuilderContext.CONFIG_MERGE_FIRST.equals(override.getValue())) {
+                                for (Enumeration<String> i = cfg.getProperties().keys(); i.hasMoreElements(); ) {
+                                    final String key = i.nextElement();
+                                    if (current.getProperties().get(key) == null) {
+                                        current.getProperties().put(key, cfg.getProperties().get(key));
+                                    }
+                                }
+                                handled = true;
+                            }
                             break outer;
                         }
                     }

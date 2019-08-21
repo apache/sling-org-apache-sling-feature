@@ -616,6 +616,21 @@ public class BuilderUtilTest {
         }
     }
 
+    @Test public void testMergeConfigurationsUSEFIRST() {
+        Configurations target = new Configurations();
+        Configurations source = new Configurations();
+        Configuration foo = new Configuration("foo");
+        foo.getProperties().put("fooKey", "valueFOO");
+        target.add(foo);
+        Configuration foo2 = new Configuration("foo");
+        foo2.getProperties().put("barKey", "valueBAR");
+        source.add(foo2);
+        BuilderUtil.mergeConfigurations(target, source, Collections.singletonMap("fo*", BuilderContext.CONFIG_USE_FIRST));
+
+        assertEquals("valueFOO", target.getConfiguration("foo").getProperties().get("fooKey"));
+        assertNull(target.getConfiguration("foo").getProperties().get("barKey"));
+    }
+
     @Test public void testMergeConfigurationsUSELATEST() {
         Configurations target = new Configurations();
         Configurations source = new Configurations();
@@ -643,6 +658,22 @@ public class BuilderUtilTest {
         BuilderUtil.mergeConfigurations(target, source, Collections.singletonMap("fo*", BuilderContext.CONFIG_MERGE_LATEST));
 
         assertEquals("valueBAR", target.getConfiguration("foo").getProperties().get("fooKey"));
+    }
+
+    @Test public void testMergeConfigurationsMERGEFIRST() {
+        Configurations target = new Configurations();
+        Configurations source = new Configurations();
+        Configuration foo = new Configuration("foo");
+        foo.getProperties().put("fooKey", "valueFOO");
+        target.add(foo);
+        Configuration foo2 = new Configuration("foo");
+        foo2.getProperties().put("fooKey", "valueBAR");
+        foo2.getProperties().put("barKey", "valueBAR");
+        source.add(foo2);
+        BuilderUtil.mergeConfigurations(target, source, Collections.singletonMap("fo*", BuilderContext.CONFIG_MERGE_FIRST));
+
+        assertEquals("valueFOO", target.getConfiguration("foo").getProperties().get("fooKey"));
+        assertEquals("valueBAR", target.getConfiguration("foo").getProperties().get("barKey"));
     }
 
     @Test public void testMergeConfigurationsFactory() {
