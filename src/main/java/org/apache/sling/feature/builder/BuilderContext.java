@@ -19,6 +19,7 @@ package org.apache.sling.feature.builder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -97,7 +98,7 @@ public class BuilderContext {
     private final List<ArtifactId> artifactsOverrides = new ArrayList<>();
     private final Map<String,String> variables = new HashMap<>();
     private final Map<String,String> frameworkProperties = new HashMap<>();
-    private final Map<String,String> configOverrides = new HashMap<>();
+    private final Map<String,String> configOverrides = new LinkedHashMap<>();
 
 
     /**
