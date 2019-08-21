@@ -1,8 +1,8 @@
-# API Controller and API Regions
+# API Regions
 
 If you're assembling a platform (in contrast to a final application) out of several features and provide this platform for customers to build their application on top of, additional control of the API provided by the platform is needed. The bundles within the features provide all kinds of APIs but you might not want to expose all of these as extension points. You would rather want to use some of them internally within either a single feature or share within your platform features.
 
-This is a proposal about how to add such additional metadata to the feature model. An API controller at runtime enforces the rules.
+This is a proposal about how to add such additional metadata to the feature model. An API Regions runtime component enforces the rules.
 
 # Visibility of API
 
