@@ -64,6 +64,18 @@ public class BuilderContext {
     /** Used in override rule to match all coordinates */
     public static final String COORDINATE_MATCH_ALL = "*";
 
+    /** Used to handle configuration merging - fail the merge when there is a clash for a PID - this is the default */
+    public static final String CONFIG_FAIL_ON_CLASH = "CLASH";
+
+    /** Used to handle configuration merging - fail the merge only when there is a clash on a property level */
+    public static final String CONFIG_FAIL_ON_PROPERTY_CLASH = "PROPERTY_CLASH";
+
+    /** Used to handle configuration merging - use the latest configuration, but don't merge */
+    public static final String CONFIG_USE_LATEST = "USE_LATEST";
+
+    /** Used to handle configuration merging - merge the latest configuration in, latest props might override previous values */
+    public static final String CONFIG_MERGE_LATEST = "MERGE_LATEST";
+
     /** Configuration key for configuration for all handlers */
     static final String CONFIGURATION_ALL_HANDLERS_KEY = "all";
 
@@ -79,6 +91,7 @@ public class BuilderContext {
     private final List<ArtifactId> artifactsOverrides = new ArrayList<>();
     private final Map<String,String> variables = new HashMap<>();
     private final Map<String,String> frameworkProperties = new HashMap<>();
+    private final Map<String,String> configOverrides = new HashMap<>();
 
 
     /**
@@ -156,6 +169,17 @@ public class BuilderContext {
     }
 
     /**
+     * Add merge policies for configuration clashes.
+     *
+     * @param overrides The overrides
+     * @return The builder context
+     */
+    public BuilderContext addConfigsOverrides(final Map<String, String> overrides) {
+        this.configOverrides.putAll(overrides);
+        return this;
+    }
+
+    /**
      * Add merge extensions
      *
      * @param extensions A list of merge extensions.
@@ -209,6 +233,10 @@ public class BuilderContext {
 
     List<ArtifactId> getArtifactOverrides() {
         return this.artifactsOverrides;
+    }
+
+    Map<String, String> getConfigOverrides() {
+        return this.configOverrides;
     }
 
     Map<String,String> getVariablesOverrides() {

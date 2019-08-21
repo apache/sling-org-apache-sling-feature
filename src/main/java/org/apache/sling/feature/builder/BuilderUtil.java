@@ -219,7 +219,7 @@ class BuilderUtil {
         }
 
         final List<Artifact> result = new ArrayList<>();
-        for (ArtifactId prefix : commonPrefixes) {
+        outer: for (ArtifactId prefix : commonPrefixes) {
             for (final ArtifactId override : artifactOverrides) {
                 if (match(prefix, override)) {
                     String rule = override.getVersion();
@@ -247,6 +247,7 @@ class BuilderUtil {
                             result.add(selectStartOrder(fromTarget, fromSource, new Artifact(override)));
                         }
                     }
+                    break outer;
                 }
             }
         }
@@ -310,6 +311,45 @@ class BuilderUtil {
         return matchCount == 4;
     }
 
+    private static boolean match(final Configuration config, String override) {
+        boolean result;
+        if (override.equals("*")) {
+            result = true;
+        }
+        else if (Configuration.isFactoryConfiguration(config.getPid())) {
+            if (Configuration.isFactoryConfiguration(override)) {
+                String configPID = Configuration.getFactoryPid(config.getPid());
+                String overridePID = Configuration.getFactoryPid(override);
+                if (match(configPID, overridePID)) {
+                    String configName = Configuration.getName(config.getPid());
+                    String overrideName = Configuration.getName(override);
+                    result = match(configName, overrideName);
+                }
+                else {
+                    result = false;
+                }
+            }
+            else {
+                result = false;
+            }
+        }
+        else {
+            result = match(config.getPid(), override);
+        }
+        return result;
+    }
+
+    private static boolean match(String value, String override) {
+        boolean result;
+        if (override.endsWith("*")) {
+            override = override.substring(0, override.length() - 1);
+            result = value.startsWith(override);
+        }
+        else {
+            result = value.equals(override);
+        }
+        return result;
+    }
     private static Set<ArtifactId> getCommonArtifactIds(Artifact a1, Artifact a2) {
         final Set<ArtifactId> result = new HashSet<>();
         for (final ArtifactId id : a1.getAliases(true)) {
@@ -335,19 +375,51 @@ class BuilderUtil {
     }
 
     // configurations - merge / override
-    static void mergeConfigurations(final Configurations target, final Configurations source) {
+    static void mergeConfigurations(final Configurations target, final Configurations source, final Map<String, String> overrides) {
         for(final Configuration cfg : source) {
             boolean found = false;
-            for(final Configuration current : target) {
+            for(int c = 0; c < target.size();c++) {
+                final Configuration current = target.get(c);
+
                 if ( current.compareTo(cfg) == 0 ) {
                     found = true;
-                    // merge / override properties
-                    final Enumeration<String> i = cfg.getProperties().keys();
-                    while ( i.hasMoreElements() ) {
-                        final String key = i.nextElement();
-                        current.getProperties().put(key, cfg.getProperties().get(key));
+
+                    boolean handled = false;
+                    outer:
+                    for (Map.Entry<String, String> override : overrides.entrySet()) {
+                        if (match(cfg, override.getKey())) {
+                            if (BuilderContext.CONFIG_USE_LATEST.equals(override.getValue())) {
+                                int idx = target.indexOf(current);
+                                target.remove(current);
+                                target.add(idx, cfg.copy(cfg.getPid()));
+                                handled = true;
+                            }
+                            else if (BuilderContext.CONFIG_FAIL_ON_PROPERTY_CLASH.equals(override.getValue())){
+                                for (Enumeration<String> i = cfg.getProperties().keys(); i.hasMoreElements(); ) {
+                                    final String key = i.nextElement();
+                                    if (current.getProperties().get(key) != null) {
+                                        break outer;
+                                    }
+                                    else {
+                                        current.getProperties().put(key, cfg.getProperties().get(key));
+                                    }
+                                }
+                                handled = true;
+                            }
+                            else if (BuilderContext.CONFIG_MERGE_LATEST.equals(override.getValue())) {
+                                for (Enumeration<String> i = cfg.getProperties().keys(); i.hasMoreElements(); ) {
+                                    final String key = i.nextElement();
+                                    current.getProperties().put(key, cfg.getProperties().get(key));
+                                }
+                                handled = true;
+                            }
+                            break outer;
+                        }
                     }
-                    break;
+                    if (!handled) {
+                        throw new IllegalStateException("Configuration override rule required to select between configurations for " +
+                            cfg.getPid());
+                    }
                 }
             }
             if ( !found ) {

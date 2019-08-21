@@ -17,6 +17,8 @@
 package org.apache.sling.feature.builder;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -29,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Properties;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -43,6 +46,8 @@ import javax.json.stream.JsonGenerator;
 import org.apache.sling.feature.Artifact;
 import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Bundles;
+import org.apache.sling.feature.Configuration;
+import org.apache.sling.feature.Configurations;
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.ExtensionState;
 import org.apache.sling.feature.ExtensionType;
@@ -482,7 +487,7 @@ public class BuilderUtilTest {
         Artifact a1 = new Artifact(ArtifactId.fromMvnId("gid:aid:1"));
         Artifact a2 = new Artifact(ArtifactId.fromMvnId("gid:aid:2"));
         List<ArtifactId> overrides = Arrays.asList(ArtifactId.parse("gid:aid:2"), ArtifactId.parse("gid:aid:3"));
-        assertEquals(Arrays.asList(a2, new Artifact(ArtifactId.fromMvnId("gid:aid:3"))),
+        assertEquals(Arrays.asList(a2),
                 BuilderUtil.selectArtifactOverride(a1, a2, overrides));
     }
 
@@ -559,6 +564,188 @@ public class BuilderUtilTest {
         HandlerContextImpl hc = new BuilderUtil.HandlerContextImpl(bc, pph);
         Map<String, String> cfg = hc.getConfiguration();
         assertEquals(0, cfg.size());
+    }
+
+    @Test public void testMergeConfigurations() {
+        Configurations target = new Configurations();
+        Configurations source = new Configurations();
+        Configuration foo = new Configuration("foo");
+        foo.getProperties().put("fooKey", "valueFOO");
+        target.add(foo);
+        Configuration bar = new Configuration("bar");
+        bar.getProperties().put("barKey", "valueBAR");
+        source.add(bar);
+        BuilderUtil.mergeConfigurations(target, source, Collections.EMPTY_MAP);
+        assertEquals(2, target.size());
+        assertEquals(target.getConfiguration("foo").getProperties(), foo.getProperties());
+        assertEquals(target.getConfiguration("bar").getProperties(), bar.getProperties());
+    }
+
+    @Test public void testMergeConfigurationsCLASH() {
+        Configurations target = new Configurations();
+        Configurations source = new Configurations();
+        target.add(new Configuration("foo"));
+        source.add(new Configuration("foo"));
+        try {
+            BuilderUtil.mergeConfigurations(target, source, Collections.EMPTY_MAP);
+            fail();
+        } catch (IllegalStateException ex) {
+
+        }
+    }
+
+    @Test public void testMergeConfigurationsCLASHPROPERTY() {
+        Configurations target = new Configurations();
+        Configurations source = new Configurations();
+        Configuration foo = new Configuration("foo");
+        foo.getProperties().put("fooKey", "valueFOO");
+        target.add(foo);
+        Configuration foo2 = new Configuration("foo");
+        foo2.getProperties().put("barKey", "valueBAR");
+        source.add(foo2);
+        BuilderUtil.mergeConfigurations(target, source, Collections.singletonMap("fo*", BuilderContext.CONFIG_FAIL_ON_PROPERTY_CLASH));
+
+        assertEquals("valueFOO", target.getConfiguration("foo").getProperties().get("fooKey"));
+        assertEquals("valueBAR", target.getConfiguration("foo").getProperties().get("barKey"));
+
+        try {
+            BuilderUtil.mergeConfigurations(target, source, Collections.singletonMap("fo*", BuilderContext.CONFIG_FAIL_ON_PROPERTY_CLASH));
+            fail();
+        } catch (IllegalStateException ex) {
+
+        }
+    }
+
+    @Test public void testMergeConfigurationsUSELATEST() {
+        Configurations target = new Configurations();
+        Configurations source = new Configurations();
+        Configuration foo = new Configuration("foo");
+        foo.getProperties().put("fooKey", "valueFOO");
+        target.add(foo);
+        Configuration foo2 = new Configuration("foo");
+        foo2.getProperties().put("barKey", "valueBAR");
+        source.add(foo2);
+        BuilderUtil.mergeConfigurations(target, source, Collections.singletonMap("fo*", BuilderContext.CONFIG_USE_LATEST));
+
+        assertEquals("valueBAR", target.getConfiguration("foo").getProperties().get("barKey"));
+        assertNull(target.getConfiguration("foo").getProperties().get("fooKey"));
+    }
+
+    @Test public void testMergeConfigurationsMERGELATEST() {
+        Configurations target = new Configurations();
+        Configurations source = new Configurations();
+        Configuration foo = new Configuration("foo");
+        foo.getProperties().put("fooKey", "valueFOO");
+        target.add(foo);
+        Configuration foo2 = new Configuration("foo");
+        foo2.getProperties().put("fooKey", "valueBAR");
+        source.add(foo2);
+        BuilderUtil.mergeConfigurations(target, source, Collections.singletonMap("fo*", BuilderContext.CONFIG_MERGE_LATEST));
+
+        assertEquals("valueBAR", target.getConfiguration("foo").getProperties().get("fooKey"));
+    }
+
+    @Test public void testMergeConfigurationsFactory() {
+        Configurations target = new Configurations();
+        Configurations source = new Configurations();
+        Configuration foo = new Configuration("foo~foo");
+        foo.getProperties().put("fooKey", "valueFOO");
+        target.add(foo);
+        Configuration bar = new Configuration("bar~bar");
+        bar.getProperties().put("barKey", "valueBAR");
+        source.add(bar);
+        BuilderUtil.mergeConfigurations(target, source, Collections.EMPTY_MAP);
+        assertEquals(2, target.size());
+        assertEquals(target.getConfiguration("foo~foo").getProperties(), foo.getProperties());
+        assertEquals(target.getConfiguration("bar~bar").getProperties(), bar.getProperties());
+    }
+
+    @Test public void testMergeConfigurationsCLASHFactory() {
+        Configurations target = new Configurations();
+        Configurations source = new Configurations();
+        target.add(new Configuration("foo~foo"));
+        source.add(new Configuration("foo~foo"));
+        try {
+            BuilderUtil.mergeConfigurations(target, source, Collections.EMPTY_MAP);
+            fail();
+        } catch (IllegalStateException ex) {
+
+        }
+    }
+
+    @Test public void testMergeConfigurationsCLASHPROPERTYFactory() {
+        Configurations target = new Configurations();
+        Configurations source = new Configurations();
+        Configuration foo = new Configuration("foo~foo");
+        foo.getProperties().put("fooKey", "valueFOO");
+        target.add(foo);
+        Configuration foo2 = new Configuration("foo~foo");
+        foo2.getProperties().put("barKey", "valueBAR");
+        source.add(foo2);
+        BuilderUtil.mergeConfigurations(target, source, Collections.singletonMap("fo*~f*", BuilderContext.CONFIG_FAIL_ON_PROPERTY_CLASH));
+
+        assertEquals("valueFOO", target.getConfiguration("foo~foo").getProperties().get("fooKey"));
+        assertEquals("valueBAR", target.getConfiguration("foo~foo").getProperties().get("barKey"));
+
+        try {
+            BuilderUtil.mergeConfigurations(target, source, Collections.singletonMap("fo*~fo*", BuilderContext.CONFIG_FAIL_ON_PROPERTY_CLASH));
+            fail();
+        } catch (IllegalStateException ex) {
+
+        }
+    }
+
+    @Test public void testMergeConfigurationsUSELATESTFactory() {
+        Configurations target = new Configurations();
+        Configurations source = new Configurations();
+        Configuration foo = new Configuration("foo~foo");
+        foo.getProperties().put("fooKey", "valueFOO");
+        target.add(foo);
+        Configuration foo2 = new Configuration("foo~foo");
+        foo2.getProperties().put("barKey", "valueBAR");
+        source.add(foo2);
+        BuilderUtil.mergeConfigurations(target, source, Collections.singletonMap("fo*~f*", BuilderContext.CONFIG_USE_LATEST));
+
+        assertEquals("valueBAR", target.getConfiguration("foo~foo").getProperties().get("barKey"));
+        assertNull(target.getConfiguration("foo~foo").getProperties().get("fooKey"));
+    }
+
+    @Test public void testMergeConfigurationsMERGELATESTFactory() {
+        Configurations target = new Configurations();
+        Configurations source = new Configurations();
+        Configuration foo = new Configuration("foo~foo");
+        foo.getProperties().put("fooKey", "valueFOO");
+        target.add(foo);
+        Configuration foo2 = new Configuration("foo~foo");
+        foo2.getProperties().put("fooKey", "valueBAR");
+        source.add(foo2);
+        BuilderUtil.mergeConfigurations(target, source, Collections.singletonMap("foo~foo", BuilderContext.CONFIG_MERGE_LATEST));
+
+        assertEquals("valueBAR", target.getConfiguration("foo~foo").getProperties().get("fooKey"));
+    }
+
+    @Test public void testMergeConfigurationsMixed() {
+        Configurations target = new Configurations();
+        Configurations source = new Configurations();
+        Configuration foo = new Configuration("foo~foo");
+        foo.getProperties().put("fooKey", "valueFOO");
+        target.add(foo);
+        Configuration foo4 = new Configuration("foo~foo");
+        foo.getProperties().put("fooKey", "valueFOO4");
+        source.add(foo);
+        Configuration foo2 = new Configuration("foo");
+        foo2.getProperties().put("fooKey", "valueBAR");
+        source.add(foo2);
+        Configuration foo3 = new Configuration("foo");
+        foo2.getProperties().put("fooKey", "valueBAR2");
+        source.add(foo3);
+        Map<String, String> overrides = new HashMap<>();
+        overrides.put("foo", BuilderContext.CONFIG_MERGE_LATEST);
+        overrides.put("foo~foo", BuilderContext.CONFIG_USE_LATEST);
+        BuilderUtil.mergeConfigurations(target, source, overrides);
+
+        assertEquals("valueFOO4", target.getConfiguration("foo~foo").getProperties().get("fooKey"));
+        assertEquals("valueBAR2", target.getConfiguration("foo").getProperties().get("fooKey"));
     }
 
     @SafeVarargs
