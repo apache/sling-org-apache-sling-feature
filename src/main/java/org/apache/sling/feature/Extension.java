@@ -248,7 +248,7 @@ public class Extension {
     /**
      * Set the JSON structure of the extension
      *
-     * @param obj The JSON object
+     * @param struct The JSON structure
      * @throws IllegalStateException    if the type is not
      *                                  {@code ExtensionType#JSON}
      * @throws IllegalArgumentException If the structure is not valid
