@@ -202,7 +202,7 @@ public abstract class FeatureBuilder {
                 targetIsComplete = false;
             }
 
-            merge(target, assembled, context, context.getArtifactOverrides(), null);
+            merge(target, assembled, context, context.getArtifactOverrides(), context.getConfigOverrides(),null);
         }
 
         // check complete flag
@@ -324,11 +324,12 @@ public abstract class FeatureBuilder {
             processPrototype(prototypeFeature, i);
 
             // and now merge the prototype feature into the result. No overrides should be needed since the result is empty before
-            merge(result, prototypeFeature, context, Collections.emptyList(), TRACKING_KEY);
+            merge(result, prototypeFeature, context, Collections.emptyList(), Collections.EMPTY_MAP, TRACKING_KEY);
 
             // and merge the current feature over the prototype feature into the result
             merge(result, feature, context, Collections.singletonList(
                     ArtifactId.parse(BuilderUtil.CATCHALL_OVERRIDE + BuilderContext.VERSION_OVERRIDE_ALL)),
+                    Collections.singletonMap("*", BuilderContext.CONFIG_MERGE_LATEST),
                     TRACKING_KEY);
 
             for (Artifact a : result.getBundles()) {
@@ -354,10 +355,11 @@ public abstract class FeatureBuilder {
             final Feature source,
             final BuilderContext context,
             final List<ArtifactId> artifactOverrides,
+            final Map<String, String> configOverrides,
             final String originKey) {
         BuilderUtil.mergeVariables(target.getVariables(), source.getVariables(), context);
         BuilderUtil.mergeArtifacts(target.getBundles(), source.getBundles(), source, artifactOverrides, originKey);
-        BuilderUtil.mergeConfigurations(target.getConfigurations(), source.getConfigurations());
+        BuilderUtil.mergeConfigurations(target.getConfigurations(), source.getConfigurations(), configOverrides);
         BuilderUtil.mergeFrameworkProperties(target.getFrameworkProperties(), source.getFrameworkProperties(), context);
         BuilderUtil.mergeRequirements(target.getRequirements(), source.getRequirements());
         BuilderUtil.mergeCapabilities(target.getCapabilities(), source.getCapabilities());

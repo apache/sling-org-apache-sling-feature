@@ -924,6 +924,43 @@ public class FeatureBuilderTest {
         }
     }
 
+    @Test
+    public void testConfigurationMerge() {
+        Feature a = new Feature(ArtifactId.fromMvnId("g:a:1.0.0"));
+        a.getConfigurations().add(new Configuration("foo"));
+        Feature b = new Feature(ArtifactId.fromMvnId("g:b:1.0.0"));
+        b.getConfigurations().add(new Configuration("bar"));
+
+        Feature c = FeatureBuilder.assemble(ArtifactId.fromMvnId("g:c:1.0.0"), new BuilderContext(provider), a, b);
+        c.getExtensions().clear();
+
+        Feature test = new Feature(ArtifactId.fromMvnId("g:c:1.0.0"));
+        test.getConfigurations().add(new Configuration("foo"));
+        test.getConfigurations().add(new Configuration("bar"));
+
+        assertEquals(test, c);
+
+        b.getConfigurations().add(new Configuration("foo"));
+
+        try
+        {
+            FeatureBuilder.assemble(ArtifactId.fromMvnId("g:c:1.0.0"), new BuilderContext(provider), a, b);
+            fail();
+        } catch (IllegalStateException ex) {
+
+        }
+
+        b.getConfigurations().get(0).getProperties().put("foo", "bar");
+
+        c = FeatureBuilder.assemble(ArtifactId.fromMvnId("g:c:1.0.0"), new BuilderContext(provider).addConfigsOverrides(Collections.singletonMap("*", BuilderContext.CONFIG_USE_LATEST)), a, b);
+
+        test.getConfigurations().add(b.getConfigurations().get(0));
+
+        c.getExtensions().clear();
+
+        assertEquals(test, c);
+    }
+
     private static class MatchingRequirementImpl extends RequirementImpl implements MatchingRequirement {
 
         public MatchingRequirementImpl(Resource res, String ns, Map<String, String> dirs, Map<String, Object> attrs) {
