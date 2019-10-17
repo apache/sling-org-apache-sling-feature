@@ -19,7 +19,7 @@ A feature can have an additional extension JSON named api-regions. The following
 
 Note that the `global` region is a predefined region that exports the listed packages to everyone. Other region names can be chosen freely. Packages listed in these other regions are only exposed to bundles in features that are in the same region.
 
-    "api-regions:JSON|false" : [
+    "api-regions:JSON|optinal" : [
         {
             "name": "global",
             "exports": [
@@ -45,7 +45,7 @@ By exporting packages to a given region, a feature automatically also sees all p
 
 A feature can also just consume packages from a region, without having to export any packages to it. This can be done by exporting an empty list of packages. For example:
 
-    "api-regions:JSON|false" : [ 
+    "api-regions:JSON|optional" : [ 
         {
             "name": "platform",
             "exports": []
@@ -56,7 +56,7 @@ If the api-regions extension is missing or the api-regions information is missin
 
 If a feature exports no packages and only wants to have visibility of packages from the global region, this can be specified as follows:
     
-    "api-regions:JSON|false" : [ 
+    "api-regions:JSON|optional" : [ 
         {
             "name": "global",
             "exports": []

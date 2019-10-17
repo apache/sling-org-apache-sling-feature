@@ -8,13 +8,14 @@ OSGi is a platform capable of running large applications for a variety of purpos
 server-side systems and cloud and container based architectures. 
 
 As these applications are generally based on many bundles, describing each bundle individually in the application 
-definition becomes unwieldy once the number of bundles reaches a certain level. 
+definition becomes unwieldy once the number of bundles reaches a certain level. Additionally, OSGi has no mechanism to describe other elements of the application definition, such as configuration or custom artifacts. 
 
-Additionally, OSGi has no mechanism to describe other elements of the application definition, such as configuration or custom artifacts.
+While bundles already provide a good way to define rather small, coherent modules, there is often a need to distribute or provision a set of such bundles together with some configuration. Or if you want to build a set of applications (for example microservices) which share certain parts
+(like a foundation) the need for a higher level building block arises.
 
-The Sling OSGi Feature Model introduces a higher level to describe OSGi applications that encapsulates the details of the various 
-components that the application is built up from. It allows the description of an entire OSGi-based application based on reusable 
-components and includes everything related to this application, including bundles, configuration, framework properties, capabilities, 
+The Sling OSGi Feature Model introduces such a higher level building block to describe OSGi applications or parts of it that encapsulates 
+the details of the various components that the feature is built up from. It allows the description of an entire OSGi-based application based 
+on reusable components and includes everything related to this application, including bundles, configuration, framework properties, capabilities, 
 requirements and custom artifacts.
 
 # Features
@@ -170,7 +171,7 @@ merge operations on all the feature models these are provided with.
 Extensions are declared in the JSON Feature file using the following syntax:
 
 ```
-"extention-name:<type>|mandatory{true|false}": [ json array ]
+"extention-name:<type>|{optional|required|transient]": [ json array ]
 ```
 
 For example, the following declaration defines an extension with name `api-regions`
@@ -179,7 +180,7 @@ present that knows about this extension it should be ignored and execution
 should continue.
 
 ```
-"api-regions:JSON|false" : [
+"api-regions:JSON|optional" : [
    {"name": "global"}
 ]
 ```
@@ -202,11 +203,18 @@ Initialization statements which will be executed on the repository at startup.
 Example:
 
 ```
-"repoinit:TEXT|true":[
+"repoinit:TEXT|required":[
   "create path /content/example.com(mixin mix:referenceable)",
   "create path (nt:unstructured) /var"
 ]
 ```
+
+As initializing the repository is usually important for Sling based applications
+the extension should be marked as required as in the example above.
+
+## Further extensions
+
+* [API Controller and API Regions](apicontroller.md)
 
 # Launching
 
@@ -226,4 +234,3 @@ The links below provide additional information regarding the Feature Model.
 * [File format](https://github.com/apache/sling-org-apache-sling-feature-io/blob/master/design/feature-model.json)
 
 * [Prototype](prototype.md)
-* [API Controller and API Regions](apicontroller.md)

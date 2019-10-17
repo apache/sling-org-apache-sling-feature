@@ -1,5 +1,7 @@
 # Prototype
 
+Note: This document describes the initial prototype - it is outdated and replaced by the [actual feature model](readme.md)
+
 The prototype uses JSON as a well defined and understood format. This fits nicely with the new OSGi R7 JSON format for configurations.
 
 A model file describes a feature. A feature consists of:
