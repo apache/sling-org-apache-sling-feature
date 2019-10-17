@@ -227,4 +227,3 @@ The links below provide additional information regarding the Feature Model.
 
 * [Prototype](prototype.md)
 * [API Controller and API Regions](apicontroller.md)
-* [Application Configuration Proposal](appconf.md)
