@@ -91,7 +91,7 @@ but referenced via their Maven Coordinates in the `bundles` section of the featu
 
 Individual bundles are either referenced as a string value in the `bundles` array in the feature model, or they can be specified 
 as objects in the `bundles` array. In that case the `id` for the bundle must be specified. Additional metadata can also be placed 
-here. 
+here. It is possible to mix bundles specified by just the id (string) and object in a single array. 
 
 Multiple versions of a bundle with the same group ID and artifact ID are allowed. In this case both must be specified in the 
 `bundles` section.
