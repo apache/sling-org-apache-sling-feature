@@ -42,7 +42,7 @@ public class Bundles extends Artifacts {
 
             @Override
             public int compare(final Integer o1, final Integer o2) {
-                if ( o1.equals(o2) ) {
+                if ( o1.compareTo(o2) == 0 ) {
                     return 0;
                 }
                 if ( o1 == 0 ) {
