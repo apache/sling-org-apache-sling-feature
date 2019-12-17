@@ -146,7 +146,7 @@ public class ArtifactIdTest {
         final ArtifactId id = new ArtifactId("group.a", "artifact.b", "1.0", "foo", "zip");
         assertEquals("group.a:artifact.b:zip:foo:1.0", id.toMvnId());
     }
-    
+
     // --
 
     @Test public void testCoordinatesGAVfromUrl() {
@@ -179,5 +179,23 @@ public class ArtifactIdTest {
     @Test public void testClassifierAndTypeToMvnUlr() {
         final ArtifactId id = new ArtifactId("group.a", "artifact.b", "1.0", "foo", "zip");
         assertEquals("mvn:group.a/artifact.b/1.0/zip/foo", id.toMvnUrl());
+    }
+
+    @Test
+    public void testToMvnPath() {
+        final ArtifactId a1 = new ArtifactId("group.a", "artifact.b", "1.0", "foo", "zip");
+        assertEquals("group/a/artifact.b/1.0/artifact.b-1.0-foo.zip", a1.toMvnPath());
+
+        final ArtifactId a2 = new ArtifactId("group.a", "artifact.b", "1.0", null, "zip");
+        assertEquals("group/a/artifact.b/1.0/artifact.b-1.0.zip", a2.toMvnPath());
+    }
+
+    @Test
+    public void testToMvnName() {
+        final ArtifactId a1 = new ArtifactId("group.a", "artifact.b", "1.0", "foo", "zip");
+        assertEquals("artifact.b-1.0-foo.zip", a1.toMvnName());
+
+        final ArtifactId a2 = new ArtifactId("group.a", "artifact.b", "1.0", null, "zip");
+        assertEquals("artifact.b-1.0.zip", a2.toMvnName());
     }
 }

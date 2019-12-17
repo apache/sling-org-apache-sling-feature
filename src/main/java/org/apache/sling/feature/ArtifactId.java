@@ -359,18 +359,16 @@ public class ArtifactId implements Comparable<ArtifactId> {
         return new Version(majorVersion, minorVersion, microVersion, qualifier);
     }
 
-    /**
-     * Create a Maven like relative repository path.
-     * @return A relative repository path. The path does not start with a slash.
-     */
-    public String toMvnPath() {
+    private String toMvnName(final boolean includePath) {
         final StringBuilder sb = new StringBuilder();
-        sb.append(groupId.replace('.', '/'));
-        sb.append('/');
-        sb.append(artifactId);
-        sb.append('/');
-        sb.append(version);
-        sb.append('/');
+        if (includePath) {
+            sb.append(groupId.replace('.', '/'));
+            sb.append('/');
+            sb.append(artifactId);
+            sb.append('/');
+            sb.append(version);
+            sb.append('/');
+        }
         sb.append(artifactId);
         sb.append('-');
         sb.append(version);
@@ -381,6 +379,25 @@ public class ArtifactId implements Comparable<ArtifactId> {
         sb.append('.');
         sb.append(type);
         return sb.toString();
+    }
+
+    /**
+     * Create a Maven like relative repository path.
+     *
+     * @return A relative repository path. The path does not start with a slash.
+     */
+    public String toMvnPath() {
+        return toMvnName(true);
+    }
+
+    /**
+     * Create a Maven like repository name
+     *
+     * @return Just the name of the artifact (including version, classifier, type)
+     * @since 1.2
+     */
+    public String toMvnName() {
+        return toMvnName(false);
     }
 
     @Override
