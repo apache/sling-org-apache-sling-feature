@@ -22,7 +22,8 @@ requirements and custom artifacts.
 
 Features are the central concept of the Feature Model. Features are typically defined in a Feature file which is
 a JSON file. An example feature file can be found here: https://github.com/apache/sling-org-apache-sling-feature-io/blob/master/design/feature-model.json
-and the JSON Schema for feature files is available from here: https://github.com/apache/sling-org-apache-sling-feature-io/blob/master/src/main/resources/META-INF/feature/Feature-1.0.0.schema.json
+and the JSON Schema for feature files is available from here: https://github.com/apache/sling-org-apache-sling-feature-io/blob/master/src/main/resources/META-INF/feature/Feature-1.0.0.schema.json.
+Serialization/Deserialization into/from this format is available from https://github.com/apache/sling-org-apache-sling-feature-io.
 
 All features have a unique identity.
 Features can have an optional `title`, `description`, `vendor` name, `license`.
