@@ -35,6 +35,7 @@ import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.MatchingRequirement;
 import org.apache.sling.feature.Prototype;
+import org.apache.sling.feature.io.CloseShieldWriter;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
 
@@ -46,7 +47,9 @@ abstract class JSONWriterBase {
     private final JsonGeneratorFactory generatorFactory = Json.createGeneratorFactory(Collections.singletonMap(JsonGenerator.PRETTY_PRINTING, true));
 
     protected final JsonGenerator newGenerator(final Writer writer) {
-        return generatorFactory.createGenerator(writer);
+        // prevent closing of the underlying writer
+        Writer closeShieldWriter = new CloseShieldWriter(writer);
+        return generatorFactory.createGenerator(closeShieldWriter);
     }
 
     protected void writeBundles(final JsonGenerator generator,

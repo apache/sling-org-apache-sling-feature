@@ -54,11 +54,21 @@ public class ConfigurationJSONWriter extends JSONWriterBase {
     }
 
     /**
-     * Write the OSGi configuration to a JSON structure as defined in <a href="https://osgi.org/specification/osgi.cmpn/7.0.0/service.configurator.html#d0e131765">OSGi Configurator Specification 1.0</a> 
-     * @param generator The json generator
+     * Write the OSGi configuration to a JSON structure as defined in <a href="https://osgi.org/specification/osgi.cmpn/7.0.0/service.configurator.html#d0e131765">OSGi Configurator Specification 1.0</a>.
+     * The writer is not closed. 
+     * @param writer Writer
      * @param props The configuration properties to write
      */
-    public static void writeConfiguration(final JsonGenerator generator, final Dictionary<String, Object> props) {
+    public static void writeConfiguration(final Writer writer, final Dictionary<String, Object> props) {
+        final ConfigurationJSONWriter w = new ConfigurationJSONWriter();
+        JsonGenerator generator = w.newGenerator(writer);
+        generator.writeStartObject();
+        writeConfiguration(generator, props);
+        generator.writeEnd();
+        generator.close();
+    }
+
+    protected static void writeConfiguration(final JsonGenerator generator, final Dictionary<String, Object> props) {
         final Enumeration<String> e = props.keys();
         while ( e.hasMoreElements() ) {
             final String name = e.nextElement();
@@ -70,7 +80,7 @@ public class ConfigurationJSONWriter extends JSONWriterBase {
         }
     }
 
-    public static void writeConfigurationProperty(JsonGenerator generator, String name, Object val) {
+    protected static void writeConfigurationProperty(JsonGenerator generator, String name, Object val) {
         String typePostFix = null;
         final Object typeCheck;
         if ( val.getClass().isArray() ) {

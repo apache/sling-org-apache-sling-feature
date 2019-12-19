@@ -47,6 +47,13 @@ public class FeatureJSONWriter extends JSONWriterBase {
     	// protected constructor for subclassing
     }
 
+    /**
+     * Writes the feature to the writer.
+     * The writer is not closed.
+     * @param writer Writer
+     * @param feature Feature
+     * @throws IOException If writing fails
+     */
     protected void writeFeature(final Writer writer, final Feature feature)
     throws IOException {
         JsonGenerator generator = newGenerator(writer);
