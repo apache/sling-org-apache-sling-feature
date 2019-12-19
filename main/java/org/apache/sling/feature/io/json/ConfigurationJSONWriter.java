@@ -19,46 +19,43 @@ package org.apache.sling.feature.io.json;
 import java.io.IOException;
 import java.io.Writer;
 import java.lang.reflect.Array;
+import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.Iterator;
 
 import javax.json.stream.JsonGenerator;
 
 import org.apache.sling.feature.Configuration;
 import org.apache.sling.feature.Configurations;
 
-
-/**
- * JSON writer for configurations
- */
+/** JSON writer for configurations */
 public class ConfigurationJSONWriter extends JSONWriterBase {
 
-    /**
-     * Writes the configurations to the writer.
-     * The writer is not closed.
+    /** Writes the configurations to the writer. The writer is not closed.
+     * 
      * @param writer Writer
      * @param configs List of configurations
-     * @throws IOException If writing fails
-     */
+     * @throws IOException If writing fails */
     public static void write(final Writer writer, final Configurations configs)
-    throws IOException {
+            throws IOException {
         final ConfigurationJSONWriter w = new ConfigurationJSONWriter();
         w.writeConfigurations(writer, configs);
     }
 
     private void writeConfigurations(final Writer writer, final Configurations configs)
-    throws IOException {
+            throws IOException {
         JsonGenerator generator = newGenerator(writer);
         writeConfigurations(generator, configs);
         generator.close();
     }
 
-    /**
-     * Write the OSGi configuration to a JSON structure as defined in <a href="https://osgi.org/specification/osgi.cmpn/7.0.0/service.configurator.html#d0e131765">OSGi Configurator Specification 1.0</a>.
-     * The writer is not closed. 
+    /** Write the OSGi configuration to a JSON structure as defined in
+     * <a href="https://osgi.org/specification/osgi.cmpn/7.0.0/service.configurator.html#d0e131765">OSGi Configurator Specification 1.0</a>.
+     * The writer is not closed.
+     * 
      * @param writer Writer
-     * @param props The configuration properties to write
-     */
+     * @param props The configuration properties to write */
     public static void writeConfiguration(final Writer writer, final Dictionary<String, Object> props) {
         final ConfigurationJSONWriter w = new ConfigurationJSONWriter();
         JsonGenerator generator = w.newGenerator(writer);
@@ -70,9 +67,9 @@ public class ConfigurationJSONWriter extends JSONWriterBase {
 
     protected static void writeConfiguration(final JsonGenerator generator, final Dictionary<String, Object> props) {
         final Enumeration<String> e = props.keys();
-        while ( e.hasMoreElements() ) {
+        while (e.hasMoreElements()) {
             final String name = e.nextElement();
-            if ( Configuration.PROP_ARTIFACT_ID.equals(name) ) {
+            if (Configuration.PROP_ARTIFACT_ID.equals(name)) {
                 continue;
             }
             final Object val = props.get(name);
@@ -80,63 +77,103 @@ public class ConfigurationJSONWriter extends JSONWriterBase {
         }
     }
 
-    protected static void writeConfigurationProperty(JsonGenerator generator, String name, Object val) {
-        String typePostFix = null;
-        final Object typeCheck;
-        if ( val.getClass().isArray() ) {
-            if ( Array.getLength(val) > 0 ) {
-                typeCheck = Array.get(val, 0);
-            } else {
-                typeCheck = null;
-            }
-        } else {
-            typeCheck = val;
+    private static void writeConfigurationProperty(JsonGenerator generator, String name, Object val) {
+        String dataType = getDataType(val);
+        writeConfigurationProperty(generator, name, dataType, val);
+    }
+
+    private static void writeConfigurationProperty(JsonGenerator generator, String name, String dataType, Object val) {
+        String nameWithDataPostFix = name;
+        if (dataType != null) {
+            nameWithDataPostFix += ":" + dataType;
         }
-
-        if ( typeCheck instanceof Integer ) {
-            typePostFix = ":Integer";
-        } else if ( typeCheck instanceof Byte ) {
-            typePostFix = ":Byte";
-        } else if ( typeCheck instanceof Character ) {
-            typePostFix = ":Character";
-        } else if ( typeCheck instanceof Float ) {
-            typePostFix = ":Float";
-        }
-
-        if ( val.getClass().isArray() ) {
-            generator.writeStartArray(name);
-            for(int i=0; i<Array.getLength(val);i++ ) {
-                final Object obj = Array.get(val, i);
-                if ( typePostFix == null ) {
-                    if ( obj instanceof String ) {
-                        generator.write((String)obj);
-                    } else if ( obj instanceof Boolean ) {
-                        generator.write((Boolean)obj);
-                    } else if ( obj instanceof Long ) {
-                        generator.write((Long)obj);
-                    } else if ( obj instanceof Double ) {
-                        generator.write((Double)obj);
-                    }
-                } else {
-                    generator.write(obj.toString());
-                }
+        if (val.getClass().isArray()) {
+            generator.writeStartArray(nameWithDataPostFix);
+            for (int i = 0; i < Array.getLength(val); i++) {
+                writeArrayItem(generator, Array.get(val, i));
             }
-
+            generator.writeEnd();
+        } else if (val instanceof Collection) {
+            generator.writeStartArray(nameWithDataPostFix);
+            for (Object item : Collection.class.cast(val)) {
+                writeArrayItem(generator, item);
+            }
             generator.writeEnd();
         } else {
-            if ( typePostFix == null ) {
-                if ( val instanceof String ) {
-                    generator.write(name, (String)val);
-                } else if ( val instanceof Boolean ) {
-                    generator.write(name, (Boolean)val);
-                } else if ( val instanceof Long ) {
-                    generator.write(name, (Long)val);
-                } else if ( val instanceof Double ) {
-                    generator.write(name, (Double)val);
-                }
+            writeNameValuePair(generator, nameWithDataPostFix, val);
+        }
+    }
+
+    private static void writeNameValuePair(JsonGenerator generator, String name, Object item) {
+        if (item instanceof Boolean) {
+            generator.write(name, (Boolean) item);
+        } else if (item instanceof Long || item instanceof Integer || item instanceof Byte || item instanceof Short) {
+            generator.write(name, ((Number)item).longValue());
+        } else if (item instanceof Double) {
+            generator.write(name, (Double) item);
+        } else if (item instanceof Float) {
+            generator.write(name, (Float) item);
+        } else {
+            generator.write(name, item.toString());
+        }
+    }
+
+    private static void writeArrayItem(JsonGenerator generator, Object item) {
+        if (item instanceof Boolean) {
+            generator.write((Boolean) item);
+        } else if (item instanceof Long || item instanceof Integer || item instanceof Byte || item instanceof Short) {
+            generator.write(((Number)item).longValue());
+        } else if (item instanceof Double) {
+            generator.write((Double) item);
+        } else if (item instanceof Float) {
+            generator.write((Float) item);
+        } else {
+            generator.write(item.toString());
+        }
+    }
+
+    private static String getDataType(Object object) {
+        if (object instanceof Collection) {
+            // check class of first item
+            Iterator<?> it = ((Collection<?>) object).iterator();
+            if (it.hasNext()) {
+                Class<?> itemClass = it.next().getClass();
+                return "Collection<" + getDataType(itemClass, false) + ">";
             } else {
-                generator.write(name + typePostFix, val.toString());
+                throw new IllegalStateException("Empty collections are invalid");
+            }
+        } else {
+            return getDataType(object.getClass(), true);
+        }
+    }
+
+    private static String getDataType(Class<?> clazz, boolean allowEmpty) {
+        if (clazz.isArray()) {
+            String dataType = getDataType(clazz.getComponentType(), false);
+            if (dataType != null) {
+                return dataType + "[]";
+            } else {
+                return null;
             }
         }
+        // default classes used by native JSON types
+        else if (clazz.isAssignableFrom(Boolean.class) || clazz.isAssignableFrom(boolean.class) || clazz.isAssignableFrom(Long.class) || clazz.isAssignableFrom(long.class) ||
+                clazz.isAssignableFrom(Double.class) || clazz.isAssignableFrom(double.class) || clazz.isAssignableFrom(String.class)) {
+            // no data type necessary except when being used in an array/collection
+            if (!allowEmpty) {
+                // for all other cases just use the simple name
+                return clazz.getSimpleName();
+            }
+
+        } else if (clazz.isAssignableFrom(Integer.class) || clazz.isAssignableFrom(int.class) || clazz.isAssignableFrom(Float.class) || clazz.isAssignableFrom(float.class)
+                || clazz.isAssignableFrom(Byte.class) || clazz.isAssignableFrom(byte.class) || clazz.isAssignableFrom(Short.class) || clazz.isAssignableFrom(short.class)
+                || clazz.isAssignableFrom(Character.class) || clazz.isAssignableFrom(char.class)) {
+            return clazz.getSimpleName();
+        }
+        if (!allowEmpty) {
+            throw new IllegalStateException("Class does not have a valid type " + clazz);
+        }
+        return null;
+
     }
 }

@@ -26,6 +26,8 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -33,9 +35,14 @@ import org.apache.felix.configurator.impl.json.JSONUtil;
 import org.apache.felix.configurator.impl.json.TypeConverter;
 import org.apache.felix.configurator.impl.model.ConfigurationFile;
 import org.hamcrest.Description;
+import org.hamcrest.TypeSafeDiagnosingMatcher;
 import org.hamcrest.TypeSafeMatcher;
+import org.hamcrest.core.Every;
 import org.junit.Assert;
 import org.junit.Test;
+import org.osgi.util.converter.Converter;
+import org.osgi.util.converter.Converters;
+import org.osgi.util.converter.TypeReference;
 
 public class ConfigurationJSONWriterTest {
 
@@ -90,15 +97,56 @@ public class ConfigurationJSONWriterTest {
         sb.append("\" : ");
         sb.append(json);
         sb.append("}");
-        final ConfigurationFile configurationFile = JSONUtil.readJSON(new TypeConverter(null),"name", new URL("http://127.0.0.1/configtest"),
+        final ConfigurationFile configurationFile = JSONUtil.readJSON(new TypeConverter(null),"name", new URL("file:///configtest"),
                 0, sb.toString(), report);
         if ( !report.errors.isEmpty() || !report.warnings.isEmpty() ) {
             Assert.fail("JSON is not the right format: \nErrors: " + StringUtils.join(report.errors) + "\nWarnings: " + StringUtils.join(report.warnings));
         }
-        Assert.assertThat(configurationFile.getConfigurations().get(0).getProperties(), new DictionaryMatcher(expectedProps));
+        // convert to maps for easier comparison
+        Converter converter = Converters.standardConverter();
+        Map<String, Object> expectedPropsMap = converter.convert(expectedProps).to(new TypeReference<Map<String,Object>>(){});
+        Map<String, Object> actualPropsMap = converter.convert(configurationFile.getConfigurations().get(0).getProperties()).to(new TypeReference<Map<String,Object>>(){});
+        Assert.assertThat(actualPropsMap.entrySet(), Every.everyItem(new MapEntryMatcher<>(expectedPropsMap)));
+    }
+    
+    public static class MapEntryMatcher<K, V> extends TypeSafeDiagnosingMatcher<Map.Entry<K, V>> {
+
+        private final Map<K,V> expectedMap;
+
+        public MapEntryMatcher(Map<K, V> expectedMap) {
+            this.expectedMap = expectedMap;
+        }
+
+        @Override
+        public void describeTo(Description description) {
+            description.appendText("contained in the expected map");
+        }
+
+        
+        @Override
+        protected boolean matchesSafely(Map.Entry<K, V> item, Description description) {
+            if (expectedMap.get(item.getKey()) == null){
+                description.appendText("key '" + item.getKey() + "' is not present");
+                return false;
+            } else {
+                boolean isEqual;
+                if (item.getValue().getClass().isArray()) {
+                    isEqual = Objects.deepEquals(expectedMap.get(item.getKey()), item.getValue());
+                    
+                } else {
+                    isEqual = expectedMap.get(item.getKey()).equals(item.getValue());
+                }
+                if (!isEqual) {
+                    description.appendText("has the wrong value for key '" + item.getKey() + "': Expected=" + expectedMap.get(item.getKey()) + " (" + expectedMap.get(item.getKey()).getClass() + ")" + ", Actual=" + item.getValue() + " (" + item.getValue().getClass() + ")");
+                }
+                return isEqual;
+            }
+        }
     }
     
     public final static class DictionaryMatcher extends TypeSafeMatcher<Dictionary<String, Object>> {
+        
+        // internally use maps
         private final Dictionary<String, Object> expectedDictionary;
 
         public DictionaryMatcher(Dictionary<String, Object> dictionary) {
@@ -139,6 +187,8 @@ public class ConfigurationJSONWriterTest {
 
         @Override
         protected boolean matchesSafely(Dictionary<String, Object> item) {
+            // use a map for comparison
+            //expectedDictionary.x
             return expectedDictionary.equals(item);
         }
         
