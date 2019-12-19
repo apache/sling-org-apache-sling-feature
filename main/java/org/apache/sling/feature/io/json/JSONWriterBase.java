@@ -17,10 +17,8 @@
 package org.apache.sling.feature.io.json;
 
 import java.io.Writer;
-import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 
@@ -104,75 +102,7 @@ abstract class JSONWriterBase {
 
         for(final Configuration cfg : cfgs) {
             generator.writeStartObject(cfg.getPid());
-
-            final Enumeration<String> e = cfg.getProperties().keys();
-            while ( e.hasMoreElements() ) {
-                final String name = e.nextElement();
-                if ( Configuration.PROP_ARTIFACT_ID.equals(name) ) {
-                    continue;
-                }
-
-                final Object val = cfg.getProperties().get(name);
-
-                String typePostFix = null;
-                final Object typeCheck;
-                if ( val.getClass().isArray() ) {
-                    if ( Array.getLength(val) > 0 ) {
-                        typeCheck = Array.get(val, 0);
-                    } else {
-                        typeCheck = null;
-                    }
-                } else {
-                    typeCheck = val;
-                }
-
-                if ( typeCheck instanceof Integer ) {
-                    typePostFix = ":Integer";
-                } else if ( typeCheck instanceof Byte ) {
-                    typePostFix = ":Byte";
-                } else if ( typeCheck instanceof Character ) {
-                    typePostFix = ":Character";
-                } else if ( typeCheck instanceof Float ) {
-                    typePostFix = ":Float";
-                }
-
-                if ( val.getClass().isArray() ) {
-                    generator.writeStartArray(name);
-                    for(int i=0; i<Array.getLength(val);i++ ) {
-                        final Object obj = Array.get(val, i);
-                        if ( typePostFix == null ) {
-                            if ( obj instanceof String ) {
-                                generator.write((String)obj);
-                            } else if ( obj instanceof Boolean ) {
-                                generator.write((Boolean)obj);
-                            } else if ( obj instanceof Long ) {
-                                generator.write((Long)obj);
-                            } else if ( obj instanceof Double ) {
-                                generator.write((Double)obj);
-                            }
-                        } else {
-                            generator.write(obj.toString());
-                        }
-                    }
-
-                    generator.writeEnd();
-                } else {
-                    if ( typePostFix == null ) {
-                        if ( val instanceof String ) {
-                            generator.write(name, (String)val);
-                        } else if ( val instanceof Boolean ) {
-                            generator.write(name, (Boolean)val);
-                        } else if ( val instanceof Long ) {
-                            generator.write(name, (Long)val);
-                        } else if ( val instanceof Double ) {
-                            generator.write(name, (Double)val);
-                        }
-                    } else {
-                        generator.write(name + typePostFix, val.toString());
-                    }
-                }
-            }
-
+            ConfigurationJSONWriter.writeConfiguration(generator, cfg.getConfigurationProperties());
             generator.writeEnd();
         }
 
