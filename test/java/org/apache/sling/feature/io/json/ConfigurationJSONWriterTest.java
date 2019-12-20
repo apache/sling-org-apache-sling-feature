@@ -22,21 +22,16 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Dictionary;
-import java.util.Enumeration;
 import java.util.Hashtable;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.configurator.impl.json.JSONUtil;
 import org.apache.felix.configurator.impl.json.TypeConverter;
 import org.apache.felix.configurator.impl.model.ConfigurationFile;
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
-import org.hamcrest.TypeSafeMatcher;
 import org.hamcrest.core.Every;
 import org.junit.Assert;
 import org.junit.Test;
@@ -108,7 +103,7 @@ public class ConfigurationJSONWriterTest {
         Map<String, Object> actualPropsMap = converter.convert(configurationFile.getConfigurations().get(0).getProperties()).to(new TypeReference<Map<String,Object>>(){});
         Assert.assertThat(actualPropsMap.entrySet(), Every.everyItem(new MapEntryMatcher<>(expectedPropsMap)));
     }
-    
+
     public static class MapEntryMatcher<K, V> extends TypeSafeDiagnosingMatcher<Map.Entry<K, V>> {
 
         private final Map<K,V> expectedMap;
@@ -122,7 +117,6 @@ public class ConfigurationJSONWriterTest {
             description.appendText("contained in the expected map");
         }
 
-        
         @Override
         protected boolean matchesSafely(Map.Entry<K, V> item, Description description) {
             if (expectedMap.get(item.getKey()) == null){
@@ -142,55 +136,5 @@ public class ConfigurationJSONWriterTest {
                 return isEqual;
             }
         }
-    }
-    
-    public final static class DictionaryMatcher extends TypeSafeMatcher<Dictionary<String, Object>> {
-        
-        // internally use maps
-        private final Dictionary<String, Object> expectedDictionary;
-
-        public DictionaryMatcher(Dictionary<String, Object> dictionary) {
-            this.expectedDictionary = dictionary;
-        }
-        
-        @Override
-        public void describeTo(Description description) {
-            description.appendText("Dictionary with items: ").appendValueList("", ",", "", toString(expectedDictionary));
-        }
-
-        
-        @Override
-        protected void describeMismatchSafely(Dictionary<String, Object> item, Description mismatchDescription) {
-            mismatchDescription.appendText("was Dictionary with items: ").appendValueList("", ",", "", toString(item));
-        }
-
-        static Iterable<String> toString(Dictionary<String, Object> dictionary) {
-            List<String> itemList = new LinkedList<String>();
-            Enumeration<String> e = dictionary.keys();
-            while (e.hasMoreElements()) {
-                final String key = e.nextElement();
-                Object value = dictionary.get(key);
-                // for arrays expand values
-                final String type = value.getClass().getSimpleName();
-                if (value.getClass().isArray()) {
-                    value = ArrayUtils.toString(value);
-                }
-                StringBuilder sb = new StringBuilder();
-                sb.append(key).append(":");
-                sb.append(value);
-                sb.append("(").append(type).append(")");
-                sb.append(", ");
-                itemList.add(sb.toString());
-            }
-            return itemList;
-        }
-
-        @Override
-        protected boolean matchesSafely(Dictionary<String, Object> item) {
-            // use a map for comparison
-            //expectedDictionary.x
-            return expectedDictionary.equals(item);
-        }
-        
     }
 }
