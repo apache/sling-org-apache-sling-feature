@@ -36,6 +36,7 @@ import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.MatchingRequirement;
 import org.apache.sling.feature.Prototype;
 import org.apache.sling.feature.io.CloseShieldWriter;
+import org.apache.sling.feature.io.ConfiguratorUtil;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
 
@@ -105,7 +106,7 @@ abstract class JSONWriterBase {
 
         for(final Configuration cfg : cfgs) {
             generator.writeStartObject(cfg.getPid());
-            ConfigurationJSONWriter.writeConfiguration(generator, cfg.getConfigurationProperties());
+            ConfiguratorUtil.writeConfiguration(generator, cfg.getConfigurationProperties());
             generator.writeEnd();
         }
 

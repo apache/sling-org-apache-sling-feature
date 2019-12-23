@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.feature.io.json;
+package org.apache.sling.feature.io;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -30,6 +30,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.configurator.impl.json.JSONUtil;
 import org.apache.felix.configurator.impl.json.TypeConverter;
 import org.apache.felix.configurator.impl.model.ConfigurationFile;
+import org.apache.sling.feature.io.ConfiguratorUtil;
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
 import org.hamcrest.core.Every;
@@ -39,7 +40,7 @@ import org.osgi.util.converter.Converter;
 import org.osgi.util.converter.Converters;
 import org.osgi.util.converter.TypeReference;
 
-public class ConfigurationJSONWriterTest {
+public class ConfiguratorUtilTest {
 
     @Test
     public void testConfigurationWriteReadRoundtrip() throws IOException {
@@ -80,7 +81,7 @@ public class ConfigurationJSONWriterTest {
         props.put("String-array", new String[]{"test1", "test2"});
         props.put("String-list", Arrays.asList("test1", "test2"));
         StringWriter writer = new StringWriter();
-        ConfigurationJSONWriter.writeConfiguration(writer, props);
+        ConfiguratorUtil.writeConfiguration(writer, props);
         writer.close();
         assertConfigurationJson(writer.toString(), props);
     }
