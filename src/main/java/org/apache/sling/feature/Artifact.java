@@ -16,7 +16,6 @@
  */
 package org.apache.sling.feature;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -151,7 +150,7 @@ public class Artifact implements Comparable<Artifact> {
         String origins = this.getMetadata().get(KEY_FEATURE_ORIGINS);
         Set<ArtifactId> originFeatures;
         if (origins == null || origins.trim().isEmpty()) {
-            originFeatures = Collections.EMPTY_SET;
+            originFeatures = Collections.emptySet();
         }
         else {
             originFeatures = new LinkedHashSet<>();
