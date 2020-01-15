@@ -336,10 +336,10 @@ public abstract class FeatureBuilder {
 
             for (Artifact a : result.getBundles()) {
                 a.getMetadata().remove(TRACKING_KEY);
-                LinkedHashSet<String> originList = new LinkedHashSet<>(Arrays.asList(a.getFeatureOrigins()));
-                originList.remove(prototypeFeature.getId().toMvnId());
-                originList.add(feature.getId().toMvnId());
-                a.setFeatureOrigins(originList.toArray(new String[0]));
+                LinkedHashSet<ArtifactId> originList = new LinkedHashSet<>(Arrays.asList(a.getFeatureOrigins()));
+                originList.remove(prototypeFeature.getId());
+                originList.add(feature.getId());
+                a.setFeatureOrigins(originList.toArray(new ArtifactId[0]));
             }
             for (Extension e : result.getExtensions()) {
                 if (ExtensionType.ARTIFACTS == e.getType()) {

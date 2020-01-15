@@ -16,6 +16,7 @@
  */
 package org.apache.sling.feature.builder;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -282,6 +283,30 @@ public class FeatureBuilderTest {
         assembled.getExtensions().clear();
 
         equals(ab, assembled);
+
+        assembled = FeatureBuilder.assemble(ArtifactId.fromMvnId("g:ab:2"), new BuilderContext(provider), assembled);
+        assembled.getExtensions().clear();
+
+        Feature ab2 = new Feature(ArtifactId.fromMvnId("g:ab:2"));
+        ab2.getBundles().add(BuilderUtilTest.createBundle("o/a/1.0.0", 10, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, a.getId().toMvnId() + "," + ab.getId().toMvnId())));
+        ab2.getBundles().add(BuilderUtilTest.createBundle("o/a/2.0.0", 9, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, a.getId().toMvnId() + "," + ab.getId().toMvnId())));
+        ab2.getBundles().add(BuilderUtilTest.createBundle("o/a/3.0.0", 11, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, a.getId().toMvnId() + "," + ab.getId().toMvnId())));
+
+        ab2.getBundles().add(BuilderUtilTest.createBundle("o/b/4.0.0", 8, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, b.getId().toMvnId() + "," + ab.getId().toMvnId())));
+        ab2.getBundles().add(BuilderUtilTest.createBundle("o/b/5.0.0", 12, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, b.getId().toMvnId() + "," + ab.getId().toMvnId())));
+        ab2.getBundles().add(BuilderUtilTest.createBundle("o/b/6.0.0", 10, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, b.getId().toMvnId() + "," + ab.getId().toMvnId())));
+
+        equals(ab2, assembled);
+    }
+
+    @Test public void testDistinctOrigions() {
+        Artifact a = BuilderUtilTest.createBundle("a/b/1.0.0", 12, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, "b/b/1.0.0,b/b/1.0.0,,b/b/2.0.0"));
+        Artifact b = BuilderUtilTest.createBundle("b/b/2.0.0", 12, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, "b/b/1.0.0,b/b/2.0.0"));
+        assertArrayEquals(a.getFeatureOrigins(), b.getFeatureOrigins());
+
+        a.setFeatureOrigins(new ArtifactId[]{ArtifactId.parse("b/b/1.0.0"), null, ArtifactId.parse("b/b/1.0.0"), ArtifactId.parse("b/b/2.0.0")});
+
+        assertArrayEquals(a.getFeatureOrigins(), b.getFeatureOrigins());
     }
 
 

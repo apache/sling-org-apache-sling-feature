@@ -17,11 +17,15 @@
 package org.apache.sling.feature;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * An artifact consists of
@@ -143,22 +147,33 @@ public class Artifact implements Comparable<Artifact> {
         }
     }
 
-    public String[] getFeatureOrigins() {
+    public ArtifactId[] getFeatureOrigins() {
         String origins = this.getMetadata().get(KEY_FEATURE_ORIGINS);
-        LinkedHashSet<String> originFeatures;
+        Set<ArtifactId> originFeatures;
         if (origins == null || origins.trim().isEmpty()) {
-            originFeatures = new LinkedHashSet<>();
+            originFeatures = Collections.EMPTY_SET;
         }
         else {
-            originFeatures =  new LinkedHashSet<>(Arrays.asList(origins.split(",")));
+            originFeatures = new LinkedHashSet<>();
+            for (String origin : origins.split(",")) {
+                if (!origin.trim().isEmpty()) {
+                    originFeatures.add(ArtifactId.parse(origin));
+                }
+            }
         }
-        return originFeatures.isEmpty() ? new String[0] : originFeatures.toArray(new String[0]);
+        return originFeatures.toArray(new ArtifactId[0]);
     }
 
-    public void setFeatureOrigins(String... featureOrigins) {
+    public void setFeatureOrigins(ArtifactId... featureOrigins) {
+        String origins;
         if (featureOrigins != null && featureOrigins.length > 0) {
-            LinkedHashSet<String> originFeatures = new LinkedHashSet<>(Arrays.asList(featureOrigins));
-            this.getMetadata().put(KEY_FEATURE_ORIGINS, String.join(",", originFeatures));
+            origins = Stream.of(featureOrigins).filter(Objects::nonNull).map(ArtifactId::toMvnId).distinct().collect(Collectors.joining(","));
+        }
+        else {
+            origins = "";
+        }
+        if (!origins.trim().isEmpty()) {
+            this.getMetadata().put(KEY_FEATURE_ORIGINS, origins);
         }
         else {
             this.getMetadata().remove(KEY_FEATURE_ORIGINS);

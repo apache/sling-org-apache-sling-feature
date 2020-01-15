@@ -167,7 +167,7 @@ class BuilderUtil {
                     selectedArtifacts.add(count++, existing);
                     selectedArtifacts.add(artifactFromSource);
                 } else {
-                    List<Artifact> artifacts = selectArtifactOverride(existing, artifactFromSource, artifactOverrides, sourceFeature.getId().toMvnId());
+                    List<Artifact> artifacts = selectArtifactOverride(existing, artifactFromSource, artifactOverrides, sourceFeature.getId());
                     // if we have an all policy we might have more then one artifact - we put the target one first
                     if (artifacts.size() > 1) {
                         selectedArtifacts.add(count++, artifacts.remove(0));
@@ -212,7 +212,7 @@ class BuilderUtil {
     }
 
     static List<Artifact> selectArtifactOverride(Artifact fromTarget, Artifact fromSource,
-            List<ArtifactId> artifactOverrides, String sourceID) {
+            List<ArtifactId> artifactOverrides, ArtifactId sourceID) {
         if (fromTarget.getId().equals(fromSource.getId())) {
             // They're the same so return the source (latest)
             return Collections.singletonList(addFeatureOrigin(selectStartOrder(fromTarget, fromSource, fromSource), fromTarget, fromSource));
@@ -301,7 +301,7 @@ class BuilderUtil {
     }
 
     private static Artifact addFeatureOrigin(Feature feature, Artifact target, Artifact... artifacts) {
-        LinkedHashSet<String> originFeatures = new LinkedHashSet<>();
+        LinkedHashSet<ArtifactId> originFeatures = new LinkedHashSet<>();
         if (artifacts != null && artifacts.length > 0) {
             for (Artifact artifact : artifacts) {
                 originFeatures.addAll(Arrays.asList(artifact.getFeatureOrigins()));
@@ -311,9 +311,9 @@ class BuilderUtil {
             originFeatures.addAll(Arrays.asList(target.getFeatureOrigins()));
         }
         if (feature != null) {
-            originFeatures.add(feature.getId().toMvnId());
+            originFeatures.add(feature.getId());
         }
-        String[] origins = originFeatures.toArray(new String[0]);
+        ArtifactId[] origins = originFeatures.toArray(new ArtifactId[0]);
         if (Arrays.equals(origins,target.getFeatureOrigins())) {
             return target;
         }
