@@ -19,6 +19,7 @@ package org.apache.sling.feature.builder;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -166,7 +167,7 @@ class BuilderUtil {
                     selectedArtifacts.add(count++, existing);
                     selectedArtifacts.add(artifactFromSource);
                 } else {
-                    List<Artifact> artifacts = selectArtifactOverride(existing, artifactFromSource, artifactOverrides);
+                    List<Artifact> artifacts = selectArtifactOverride(existing, artifactFromSource, artifactOverrides, sourceFeature.getId());
                     // if we have an all policy we might have more then one artifact - we put the target one first
                     if (artifacts.size() > 1) {
                         selectedArtifacts.add(count++, artifacts.remove(0));
@@ -187,7 +188,7 @@ class BuilderUtil {
 
             for (final Artifact sa : new LinkedHashSet<>(selectedArtifacts)) {
                 // create a copy to detach artifact from source
-                final Artifact cp = sa.copy(sa.getId());
+                final Artifact cp = addFeatureOrigin(sourceFeature, sa.copy(sa.getId()));
                 // Record the original feature of the bundle, if needed
                 if (originKey != null) {
                     if (sourceFeature != null && source.contains(sa) && sa.getMetadata().get(originKey) == null) {
@@ -206,10 +207,15 @@ class BuilderUtil {
     }
 
     static List<Artifact> selectArtifactOverride(Artifact fromTarget, Artifact fromSource,
-            List<ArtifactId> artifactOverrides) {
+        List<ArtifactId> artifactOverrides) {
+        return selectArtifactOverride(fromTarget, fromSource, artifactOverrides, null);
+    }
+
+    static List<Artifact> selectArtifactOverride(Artifact fromTarget, Artifact fromSource,
+            List<ArtifactId> artifactOverrides, ArtifactId sourceID) {
         if (fromTarget.getId().equals(fromSource.getId())) {
             // They're the same so return the source (latest)
-            return Collections.singletonList(selectStartOrder(fromTarget, fromSource, fromSource));
+            return Collections.singletonList(addFeatureOrigin(selectStartOrder(fromTarget, fromSource, fromSource), fromTarget, fromSource));
         }
 
         final Set<ArtifactId> commonPrefixes = getCommonArtifactIds(fromTarget, fromSource);
@@ -219,6 +225,11 @@ class BuilderUtil {
         }
 
         final List<Artifact> result = new ArrayList<>();
+        if (artifactOverrides.isEmpty() && Arrays.asList(fromTarget.getFeatureOrigins()).contains(sourceID)) {
+            result.add(fromTarget);
+            result.add(addFeatureOrigin(fromSource, fromTarget, fromSource));
+            return result;
+        }
         outer: for (ArtifactId prefix : commonPrefixes) {
             for (final ArtifactId override : artifactOverrides) {
                 if (match(prefix, override)) {
@@ -230,21 +241,24 @@ class BuilderUtil {
                     } else if (BuilderContext.VERSION_OVERRIDE_HIGHEST.equalsIgnoreCase(rule)) {
                         Version a1v = fromTarget.getId().getOSGiVersion();
                         Version a2v = fromSource.getId().getOSGiVersion();
-                        result.add(selectStartOrder(fromTarget, fromSource, a1v.compareTo(a2v) > 0 ? fromTarget : fromSource));
+                        result.add(
+                            addFeatureOrigin(
+                                selectStartOrder(fromTarget, fromSource, a1v.compareTo(a2v) > 0 ? fromTarget : fromSource),
+                                fromTarget, fromSource));
                     } else if (BuilderContext.VERSION_OVERRIDE_LATEST.equalsIgnoreCase(rule)) {
-                        result.add(selectStartOrder(fromTarget, fromSource, fromSource));
+                        result.add(addFeatureOrigin(selectStartOrder(fromTarget, fromSource, fromSource), fromTarget, fromSource));
                     } else {
 
                         // The rule must represent a version
                         // See if its one of the existing artifact. If so use those, as they may have
                         // additional metadata
                         if (fromTarget.getId().getVersion().equals(rule)) {
-                            result.add(selectStartOrder(fromTarget, fromSource, fromTarget));
+                            result.add(addFeatureOrigin(selectStartOrder(fromTarget, fromSource, fromTarget), fromTarget, fromSource));
                         } else if (fromSource.getId().getVersion().equals(rule)) {
-                            result.add(selectStartOrder(fromTarget, fromSource, fromSource));
+                            result.add(addFeatureOrigin(selectStartOrder(fromTarget, fromSource, fromSource), fromTarget, fromSource));
                         } else {
                             // It's a completely new artifact
-                            result.add(selectStartOrder(fromTarget, fromSource, new Artifact(override)));
+                            result.add(addFeatureOrigin(selectStartOrder(fromTarget, fromSource, new Artifact(override)), fromTarget, fromSource));
                         }
                     }
                     break outer;
@@ -279,6 +293,34 @@ class BuilderUtil {
         }
         else {
             return target;
+        }
+    }
+
+    private static Artifact addFeatureOrigin(Artifact target, Artifact... artifacts) {
+        return addFeatureOrigin(null, target, artifacts);
+    }
+
+    private static Artifact addFeatureOrigin(Feature feature, Artifact target, Artifact... artifacts) {
+        LinkedHashSet<ArtifactId> originFeatures = new LinkedHashSet<>();
+        if (artifacts != null && artifacts.length > 0) {
+            for (Artifact artifact : artifacts) {
+                originFeatures.addAll(Arrays.asList(artifact.getFeatureOrigins()));
+            }
+        }
+        else {
+            originFeatures.addAll(Arrays.asList(target.getFeatureOrigins()));
+        }
+        if (feature != null) {
+            originFeatures.add(feature.getId());
+        }
+        ArtifactId[] origins = originFeatures.toArray(new ArtifactId[0]);
+        if (Arrays.equals(origins,target.getFeatureOrigins())) {
+            return target;
+        }
+        else {
+            Artifact result = target.copy(target.getId());
+            result.setFeatureOrigins(origins);
+            return result;
         }
     }
 

@@ -16,10 +16,15 @@
  */
 package org.apache.sling.feature;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * An artifact consists of
@@ -38,6 +43,8 @@ public class Artifact implements Comparable<Artifact> {
 
     /** This key might be used by bundles to define the start order. */
     public static final String KEY_START_ORDER = "start-order";
+
+    public static final String KEY_FEATURE_ORIGINS = "feature-origins";
 
     /** The artifact id. */
     private final ArtifactId id;
@@ -136,6 +143,39 @@ public class Artifact implements Comparable<Artifact> {
             this.getMetadata().remove(KEY_START_ORDER);
         } else {
             this.getMetadata().put(KEY_START_ORDER, String.valueOf(startOrder));
+        }
+    }
+
+    public ArtifactId[] getFeatureOrigins() {
+        String origins = this.getMetadata().get(KEY_FEATURE_ORIGINS);
+        Set<ArtifactId> originFeatures;
+        if (origins == null || origins.trim().isEmpty()) {
+            originFeatures = Collections.emptySet();
+        }
+        else {
+            originFeatures = new LinkedHashSet<>();
+            for (String origin : origins.split(",")) {
+                if (!origin.trim().isEmpty()) {
+                    originFeatures.add(ArtifactId.parse(origin));
+                }
+            }
+        }
+        return originFeatures.toArray(new ArtifactId[0]);
+    }
+
+    public void setFeatureOrigins(ArtifactId... featureOrigins) {
+        String origins;
+        if (featureOrigins != null && featureOrigins.length > 0) {
+            origins = Stream.of(featureOrigins).filter(Objects::nonNull).map(ArtifactId::toMvnId).distinct().collect(Collectors.joining(","));
+        }
+        else {
+            origins = "";
+        }
+        if (!origins.trim().isEmpty()) {
+            this.getMetadata().put(KEY_FEATURE_ORIGINS, origins);
+        }
+        else {
+            this.getMetadata().remove(KEY_FEATURE_ORIGINS);
         }
     }
 

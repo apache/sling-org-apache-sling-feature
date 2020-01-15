@@ -790,4 +790,15 @@ public class BuilderUtilTest {
 
         return a;
     }
+
+    @SafeVarargs
+    public static Artifact createBundle(final String id, Map.Entry<String, String> ... metadata) {
+        final Artifact a = new Artifact(ArtifactId.parse(id));
+
+        for (Map.Entry<String, String> md : metadata) {
+            a.getMetadata().put(md.getKey(), md.getValue());
+        }
+
+        return a;
+    }
 }
