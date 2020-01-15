@@ -16,8 +16,10 @@
  */
 package org.apache.sling.feature;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -138,6 +140,28 @@ public class Artifact implements Comparable<Artifact> {
             this.getMetadata().remove(KEY_START_ORDER);
         } else {
             this.getMetadata().put(KEY_START_ORDER, String.valueOf(startOrder));
+        }
+    }
+
+    public String[] getFeatureOrigins() {
+        String origins = this.getMetadata().get(KEY_FEATURE_ORIGINS);
+        LinkedHashSet<String> originFeatures;
+        if (origins == null || origins.trim().isEmpty()) {
+            originFeatures = new LinkedHashSet<>();
+        }
+        else {
+            originFeatures =  new LinkedHashSet<>(Arrays.asList(origins.split(",")));
+        }
+        return originFeatures.isEmpty() ? new String[0] : originFeatures.toArray(new String[0]);
+    }
+
+    public void setFeatureOrigins(String... featureOrigins) {
+        if (featureOrigins != null && featureOrigins.length > 0) {
+            LinkedHashSet<String> originFeatures = new LinkedHashSet<>(Arrays.asList(featureOrigins));
+            this.getMetadata().put(KEY_FEATURE_ORIGINS, String.join(",", originFeatures));
+        }
+        else {
+            this.getMetadata().remove(KEY_FEATURE_ORIGINS);
         }
     }
 

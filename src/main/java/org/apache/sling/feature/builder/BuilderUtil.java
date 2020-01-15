@@ -225,7 +225,7 @@ class BuilderUtil {
         }
 
         final List<Artifact> result = new ArrayList<>();
-        if (artifactOverrides.isEmpty() && getFeatureOrigins(fromTarget).contains(sourceID)) {
+        if (artifactOverrides.isEmpty() && Arrays.asList(fromTarget.getFeatureOrigins()).contains(sourceID)) {
             result.add(fromTarget);
             result.add(addFeatureOrigin(fromSource, fromTarget, fromSource));
             return result;
@@ -304,36 +304,24 @@ class BuilderUtil {
         LinkedHashSet<String> originFeatures = new LinkedHashSet<>();
         if (artifacts != null && artifacts.length > 0) {
             for (Artifact artifact : artifacts) {
-                originFeatures.addAll(getFeatureOrigins(artifact));
+                originFeatures.addAll(Arrays.asList(artifact.getFeatureOrigins()));
             }
         }
         else {
-            originFeatures.addAll(getFeatureOrigins(target));
+            originFeatures.addAll(Arrays.asList(target.getFeatureOrigins()));
         }
         if (feature != null) {
             originFeatures.add(feature.getId().toMvnId());
         }
-        String origins = String.join(",", originFeatures);
-        if (origins.equals(target.getMetadata().get(Artifact.KEY_FEATURE_ORIGINS))) {
+        String[] origins = originFeatures.toArray(new String[0]);
+        if (Arrays.equals(origins,target.getFeatureOrigins())) {
             return target;
         }
         else {
             Artifact result = target.copy(target.getId());
-            result.getMetadata().put(Artifact.KEY_FEATURE_ORIGINS, origins);
+            result.setFeatureOrigins(origins);
             return result;
         }
-    }
-
-    static LinkedHashSet<String> getFeatureOrigins(Artifact artifact) {
-        String origins = artifact.getMetadata().get(Artifact.KEY_FEATURE_ORIGINS);
-        LinkedHashSet<String> originFeatures;
-        if (origins == null || origins.trim().isEmpty()) {
-            originFeatures = new LinkedHashSet<>();
-        }
-        else {
-            originFeatures =  new LinkedHashSet<>(Arrays.asList(origins.split(",")));
-        }
-        return originFeatures;
     }
 
     private static boolean match(final ArtifactId id, final ArtifactId override) {
