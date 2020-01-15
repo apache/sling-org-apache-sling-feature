@@ -264,7 +264,7 @@ public class FeatureBuilderTest {
         a.getBundles().add(BuilderUtilTest.createBundle("o/a/2.0.0", 9));
         a.getBundles().add(BuilderUtilTest.createBundle("o/a/3.0.0", 11));
 
-        b.getBundles().add(BuilderUtilTest.createBundle("o/b    /4.0.0", 8));
+        b.getBundles().add(BuilderUtilTest.createBundle("o/b/4.0.0", 8));
         b.getBundles().add(BuilderUtilTest.createBundle("o/b/5.0.0", 12));
         b.getBundles().add(BuilderUtilTest.createBundle("o/b/6.0.0", 10));
 
