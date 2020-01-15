@@ -314,20 +314,20 @@ class BuilderUtil {
             originFeatures.add(feature.getId().toMvnId());
         }
         String origins = String.join(",", originFeatures);
-        if (origins.equals(target.getMetadata().get("feature-origins"))) {
+        if (origins.equals(target.getMetadata().get(Artifact.KEY_FEATURE_ORIGINS))) {
             return target;
         }
         else {
             Artifact result = target.copy(target.getId());
-            result.getMetadata().put("feature-origins", origins);
+            result.getMetadata().put(Artifact.KEY_FEATURE_ORIGINS, origins);
             return result;
         }
     }
 
-    private static LinkedHashSet<String> getFeatureOrigins(Artifact artifact) {
-        String origins = artifact.getMetadata().get("feature-origins");
+    static LinkedHashSet<String> getFeatureOrigins(Artifact artifact) {
+        String origins = artifact.getMetadata().get(Artifact.KEY_FEATURE_ORIGINS);
         LinkedHashSet<String> originFeatures;
-        if (origins == null) {
+        if (origins == null || origins.trim().isEmpty()) {
             originFeatures = new LinkedHashSet<>();
         }
         else {

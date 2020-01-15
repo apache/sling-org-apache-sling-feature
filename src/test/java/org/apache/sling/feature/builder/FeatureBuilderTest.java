@@ -212,7 +212,7 @@ public class FeatureBuilderTest {
         b.getBundles().add(BuilderUtilTest.createBundle("o/a/6.0.0", 10));
 
         Feature ab = new Feature(ArtifactId.fromMvnId("g:ab:1"));
-        ab.getBundles().add(BuilderUtilTest.createBundle("o/a/6.0.0", 8, new AbstractMap.SimpleEntry("feature-origins", a.getId() + "," + b.getId())));
+        ab.getBundles().add(BuilderUtilTest.createBundle("o/a/6.0.0", 8, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, a.getId() + "," + b.getId())));
 
         Feature assembled = FeatureBuilder.assemble(ArtifactId.fromMvnId("g:ab:1"), new BuilderContext(provider)
                 .addArtifactsOverride(ArtifactId.fromMvnId("o:a:HIGHEST")), a, b);
@@ -228,10 +228,10 @@ public class FeatureBuilderTest {
 
         ab = new Feature(ArtifactId.fromMvnId("g:ab:1"));
         for (Artifact bundle : a.getBundles()) {
-            ab.getBundles().add(BuilderUtilTest.createBundle(bundle.getId().toMvnId(), bundle.getStartOrder(), new AbstractMap.SimpleEntry("feature-origins", a.getId() + "," + b.getId())));
+            ab.getBundles().add(BuilderUtilTest.createBundle(bundle.getId().toMvnId(), bundle.getStartOrder(), new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, a.getId() + "," + b.getId())));
         }
         for (Artifact bundle : b.getBundles()) {
-            ab.getBundles().add(BuilderUtilTest.createBundle(bundle.getId().toMvnId(), bundle.getStartOrder(), new AbstractMap.SimpleEntry("feature-origins", b.getId().toMvnId())));
+            ab.getBundles().add(BuilderUtilTest.createBundle(bundle.getId().toMvnId(), bundle.getStartOrder(), new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, b.getId().toMvnId())));
         }
 
         assembled = FeatureBuilder.assemble(ArtifactId.fromMvnId("g:ab:1"), new BuilderContext(provider)
@@ -244,7 +244,7 @@ public class FeatureBuilderTest {
         a.getBundles().get(1).setStartOrder(1);
 
         ab = new Feature(ArtifactId.fromMvnId("g:ab:1"));
-        ab.getBundles().add(BuilderUtilTest.createBundle("o/a/6.0.0", 1, new AbstractMap.SimpleEntry("feature-origins", a.getId() + "," + b.getId())));
+        ab.getBundles().add(BuilderUtilTest.createBundle("o/a/6.0.0", 1, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, a.getId() + "," + b.getId())));
         ab.getBundles().get(0).setStartOrder(1);
 
         assembled = FeatureBuilder.assemble(ArtifactId.fromMvnId("g:ab:1"), new BuilderContext(provider)
@@ -269,13 +269,13 @@ public class FeatureBuilderTest {
         b.getBundles().add(BuilderUtilTest.createBundle("o/b/6.0.0", 10));
 
         Feature ab = new Feature(ArtifactId.fromMvnId("g:ab:1"));
-        ab.getBundles().add(BuilderUtilTest.createBundle("o/a/1.0.0", 10, new AbstractMap.SimpleEntry("feature-origins", a.getId().toMvnId())));
-        ab.getBundles().add(BuilderUtilTest.createBundle("o/a/2.0.0", 9, new AbstractMap.SimpleEntry("feature-origins", a.getId().toMvnId())));
-        ab.getBundles().add(BuilderUtilTest.createBundle("o/a/3.0.0", 11, new AbstractMap.SimpleEntry("feature-origins", a.getId().toMvnId())));
+        ab.getBundles().add(BuilderUtilTest.createBundle("o/a/1.0.0", 10, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, a.getId().toMvnId())));
+        ab.getBundles().add(BuilderUtilTest.createBundle("o/a/2.0.0", 9, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, a.getId().toMvnId())));
+        ab.getBundles().add(BuilderUtilTest.createBundle("o/a/3.0.0", 11, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, a.getId().toMvnId())));
 
-        ab.getBundles().add(BuilderUtilTest.createBundle("o/b/4.0.0", 8, new AbstractMap.SimpleEntry("feature-origins", b.getId().toMvnId())));
-        ab.getBundles().add(BuilderUtilTest.createBundle("o/b/5.0.0", 12, new AbstractMap.SimpleEntry("feature-origins", b.getId().toMvnId())));
-        ab.getBundles().add(BuilderUtilTest.createBundle("o/b/6.0.0", 10, new AbstractMap.SimpleEntry("feature-origins", b.getId().toMvnId())));
+        ab.getBundles().add(BuilderUtilTest.createBundle("o/b/4.0.0", 8, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, b.getId().toMvnId())));
+        ab.getBundles().add(BuilderUtilTest.createBundle("o/b/5.0.0", 12, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, b.getId().toMvnId())));
+        ab.getBundles().add(BuilderUtilTest.createBundle("o/b/6.0.0", 10, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, b.getId().toMvnId())));
 
 
         Feature assembled = FeatureBuilder.assemble(ArtifactId.fromMvnId("g:ab:1"), new BuilderContext(provider), a, b);
@@ -384,20 +384,20 @@ public class FeatureBuilderTest {
         result.setPrototype(null);
         result.getBundles().clear();
 
-        result.getBundles().add(BuilderUtilTest.createBundle("org.apache.sling/foo-bar/4.5.6", 3, new AbstractMap.SimpleEntry("feature-origins", base.getId().toMvnId())));
-        result.getBundles().add(BuilderUtilTest.createBundle("group/testnewversion_low/2", 5, new AbstractMap.SimpleEntry("feature-origins", base.getId().toMvnId())));
-        result.getBundles().add(BuilderUtilTest.createBundle("group/testnewversion_low/1", 5, new AbstractMap.SimpleEntry("feature-origins", base.getId().toMvnId())));
-        result.getBundles().add(BuilderUtilTest.createBundle("group/testnewversion_high/2", 5, new AbstractMap.SimpleEntry("feature-origins", base.getId().toMvnId())));
-        result.getBundles().add(BuilderUtilTest.createBundle("group/testnewversion_high/5", 5, new AbstractMap.SimpleEntry("feature-origins", base.getId().toMvnId())));
-        result.getBundles().add(BuilderUtilTest.createBundle("group/testnewstartlevel/1", 5, new AbstractMap.SimpleEntry("feature-origins", base.getId().toMvnId())));
-        result.getBundles().add(BuilderUtilTest.createBundle("group/testnewstartlevelandversion/1", 5, new AbstractMap.SimpleEntry("feature-origins",base.getId().toMvnId())));
-        result.getBundles().add(BuilderUtilTest.createBundle("group/testnewstartlevelandversion/2", 10, new AbstractMap.SimpleEntry("feature-origins", base.getId().toMvnId())));
+        result.getBundles().add(BuilderUtilTest.createBundle("org.apache.sling/foo-bar/4.5.6", 3, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, base.getId().toMvnId())));
+        result.getBundles().add(BuilderUtilTest.createBundle("group/testnewversion_low/2", 5, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, base.getId().toMvnId())));
+        result.getBundles().add(BuilderUtilTest.createBundle("group/testnewversion_low/1", 5, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, base.getId().toMvnId())));
+        result.getBundles().add(BuilderUtilTest.createBundle("group/testnewversion_high/2", 5, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, base.getId().toMvnId())));
+        result.getBundles().add(BuilderUtilTest.createBundle("group/testnewversion_high/5", 5, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, base.getId().toMvnId())));
+        result.getBundles().add(BuilderUtilTest.createBundle("group/testnewstartlevel/1", 5, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, base.getId().toMvnId())));
+        result.getBundles().add(BuilderUtilTest.createBundle("group/testnewstartlevelandversion/1", 5, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS,base.getId().toMvnId())));
+        result.getBundles().add(BuilderUtilTest.createBundle("group/testnewstartlevelandversion/2", 10, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, base.getId().toMvnId())));
         Artifact copy = a1.copy(a1.getId());
-        copy.getMetadata().put("feature-origins", base.getId().toMvnId());
+        copy.getMetadata().put(Artifact.KEY_FEATURE_ORIGINS, base.getId().toMvnId());
         result.getBundles().add(copy);
-        result.getBundles().add(BuilderUtilTest.createBundle("org.apache.sling/application-bundle/2.0.0", 1, new AbstractMap.SimpleEntry("feature-origins", base.getId().toMvnId())));
-        result.getBundles().add(BuilderUtilTest.createBundle("org.apache.sling/another-bundle/2.1.0", 1, new AbstractMap.SimpleEntry("feature-origins", base.getId().toMvnId())));
-        result.getBundles().add(BuilderUtilTest.createBundle("org.apache.sling/foo-xyz/1.2.3", 2, new AbstractMap.SimpleEntry("feature-origins", base.getId().toMvnId())));
+        result.getBundles().add(BuilderUtilTest.createBundle("org.apache.sling/application-bundle/2.0.0", 1, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, base.getId().toMvnId())));
+        result.getBundles().add(BuilderUtilTest.createBundle("org.apache.sling/another-bundle/2.1.0", 1, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, base.getId().toMvnId())));
+        result.getBundles().add(BuilderUtilTest.createBundle("org.apache.sling/foo-xyz/1.2.3", 2, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, base.getId().toMvnId())));
 
         result.getVariables().put("varx", "myvalx");
         result.getFrameworkProperties().put("bar", "X");
@@ -425,18 +425,18 @@ public class FeatureBuilderTest {
 
         Feature result = new Feature(ArtifactId.parse("g:tgtart:1"));
 
-        result.getBundles().add(BuilderUtilTest.createBundle("group/testmulti/2", 8, new AbstractMap.SimpleEntry("feature-origins", base.getId().toMvnId())));
-        Artifact b1 = BuilderUtilTest.createBundle("group:testmulti:1", new AbstractMap.SimpleEntry("feature-origins", base.getId().toMvnId()));
+        result.getBundles().add(BuilderUtilTest.createBundle("group/testmulti/2", 8, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, base.getId().toMvnId())));
+        Artifact b1 = BuilderUtilTest.createBundle("group:testmulti:1", new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, base.getId().toMvnId()));
         result.getBundles().add(b1);
 
 
-        Artifact b2 = BuilderUtilTest.createBundle("group:testmulti:3", new AbstractMap.SimpleEntry("feature-origins", base.getId().toMvnId()));
+        Artifact b2 = BuilderUtilTest.createBundle("group:testmulti:3", new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, base.getId().toMvnId()));
         result.getBundles().add(b2);
 
-        Artifact b3 = BuilderUtilTest.createBundle("group:someart:1.2.3", new AbstractMap.SimpleEntry("feature-origins", base.getId().toMvnId()));
+        Artifact b3 = BuilderUtilTest.createBundle("group:someart:1.2.3", new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, base.getId().toMvnId()));
         b3.setStartOrder(4);
         result.getBundles().add(b3);
-        Artifact b0 = BuilderUtilTest.createBundle("g:myart:1", new AbstractMap.SimpleEntry("feature-origins", base.getId().toMvnId()));
+        Artifact b0 = BuilderUtilTest.createBundle("g:myart:1", new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, base.getId().toMvnId()));
         result.getBundles().add(b0);
 
 
@@ -450,7 +450,7 @@ public class FeatureBuilderTest {
         result = result.copy(ArtifactId.fromMvnId("g:tgtart:2"));
         int idx = result.getBundles().indexOf(BuilderUtilTest.createBundle("group:someart:1.2.3"));
         result.getBundles().remove(idx);
-        result.getBundles().add(idx, BuilderUtilTest.createBundle("group:someart:1.2.3", 4, new AbstractMap.SimpleEntry("feature-origins", base.getId().toMvnId() + "," + addOn.getId())));
+        result.getBundles().add(idx, BuilderUtilTest.createBundle("group:someart:1.2.3", 4, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, base.getId().toMvnId() + "," + addOn.getId())));
 
         equals(result, assembled);
     }
@@ -465,13 +465,13 @@ public class FeatureBuilderTest {
         Feature assembled = FeatureBuilder.assemble(base, builderContext);
 
         Feature result = new Feature(ArtifactId.parse("g:tgtart:1"));
-        Artifact b1 = BuilderUtilTest.createBundle("group:testmulti:1" ,4, new AbstractMap.SimpleEntry("feature-origins", base.getId().toMvnId()));
+        Artifact b1 = BuilderUtilTest.createBundle("group:testmulti:1" ,4, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, base.getId().toMvnId()));
         result.getBundles().add(b1);
-        Artifact b2 = BuilderUtilTest.createBundle("group:testmulti:2",8, new AbstractMap.SimpleEntry("feature-origins", base.getId().toMvnId()));
+        Artifact b2 = BuilderUtilTest.createBundle("group:testmulti:2",8, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, base.getId().toMvnId()));
         result.getBundles().add(b2);
-        Artifact b3 = BuilderUtilTest.createBundle("group:someart:1.2.3",4, new AbstractMap.SimpleEntry("feature-origins", base.getId().toMvnId()));
+        Artifact b3 = BuilderUtilTest.createBundle("group:someart:1.2.3",4, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, base.getId().toMvnId()));
         result.getBundles().add(b3);
-        Artifact b0 = BuilderUtilTest.createBundle("g:myart:1", new AbstractMap.SimpleEntry("feature-origins", base.getId().toMvnId()));
+        Artifact b0 = BuilderUtilTest.createBundle("g:myart:1", new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, base.getId().toMvnId()));
         result.getBundles().add(b0);
 
         equals(result, assembled);
@@ -489,13 +489,13 @@ public class FeatureBuilderTest {
 
         Feature result = new Feature(ArtifactId.parse("g:tgtart:1"));
 
-        result.getBundles().add(BuilderUtilTest.createBundle("group/testmulti/2", 8, new AbstractMap.SimpleEntry("feature-origins", base.getId().toMvnId())));
+        result.getBundles().add(BuilderUtilTest.createBundle("group/testmulti/2", 8, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, base.getId().toMvnId())));
 
-        Artifact b1 = BuilderUtilTest.createBundle("group:testmulti:1", 4, new AbstractMap.SimpleEntry("feature-origins", base.getId().toMvnId()));
+        Artifact b1 = BuilderUtilTest.createBundle("group:testmulti:1", 4, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, base.getId().toMvnId()));
         result.getBundles().add(b1);
-        Artifact b3 = BuilderUtilTest.createBundle("group:someart:1.2.3", 4, new AbstractMap.SimpleEntry("feature-origins", base.getId().toMvnId()));
+        Artifact b3 = BuilderUtilTest.createBundle("group:someart:1.2.3", 4, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, base.getId().toMvnId()));
         result.getBundles().add(b3);
-        Artifact b0 = BuilderUtilTest.createBundle("g:myart:1", new AbstractMap.SimpleEntry("feature-origins", base.getId().toMvnId()));
+        Artifact b0 = BuilderUtilTest.createBundle("g:myart:1", new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, base.getId().toMvnId()));
         result.getBundles().add(b0);
 
         equals(result, assembled);
@@ -514,17 +514,17 @@ public class FeatureBuilderTest {
 
         Feature result = new Feature(ArtifactId.parse("g:tgtart:1"));
 
-        result.getBundles().add(BuilderUtilTest.createBundle("group/testmulti/2", 8, new AbstractMap.SimpleEntry("feature-origins", base.getId().toMvnId())));
+        result.getBundles().add(BuilderUtilTest.createBundle("group/testmulti/2", 8, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, base.getId().toMvnId())));
 
-        Artifact b1 = BuilderUtilTest.createBundle("group:testmulti:1",4, new AbstractMap.SimpleEntry("feature-origins", base.getId().toMvnId()));
+        Artifact b1 = BuilderUtilTest.createBundle("group:testmulti:1",4, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, base.getId().toMvnId()));
         result.getBundles().add(b1);
 
-        Artifact b2 = BuilderUtilTest.createBundle("group:testmulti:3", new AbstractMap.SimpleEntry("feature-origins", base.getId().toMvnId()));
+        Artifact b2 = BuilderUtilTest.createBundle("group:testmulti:3", new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, base.getId().toMvnId()));
         result.getBundles().add(b2);
 
-        Artifact b3 = BuilderUtilTest.createBundle("group:someart:1.2.3", 4, new AbstractMap.SimpleEntry("feature-origins", base.getId().toMvnId()));
+        Artifact b3 = BuilderUtilTest.createBundle("group:someart:1.2.3", 4, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, base.getId().toMvnId()));
         result.getBundles().add(b3);
-        Artifact b0 = BuilderUtilTest.createBundle("g:myart:1", new AbstractMap.SimpleEntry("feature-origins", base.getId().toMvnId()));
+        Artifact b0 = BuilderUtilTest.createBundle("g:myart:1", new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, base.getId().toMvnId()));
         result.getBundles().add(b0);
 
         equals(result, assembled);

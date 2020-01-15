@@ -39,6 +39,8 @@ public class Artifact implements Comparable<Artifact> {
     /** This key might be used by bundles to define the start order. */
     public static final String KEY_START_ORDER = "start-order";
 
+    public static final String KEY_FEATURE_ORIGINS = "feature-origins";
+
     /** The artifact id. */
     private final ArtifactId id;
 
