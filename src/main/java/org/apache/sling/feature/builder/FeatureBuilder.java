@@ -17,9 +17,11 @@
 package org.apache.sling.feature.builder;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -334,6 +336,13 @@ public abstract class FeatureBuilder {
 
             for (Artifact a : result.getBundles()) {
                 a.getMetadata().remove(TRACKING_KEY);
+                String origins = a.getMetadata().get("feature-origins");
+                if (origins != null && !origins.isEmpty()) {
+                    LinkedHashSet<String> originList = new LinkedHashSet<>(Arrays.asList(origins.split(",")));
+                    originList.remove(prototypeFeature.getId().toMvnId());
+                    originList.add(feature.getId().toMvnId());
+                    a.getMetadata().put("feature-origins", String.join(",", originList));
+                }
             }
             for (Extension e : result.getExtensions()) {
                 if (ExtensionType.ARTIFACTS == e.getType()) {
