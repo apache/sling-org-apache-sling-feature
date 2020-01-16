@@ -87,6 +87,21 @@ public class Artifacts extends ArrayList<Artifact> {
     }
 
     /**
+     * Get the artifact for the given id
+     *
+     * @param id The artifact id
+     * @return The artifact or {@code null} otherwise
+     */
+    public Artifact getExact(final ArtifactId id) {
+        for (final Artifact artifact : this) {
+            if (artifact.getId().equals(id)) {
+                return artifact;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Checks whether the exact artifact is available
      * @param id The artifact id.
      * @return {@code true} if the artifact exists
