@@ -288,13 +288,13 @@ public class FeatureBuilderTest {
         assembled.getExtensions().clear();
 
         Feature ab2 = new Feature(ArtifactId.fromMvnId("g:ab:2"));
-        ab2.getBundles().add(BuilderUtilTest.createBundle("o/a/1.0.0", 10, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, a.getId().toMvnId() + "," + ab.getId().toMvnId())));
-        ab2.getBundles().add(BuilderUtilTest.createBundle("o/a/2.0.0", 9, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, a.getId().toMvnId() + "," + ab.getId().toMvnId())));
-        ab2.getBundles().add(BuilderUtilTest.createBundle("o/a/3.0.0", 11, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, a.getId().toMvnId() + "," + ab.getId().toMvnId())));
+        ab2.getBundles().add(BuilderUtilTest.createBundle("o/a/1.0.0", 10, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, a.getId().toMvnId())));
+        ab2.getBundles().add(BuilderUtilTest.createBundle("o/a/2.0.0", 9, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, a.getId().toMvnId())));
+        ab2.getBundles().add(BuilderUtilTest.createBundle("o/a/3.0.0", 11, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, a.getId().toMvnId())));
 
-        ab2.getBundles().add(BuilderUtilTest.createBundle("o/b/4.0.0", 8, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, b.getId().toMvnId() + "," + ab.getId().toMvnId())));
-        ab2.getBundles().add(BuilderUtilTest.createBundle("o/b/5.0.0", 12, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, b.getId().toMvnId() + "," + ab.getId().toMvnId())));
-        ab2.getBundles().add(BuilderUtilTest.createBundle("o/b/6.0.0", 10, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, b.getId().toMvnId() + "," + ab.getId().toMvnId())));
+        ab2.getBundles().add(BuilderUtilTest.createBundle("o/b/4.0.0", 8, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, b.getId().toMvnId())));
+        ab2.getBundles().add(BuilderUtilTest.createBundle("o/b/5.0.0", 12, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, b.getId().toMvnId())));
+        ab2.getBundles().add(BuilderUtilTest.createBundle("o/b/6.0.0", 10, new AbstractMap.SimpleEntry(Artifact.KEY_FEATURE_ORIGINS, b.getId().toMvnId())));
 
         equals(ab2, assembled);
     }
