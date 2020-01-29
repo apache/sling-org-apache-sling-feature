@@ -18,6 +18,7 @@ package org.apache.sling.feature.io.artifacts;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -365,6 +366,10 @@ public class ArtifactManager implements AutoCloseable {
                     this.config.incCachedArtifacts();
                 }
                 return cacheFile.toURI().toURL();
+            } catch ( final FileNotFoundException e) {
+                logger.trace("File not found here (keep on looking): '{}'", url);
+                // Do not report if the file does not exist as we cycle through the various sources
+                return null;
             } catch ( final Exception e) {
                 logger.info("Artifact not found in one repository", e);
                 // ignore for now
