@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -34,8 +35,11 @@ import java.util.Map;
 import java.util.ServiceLoader;
 
 import org.apache.sling.feature.ArtifactId;
+import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.builder.FeatureProvider;
 import org.apache.sling.feature.io.artifacts.spi.ArtifactProvider;
 import org.apache.sling.feature.io.artifacts.spi.ArtifactProviderContext;
+import org.apache.sling.feature.io.json.FeatureJSONReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +48,8 @@ import org.slf4j.LoggerFactory;
  * It uses {@link ArtifactProvider}s to get artifacts. The
  * providers are loaded using the service loader.
  */
-public class ArtifactManager implements AutoCloseable {
+public class ArtifactManager
+        implements AutoCloseable, org.apache.sling.feature.builder.ArtifactProvider {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -106,11 +111,35 @@ public class ArtifactManager implements AutoCloseable {
     }
 
     @Override
-    public void close()
-    {
+    public void close() {
         shutdown();
     }
 
+    @Override
+    public URL provide(final ArtifactId id) {
+        try {
+            final ArtifactHandler handler = this.getArtifactHandler(id.toMvnUrl());
+            return handler.getLocalURL();
+        } catch (final IOException e) {
+            // ignore
+            return null;
+        }
+    }
+
+    public FeatureProvider toFeatureProvider() {
+        return (id -> {
+            try {
+                final ArtifactHandler handler = this.getArtifactHandler(id.toMvnUrl());
+                try (final Reader r = new InputStreamReader(handler.getLocalURL().openStream(), "UTF-8")) {
+                    final Feature f = FeatureJSONReader.read(r, handler.getUrl());
+                    return f;
+                }
+            } catch (final IOException e) {
+                // ignore
+                return null;
+            }
+        });
+    }
     private final URL getArtifactFromProviders(final String url, final String relativeCachePath) throws IOException {
         final int pos = url.indexOf(":");
         final String scheme = url.substring(0, pos);
@@ -127,9 +156,10 @@ public class ArtifactManager implements AutoCloseable {
 
     /**
      * Get the full artifact url and file for an artifact.
+     * 
      * @param url Artifact url or relative path.
      * @return Absolute url and file in the form of a handler.
-     * @throws IOException If something goes wrong.
+     * @throws IOException If something goes wrong or the artifact can't be found.
      */
     public ArtifactHandler getArtifactHandler(final String url) throws IOException {
         logger.debug("Trying to get artifact for {}", url);
