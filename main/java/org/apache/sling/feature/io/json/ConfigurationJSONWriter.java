@@ -18,15 +18,9 @@ package org.apache.sling.feature.io.json;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.lang.reflect.Array;
-import java.util.Collection;
-import java.util.Dictionary;
-import java.util.Enumeration;
-import java.util.Iterator;
 
 import javax.json.stream.JsonGenerator;
 
-import org.apache.sling.feature.Configuration;
 import org.apache.sling.feature.Configurations;
 
 /** JSON writer for configurations */
