@@ -49,47 +49,11 @@ public class ArchiveWriter {
     /** Current support version of the feature model archive. */
     public static final int ARCHIVE_VERSION = 1;
 
-    /** Default extension for feature model archives. */
-    public static final String DEFAULT_EXTENSION = "far";
-
     /** Model name. */
     public static final String MODEL_NAME = "models/feature.json";
 
     /** Artifacts prefix. */
     public static final String ARTIFACTS_PREFIX = "artifacts/";
-
-    /**
-     * Options are used to control the creation of an archive.
-     */
-    public static final class ArchiveOptions {
-
-        private int level = Deflater.DEFAULT_COMPRESSION;
-
-        /**
-         * Get the compression level.
-         *
-         * @return The compression level
-         */
-        public int getLevel() {
-            return level;
-        }
-
-        /**
-         * Set the compression level
-         *
-         * @param level The compression level
-         * @return This object
-         * @see Deflater#DEFAULT_COMPRESSION
-         * @exception IllegalArgumentException if the compression level is invalid
-         */
-        public ArchiveOptions setLevel(final int level) {
-            if ((level < 0 || level > 9) && level != Deflater.DEFAULT_COMPRESSION) {
-                throw new IllegalArgumentException("invalid compression level");
-            }
-            this.level = level;
-            return this;
-        }
-    }
 
     /**
      * Create a feature model archive. The output stream will not be closed by this
@@ -108,14 +72,13 @@ public class ArchiveWriter {
      * @param feature      The feature model to archive
      * @param baseManifest Optional base manifest used for creating the manifest.
      * @param provider     The artifact provider
-     * @param options      Optional options to further control the compression
      * @return The jar output stream.
      * @throws IOException If anything goes wrong
      */
     public static JarOutputStream write(final OutputStream out,
             final Feature feature,
             final Manifest baseManifest,
-            final ArtifactProvider provider, final ArchiveOptions options)
+            final ArtifactProvider provider)
     throws IOException {
         // create manifest
         final Manifest manifest = (baseManifest == null ? new Manifest() : new Manifest(baseManifest));
@@ -124,10 +87,9 @@ public class ArchiveWriter {
 
         // create archive
         final JarOutputStream jos = new JarOutputStream(out, manifest);
-        if (options != null) {
-            jos.setLevel(options.getLevel());
-        }
-        // write model first
+
+        // write model first with compression enabled
+        jos.setLevel(Deflater.BEST_COMPRESSION);
         final JarEntry entry = new JarEntry(MODEL_NAME);
         jos.putNextEntry(entry);
         final Writer writer = new OutputStreamWriter(jos, "UTF-8");
@@ -135,6 +97,8 @@ public class ArchiveWriter {
         writer.flush();
         jos.closeEntry();
 
+        // write artifacts with compression disabled
+        jos.setLevel(Deflater.NO_COMPRESSION);
         final byte[] buffer = new byte[1024*1024*256];
 
         final Set<ArtifactId> artifacts = new HashSet<>();
