@@ -67,7 +67,7 @@ public class ArchiveWriter {
 
         /**
          * Get the compression level.
-         * 
+         *
          * @return The compression level
          */
         public int getLevel() {
@@ -79,7 +79,7 @@ public class ArchiveWriter {
          *
          * @param level The compression level
          * @return This object
-         * @see [{@link Deflater#setLevel(int)}
+         * @see Deflater#DEFAULT_COMPRESSION
          * @exception IllegalArgumentException if the compression level is invalid
          */
         public ArchiveOptions setLevel(final int level) {
