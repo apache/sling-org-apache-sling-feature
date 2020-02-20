@@ -50,7 +50,7 @@ public class ArchiveWriter {
     public static final int ARCHIVE_VERSION = 1;
 
     /** Model name. */
-    public static final String MODEL_NAME = "models/feature.json";
+    public static final String MODEL_NAME = "features/feature.json";
 
     /** Artifacts prefix. */
     public static final String ARTIFACTS_PREFIX = "artifacts/";
