@@ -25,12 +25,19 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.lang.ProcessBuilder.Redirect;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 
@@ -86,6 +93,12 @@ public class ArtifactManager
         return new ArtifactManager(config, providers);
     }
 
+    /**
+     * Internal constructor for the manager
+     * @param config The configuration
+     * @param providers The provider map
+     * @throws IOException If the manager can't be initialized
+     */
     ArtifactManager(final ArtifactManagerConfig config, final Map<String, ArtifactProvider> providers)
     throws IOException {
         this.config = config;
@@ -126,6 +139,12 @@ public class ArtifactManager
         }
     }
 
+    /**
+     * Return a feature provider based on this artifact manager
+     *
+     * @return A feature provider
+     * @since 1.1.0
+     */
     public FeatureProvider toFeatureProvider() {
         return (id -> {
             try {
@@ -140,6 +159,7 @@ public class ArtifactManager
             }
         });
     }
+
     private final URL getArtifactFromProviders(final String url, final String relativeCachePath) throws IOException {
         final int pos = url.indexOf(":");
         final String scheme = url.substring(0, pos);
@@ -156,7 +176,7 @@ public class ArtifactManager
 
     /**
      * Get the full artifact url and file for an artifact.
-     * 
+     *
      * @param url Artifact url or relative path.
      * @return Absolute url and file in the form of a handler.
      * @throws IOException If something goes wrong or the artifact can't be found.
@@ -166,10 +186,16 @@ public class ArtifactManager
 
         final String path;
 
+        ArtifactId artifactId = null;
+
         if ( url.startsWith("mvn:") ) {
             // mvn url
-            path = ArtifactId.fromMvnUrl(url).toMvnPath();
-
+            try {
+                artifactId = ArtifactId.fromMvnUrl(url);
+                path = artifactId.toMvnPath();
+            } catch (final IllegalArgumentException iae) {
+                throw new IOException(iae.getMessage(), iae);
+            }
         } else if ( url.startsWith(":") ) {
             // repository path
             path = url.substring(1);
@@ -193,7 +219,7 @@ public class ArtifactManager
             if ( !f.exists()) {
                 throw new IOException("Artifact " + url + " not found.");
             }
-            return new ArtifactHandler(f.toURI().toString(), f.toURI().toURL());
+            return new ArtifactHandler(f);
         }
         logger.debug("Querying repositories for {}", path);
 
@@ -255,6 +281,14 @@ public class ArtifactManager
             }
         }
 
+        // if we have an artifact id and using mvn is enabled, we try this as a last
+        // resort
+        if (artifactId != null && this.config.isUseMvn()) {
+            final File file = getArtifactFromMvn(artifactId);
+            if (file != null) {
+                return new ArtifactHandler(file);
+            }
+        }
         throw new IOException("Artifact " + url + " not found in any repository.");
     }
 
@@ -293,6 +327,7 @@ public class ArtifactManager
         }
         return value;
     }
+
     public static String getLatestSnapshot(final String mavenMetadata) {
         final String timestamp = getValue(mavenMetadata, new String[] {"metadata", "versioning", "snapshot", "timestamp"});
         final String buildNumber = getValue(mavenMetadata, new String[] {"metadata", "versioning", "snapshot", "buildNumber"});
@@ -410,6 +445,83 @@ public class ArtifactManager
         @Override
         public String toString() {
             return "DefaultArtifactHandler";
+        }
+    }
+
+    private File getArtifactFromMvn(final ArtifactId artifactId) {
+        final String filePath = this.config.getMvnHome()
+                .concat(artifactId.toMvnPath().replace('/', File.separatorChar));
+        logger.debug("Trying to fetch artifact {} from local mvn repository {}", artifactId.toMvnId(), filePath);
+        final File f = new File(filePath);
+        if (!f.exists() || !f.isFile() || !f.canRead()) {
+            logger.debug("Trying to download {}", artifactId.toMvnId());
+            try {
+                this.downloadArtifact(artifactId);
+            } catch (final IOException ioe) {
+                logger.debug("Error downloading file.", ioe);
+            }
+            if (!f.exists() || !f.isFile() || !f.canRead()) {
+                logger.info("Artifact not found {}", artifactId.toMvnId());
+
+                return null;
+            }
+        }
+        return f;
+    }
+
+    /**
+     * Download artifact from maven
+     *
+     * @throws IOException
+     */
+    private void downloadArtifact(final ArtifactId artifactId) throws IOException {
+        // create fake pom
+        final Path dir = Files.createTempDirectory(null);
+        try {
+            final List<String> lines = new ArrayList<String>();
+            lines.add(
+                    "<project xmlns=\"http://maven.apache.org/POM/4.0.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd\">");
+            lines.add("    <modelVersion>4.0.0</modelVersion>");
+            lines.add("    <groupId>org.apache.sling</groupId>");
+            lines.add("    <artifactId>temp-artifact</artifactId>");
+            lines.add("    <version>1-SNAPSHOT</version>");
+            lines.add("    <dependencies>");
+            lines.add("        <dependency>");
+            lines.add("            <groupId>".concat(artifactId.getGroupId()).concat("</groupId>"));
+            lines.add("            <artifactId>".concat(artifactId.getArtifactId()).concat("</artifactId>"));
+            lines.add("            <version>".concat(artifactId.getVersion()).concat("</version>"));
+            if (artifactId.getClassifier() != null) {
+                lines.add("            <classifier>".concat(artifactId.getClassifier()).concat("</classifier>"));
+            }
+            if (!"bundle".equals(artifactId.getType()) && !"jar".equals(artifactId.getType())) {
+                lines.add("            <type>".concat(artifactId.getType()).concat("</type>"));
+            }
+            lines.add("            <scope>provided</scope>");
+            lines.add("        </dependency>");
+            lines.add("    </dependencies>");
+            lines.add("</project>");
+            logger.debug("Writing pom to {}", dir);
+            Files.write(dir.resolve("pom.xml"), lines, Charset.forName("UTF-8"));
+
+            final File output = dir.resolve("output.txt").toFile();
+            final File error = dir.resolve("error.txt").toFile();
+
+            // invoke maven
+            logger.debug("Invoking mvn...");
+            final ProcessBuilder pb = new ProcessBuilder("mvn", "verify");
+            pb.directory(dir.toFile());
+            pb.redirectOutput(Redirect.to(output));
+            pb.redirectError(Redirect.to(error));
+
+            final Process p = pb.start();
+            try {
+                p.waitFor();
+            } catch (final InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+
+        } finally {
+            Files.walk(dir).sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
         }
     }
 }

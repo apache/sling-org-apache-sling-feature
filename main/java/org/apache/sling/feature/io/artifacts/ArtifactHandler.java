@@ -16,6 +16,8 @@
  */
 package org.apache.sling.feature.io.artifacts;
 
+import java.io.File;
+import java.net.MalformedURLException;
 import java.net.URL;
 
 /**
@@ -29,7 +31,7 @@ public class ArtifactHandler {
 
     /**
      * Create a new handler.
-     * 
+     *
      * @param url  The url of the artifact
      * @param localURL The local URL for the artifact
      */
@@ -39,8 +41,19 @@ public class ArtifactHandler {
     }
 
     /**
+     * Create a new handler.
+     *
+     * @param file The file for the artifact
+     * @throws MalformedURLException
+     * @since 1.1.0
+     */
+    public ArtifactHandler(final File file) throws MalformedURLException {
+        this(file.toURI().toString(), file.toURI().toURL());
+    }
+
+    /**
      * Get the url of the artifact
-     * 
+     *
      * @return The url.
      */
     public String getUrl() {
@@ -49,7 +62,7 @@ public class ArtifactHandler {
 
     /**
      * Get a local url for the artifact
-     * 
+     *
      * @return The file
      */
     public URL getLocalURL() {

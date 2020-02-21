@@ -19,6 +19,7 @@ package org.apache.sling.feature.io.artifacts;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.sling.feature.io.artifacts.spi.ArtifactProviderContext;
 
@@ -33,15 +34,25 @@ public class ArtifactManagerConfig implements ArtifactProviderContext {
     /** The cache directory. */
     private volatile File cacheDirectory;
 
-    private volatile long cachedArtifacts;
+    /** Metrics for artifacts used from the cache. */
+    private final AtomicLong cachedArtifacts = new AtomicLong();
 
-    private volatile long downloadedArtifacts;
+    /** Metrics for artifacts needed to be downloaded. */
+    private final AtomicLong downloadedArtifacts = new AtomicLong();
 
-    private volatile long localArtifacts;
+    /** Metrics for artifacts read locally. */
+    private final AtomicLong localArtifacts = new AtomicLong();
+
+    /** Whether locally mvn command can be used to download artifacts. */
+    private volatile boolean useMvn = false;
 
     /**
-     * Create a new configuration object.
-     * Set the default values
+     * The .m2 directory.
+     */
+    private final String repoHome;
+
+    /**
+     * Create a new configuration object. Set the default values
      */
     public ArtifactManagerConfig() {
         // set defaults
@@ -55,6 +66,7 @@ public class ArtifactManagerConfig implements ArtifactProviderContext {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        this.repoHome = System.getProperty("user.home") + "/.m2/repository/";
     }
 
     /**
@@ -103,17 +115,17 @@ public class ArtifactManagerConfig implements ArtifactProviderContext {
 
     @Override
     public void incCachedArtifacts() {
-        this.cachedArtifacts++;
+        this.cachedArtifacts.incrementAndGet();
     }
 
     @Override
     public void incDownloadedArtifacts() {
-        this.downloadedArtifacts++;
+        this.downloadedArtifacts.incrementAndGet();
     }
 
     @Override
     public void incLocalArtifacts() {
-        this.localArtifacts++;
+        this.localArtifacts.incrementAndGet();
     }
 
     /**
@@ -121,7 +133,7 @@ public class ArtifactManagerConfig implements ArtifactProviderContext {
      * @return The number of cached artifacts
      */
     public long getCachedArtifacts() {
-        return this.cachedArtifacts;
+        return this.cachedArtifacts.get();
     }
 
     /**
@@ -129,7 +141,7 @@ public class ArtifactManagerConfig implements ArtifactProviderContext {
      * @return The number of downloaded artifacts
      */
     public long getDownloadedArtifacts() {
-        return this.downloadedArtifacts;
+        return this.downloadedArtifacts.get();
     }
 
     /**
@@ -137,6 +149,35 @@ public class ArtifactManagerConfig implements ArtifactProviderContext {
      * @return The number of local artifacts
      */
     public long getLocalArtifacts() {
-        return this.localArtifacts;
+        return this.localArtifacts.get();
+    }
+
+    /**
+     * Should mvn be used if an artifact can't be found in the repositories
+     *
+     * @return Whether mvn command should be used.
+     * @since 1.1.0
+     */
+    public boolean isUseMvn() {
+        return useMvn;
+    }
+
+    /**
+     * Set whether mvn should be used to get artifacts.
+     *
+     * @param useMvn flag for enabling mvn
+     * @since 1.1.0
+     */
+    public void setUseMvn(final boolean useMvn) {
+        this.useMvn = useMvn;
+    }
+
+    /**
+     * Return mvn home
+     * 
+     * @since 1.1.0
+     */
+    String getMvnHome() {
+        return this.repoHome;
     }
 }
