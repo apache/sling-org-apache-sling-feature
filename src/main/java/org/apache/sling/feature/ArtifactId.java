@@ -33,6 +33,9 @@ import org.osgi.framework.Version;
  */
 public class ArtifactId implements Comparable<ArtifactId> {
 
+    /** The default type if {@code null} is provided as a type. @since 1.3 */
+    public static final String DEFAULT_TYPE = "jar";
+
     /** The required group id. */
     private final String groupId;
 
@@ -50,13 +53,15 @@ public class ArtifactId implements Comparable<ArtifactId> {
 
     /**
      * Create a new artifact object
-     * @param groupId   The group id (required)
-     * @param artifactId   The artifact id (required)
-     * @param version The version (required)
+     *
+     * @param groupId    The group id (required)
+     * @param artifactId The artifact id (required)
+     * @param version    The version (required)
      * @param classifier The classifier (optional)
-     * @param type The type/extension (optional, defaults to jar)
-     * @throws IllegalArgumentException If group id, artifact id or version are {@code null} or if
-     *         the version is not a valid version.
+     * @param type       The type/extension (optional, defaults to
+     *                   {@code #DEFAULT_TYPE}.
+     * @throws IllegalArgumentException If group id, artifact id or version are
+     *                                  {@code null}.
      */
     public ArtifactId(final String groupId,
             final String artifactId,
@@ -71,7 +76,7 @@ public class ArtifactId implements Comparable<ArtifactId> {
         this.version = version;
 
         if ( "bundle".equals(type) || type == null || type.isEmpty() ) {
-            this.type = "jar";
+            this.type = DEFAULT_TYPE;
         } else {
             this.type = type;
         }
@@ -398,6 +403,41 @@ public class ArtifactId implements Comparable<ArtifactId> {
      */
     public String toMvnName() {
         return toMvnName(false);
+    }
+
+    /**
+     * Provide artifact id with a different version.
+     *
+     * @param newVersion The new version
+     * @return New artifact id based on this id with just a different version.
+     * @throws IllegalArgumentException if the version is {@code null}
+     * @since 1.3
+     */
+    public ArtifactId changeVersion(final String newVersion) {
+        return new ArtifactId(this.groupId, this.artifactId, newVersion, this.classifier, this.type);
+    }
+
+    /**
+     * Provide artifact id with a different type.
+     *
+     * @param newType The new type, if {@code null} the default
+     *                {@code #DEFAULT_TYPE} is used
+     * @return New artifact id based on this id with just a different type.
+     * @since 1.3
+     */
+    public ArtifactId changeType(final String newType) {
+        return new ArtifactId(this.groupId, this.artifactId, this.version, this.classifier, newType);
+    }
+
+    /**
+     * Provide artifact id with a different classifier.
+     *
+     * @param newClassifier The new classifier
+     * @return New artifact id based on this id with just a different classifier.
+     * @since 1.3
+     */
+    public ArtifactId changeClassifier(final String newClassifier) {
+        return new ArtifactId(this.groupId, this.artifactId, this.version, newClassifier, this.type);
     }
 
     @Override

@@ -19,6 +19,7 @@ package org.apache.sling.feature;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.junit.Test;
 import org.osgi.framework.Version;
@@ -197,5 +198,42 @@ public class ArtifactIdTest {
 
         final ArtifactId a2 = new ArtifactId("group.a", "artifact.b", "1.0", null, "zip");
         assertEquals("artifact.b-1.0.zip", a2.toMvnName());
+    }
+
+    @Test
+    public void testChangeVersion() {
+        final ArtifactId a1 = new ArtifactId("group.a", "artifact.b", "1.0", "foo", "zip");
+        final ArtifactId a2 = a1.changeVersion("3.0");
+        assertTrue(a1.isSame(a2));
+        assertEquals("3.0", a2.getVersion());
+
+        try {
+            a1.changeVersion(null);
+            fail();
+        } catch (IllegalArgumentException ignore) {
+            // expected
+        }
+    }
+
+    @Test
+    public void testChangeClassifier() {
+        final ArtifactId a1 = new ArtifactId("group.a", "artifact", "1.0", "foo", "zip");
+        final ArtifactId a2 = a1.changeClassifier("bar");
+        final ArtifactId a3 = a1.changeClassifier(null);
+
+        // we use mvn path to compare all parts together in a single check
+        assertEquals("group/a/artifact/1.0/artifact-1.0-bar.zip", a2.toMvnPath());
+        assertEquals("group/a/artifact/1.0/artifact-1.0.zip", a3.toMvnPath());
+    }
+
+    @Test
+    public void testChangeType() {
+        final ArtifactId a1 = new ArtifactId("group.a", "artifact", "1.0", "foo", "zip");
+        final ArtifactId a2 = a1.changeType("json");
+        final ArtifactId a3 = a1.changeType(null);
+
+        // we use mvn path to compare all parts together in a single check
+        assertEquals("group/a/artifact/1.0/artifact-1.0-foo.json", a2.toMvnPath());
+        assertEquals("group/a/artifact/1.0/artifact-1.0-foo.jar", a3.toMvnPath());
     }
 }

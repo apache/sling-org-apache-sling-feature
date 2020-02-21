@@ -326,7 +326,7 @@ public abstract class FeatureBuilder {
             processPrototype(prototypeFeature, i);
 
             // and now merge the prototype feature into the result. No overrides should be needed since the result is empty before
-            merge(result, prototypeFeature, context, Collections.emptyList(), Collections.EMPTY_MAP, TRACKING_KEY);
+            merge(result, prototypeFeature, context, Collections.emptyList(), Collections.emptyMap(), TRACKING_KEY);
 
             // and merge the current feature over the prototype feature into the result
             merge(result, feature, context, Collections.singletonList(

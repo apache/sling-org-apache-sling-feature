@@ -17,7 +17,6 @@
 package org.apache.sling.feature.builder;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -31,7 +30,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Properties;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -55,7 +53,6 @@ import org.apache.sling.feature.Feature;
 import org.apache.sling.feature.builder.BuilderUtil.HandlerContextImpl;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.mockito.internal.util.collections.Sets;
 
 public class BuilderUtilTest {
 
@@ -575,7 +572,7 @@ public class BuilderUtilTest {
         Configuration bar = new Configuration("bar");
         bar.getProperties().put("barKey", "valueBAR");
         source.add(bar);
-        BuilderUtil.mergeConfigurations(target, source, Collections.EMPTY_MAP);
+        BuilderUtil.mergeConfigurations(target, source, Collections.emptyMap());
         assertEquals(2, target.size());
         assertEquals(target.getConfiguration("foo").getProperties(), foo.getProperties());
         assertEquals(target.getConfiguration("bar").getProperties(), bar.getProperties());
@@ -587,7 +584,7 @@ public class BuilderUtilTest {
         target.add(new Configuration("foo"));
         source.add(new Configuration("foo"));
         try {
-            BuilderUtil.mergeConfigurations(target, source, Collections.EMPTY_MAP);
+            BuilderUtil.mergeConfigurations(target, source, Collections.emptyMap());
             fail();
         } catch (IllegalStateException ex) {
 
@@ -685,7 +682,7 @@ public class BuilderUtilTest {
         Configuration bar = new Configuration("bar~bar");
         bar.getProperties().put("barKey", "valueBAR");
         source.add(bar);
-        BuilderUtil.mergeConfigurations(target, source, Collections.EMPTY_MAP);
+        BuilderUtil.mergeConfigurations(target, source, Collections.emptyMap());
         assertEquals(2, target.size());
         assertEquals(target.getConfiguration("foo~foo").getProperties(), foo.getProperties());
         assertEquals(target.getConfiguration("bar~bar").getProperties(), bar.getProperties());
@@ -697,7 +694,7 @@ public class BuilderUtilTest {
         target.add(new Configuration("foo~foo"));
         source.add(new Configuration("foo~foo"));
         try {
-            BuilderUtil.mergeConfigurations(target, source, Collections.EMPTY_MAP);
+            BuilderUtil.mergeConfigurations(target, source, Collections.emptyMap());
             fail();
         } catch (IllegalStateException ex) {
 
@@ -762,8 +759,8 @@ public class BuilderUtilTest {
         foo.getProperties().put("fooKey", "valueFOO");
         target.add(foo);
         Configuration foo4 = new Configuration("foo~foo");
-        foo.getProperties().put("fooKey", "valueFOO4");
-        source.add(foo);
+        foo4.getProperties().put("fooKey", "valueFOO4");
+        source.add(foo4);
         Configuration foo2 = new Configuration("foo");
         foo2.getProperties().put("fooKey", "valueBAR");
         source.add(foo2);
