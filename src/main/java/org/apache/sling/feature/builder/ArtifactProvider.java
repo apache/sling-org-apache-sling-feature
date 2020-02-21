@@ -25,6 +25,7 @@ import org.osgi.annotation.versioning.ConsumerType;
  * The artifact provider provides a URL for an artifact.
  */
 @ConsumerType
+@FunctionalInterface
 public interface ArtifactProvider {
 
     /**

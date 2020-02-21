@@ -24,6 +24,7 @@ import org.osgi.annotation.versioning.ConsumerType;
  * The feature provider is used to find features while assembling using {@link FeatureBuilder}.
  */
 @ConsumerType
+@FunctionalInterface
 public interface FeatureProvider {
 
     /**
