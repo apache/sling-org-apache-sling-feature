@@ -38,6 +38,7 @@ import org.apache.sling.feature.io.json.FeatureJSONReader;
  */
 public class ArchiveReader {
 
+    @FunctionalInterface
     public interface ArtifactConsumer {
 
         /**
@@ -55,16 +56,16 @@ public class ArchiveReader {
      * Read a feature model archive. The input stream is not closed. It is up to the
      * caller to close the input stream.
      *
-     * @param in The input stream to read from.
-     * @return The feature model
+     * @param in       The input stream to read from.
+     * @param consumer The plugin consuming the binaries, if {@code null} only the
+     *                 feature models are read
+     * @return The feature models
      * @throws IOException If anything goes wrong
      */
     @SuppressWarnings("resource")
-    public static Feature read(final InputStream in,
+    public static Set<Feature> read(final InputStream in,
                              final ArtifactConsumer consumer)
     throws IOException {
-        Feature feature = null;
-
         final JarInputStream jis = new JarInputStream(in);
 
         // check manifest
@@ -90,40 +91,44 @@ public class ArchiveReader {
         final Set<ArtifactId> artifacts = new HashSet<>();
 
         // read contents
+        final Set<Feature> features = new HashSet<>();
+
         JarEntry entry = null;
         while ( ( entry = jis.getNextJarEntry() ) != null ) {
-            if ( ArchiveWriter.MODEL_NAME.equals(entry.getName()) ) {
-                feature = FeatureJSONReader.read(new InputStreamReader(jis, "UTF-8"), null);
+            if (!entry.isDirectory() && entry.getName().startsWith(ArchiveWriter.FEATURE_MODEL_PREFIX)) { // feature
+                features.add(FeatureJSONReader.read(new InputStreamReader(jis, "UTF-8"), entry.getName()));
             } else if ( !entry.isDirectory() && entry.getName().startsWith(ArchiveWriter.ARTIFACTS_PREFIX) ) { // artifact
                 final ArtifactId id = ArtifactId
-                        .fromMvnUrl("mvn:" + entry.getName().substring(ArchiveWriter.ARTIFACTS_PREFIX.length()));
-                consumer.consume(id, jis);
+                        .fromMvnUrl("mvn:".concat(entry.getName().substring(ArchiveWriter.ARTIFACTS_PREFIX.length())));
+                if (consumer != null) {
+                    consumer.consume(id, jis);
+                }
                 artifacts.add(id);
             }
             jis.closeEntry();
         }
-        if (feature == null) {
+        if (features.isEmpty()) {
             throw new IOException("Not a feature model archive - feature file is missing.");
         }
 
-        // check whether all artifacts from the model are in the archive
-
-        for (final Artifact a : feature.getBundles()) {
-            if (!artifacts.contains(a.getId())) {
-                throw new IOException("Artifact " + a.getId().toMvnId() + " is missing in archive");
+        // check whether all artifacts from the models are in the archive
+        for (final Feature feature : features) {
+            for (final Artifact a : feature.getBundles()) {
+                if (!artifacts.contains(a.getId())) {
+                    throw new IOException("Artifact " + a.getId().toMvnId() + " is missing in archive");
+                }
             }
-        }
 
-        for (final Extension e : feature.getExtensions()) {
-            if (e.getType() == ExtensionType.ARTIFACTS) {
-                for (final Artifact a : e.getArtifacts()) {
-                    if (!artifacts.contains(a.getId())) {
-                        throw new IOException("Artifact " + a.getId().toMvnId() + " is missing in archive");
+            for (final Extension e : feature.getExtensions()) {
+                if (e.getType() == ExtensionType.ARTIFACTS) {
+                    for (final Artifact a : e.getArtifacts()) {
+                        if (!artifacts.contains(a.getId())) {
+                            throw new IOException("Artifact " + a.getId().toMvnId() + " is missing in archive");
+                        }
                     }
                 }
             }
         }
-
-        return feature;
+        return features;
     }
 }

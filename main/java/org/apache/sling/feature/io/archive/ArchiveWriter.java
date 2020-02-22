@@ -49,10 +49,10 @@ public class ArchiveWriter {
     /** Current support version of the feature model archive. */
     public static final int ARCHIVE_VERSION = 1;
 
-    /** Model name. */
-    public static final String MODEL_NAME = "features/feature.json";
+    /** The directory in the archive holding the features */
+    public static final String FEATURE_MODEL_PREFIX = "features/";
 
-    /** Artifacts prefix. */
+    /** The directory in the archive holding the artifacts */
     public static final String ARTIFACTS_PREFIX = "artifacts/";
 
     /**
@@ -69,16 +69,15 @@ public class ArchiveWriter {
      * complete} features.
      *
      * @param out          The output stream to write to
-     * @param feature      The feature model to archive
      * @param baseManifest Optional base manifest used for creating the manifest.
      * @param provider     The artifact provider
+     * @param features     The features model to archive
      * @return The jar output stream.
      * @throws IOException If anything goes wrong
      */
     public static JarOutputStream write(final OutputStream out,
-            final Feature feature,
             final Manifest baseManifest,
-            final ArtifactProvider provider)
+            final ArtifactProvider provider, final Feature... features)
     throws IOException {
         // create manifest
         final Manifest manifest = (baseManifest == null ? new Manifest() : new Manifest(baseManifest));
@@ -88,14 +87,16 @@ public class ArchiveWriter {
         // create archive
         final JarOutputStream jos = new JarOutputStream(out, manifest);
 
-        // write model first with compression enabled
+        // write models first with compression enabled
         jos.setLevel(Deflater.BEST_COMPRESSION);
-        final JarEntry entry = new JarEntry(MODEL_NAME);
-        jos.putNextEntry(entry);
-        final Writer writer = new OutputStreamWriter(jos, "UTF-8");
-        FeatureJSONWriter.write(writer, feature);
-        writer.flush();
-        jos.closeEntry();
+        for (final Feature feature : features) {
+            final JarEntry entry = new JarEntry(FEATURE_MODEL_PREFIX.concat(feature.getId().toMvnPath()));
+            jos.putNextEntry(entry);
+            final Writer writer = new OutputStreamWriter(jos, "UTF-8");
+            FeatureJSONWriter.write(writer, feature);
+            writer.flush();
+            jos.closeEntry();
+        }
 
         // write artifacts with compression disabled
         jos.setLevel(Deflater.NO_COMPRESSION);
@@ -103,14 +104,16 @@ public class ArchiveWriter {
 
         final Set<ArtifactId> artifacts = new HashSet<>();
 
-        for(final Artifact a : feature.getBundles() ) {
-            writeArtifact(artifacts, provider, a, jos, buffer);
-        }
+        for (final Feature feature : features) {
+            for (final Artifact a : feature.getBundles()) {
+                writeArtifact(artifacts, provider, a, jos, buffer);
+            }
 
-        for (final Extension e : feature.getExtensions()) {
-            if (e.getType() == ExtensionType.ARTIFACTS) {
-                for (final Artifact a : e.getArtifacts()) {
-                    writeArtifact(artifacts, provider, a, jos, buffer);
+            for (final Extension e : feature.getExtensions()) {
+                if (e.getType() == ExtensionType.ARTIFACTS) {
+                    for (final Artifact a : e.getArtifacts()) {
+                        writeArtifact(artifacts, provider, a, jos, buffer);
+                    }
                 }
             }
         }
