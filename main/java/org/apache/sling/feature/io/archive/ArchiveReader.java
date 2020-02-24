@@ -99,7 +99,7 @@ public class ArchiveReader {
                 features.add(FeatureJSONReader.read(new InputStreamReader(jis, "UTF-8"), entry.getName()));
             } else if ( !entry.isDirectory() && entry.getName().startsWith(ArchiveWriter.ARTIFACTS_PREFIX) ) { // artifact
                 final ArtifactId id = ArtifactId
-                        .fromMvnUrl("mvn:".concat(entry.getName().substring(ArchiveWriter.ARTIFACTS_PREFIX.length())));
+                        .fromMvnPath(entry.getName().substring(ArchiveWriter.ARTIFACTS_PREFIX.length()));
                 if (consumer != null) {
                     consumer.consume(id, jis);
                 }
