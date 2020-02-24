@@ -180,7 +180,44 @@ public class ArtifactId implements Comparable<ArtifactId> {
     }
 
     /**
+     * Create a new artifact id from a maven path The schema is
+     * {@code groupIdPath/artifactId/version/artifactId-version[-classifier].type}
+     *
+     * @param path The maven path
+     * @return A new artifact id
+     * @throws IllegalArgumentException If the path is not valid
+     * @since 1.3.0
+     */
+    public static ArtifactId fromMvnPath(final String path) {
+        final String[] parts = path.startsWith("/") ? path.substring(1).split("/") : path.split("/");
+        if (parts.length < 4) {
+            throw new IllegalArgumentException("Invalid mvn path: " + path);
+        }
+        final String gId = String.join(".", Arrays.copyOfRange(parts, 0, parts.length - 3));
+        final String aId = parts[parts.length - 3];
+        final String version = parts[parts.length - 2];
+        final String prefix = aId.concat("-").concat(version);
+        if (!parts[parts.length - 1].startsWith(prefix)) {
+            throw new IllegalArgumentException("Invalid mvn path: " + path);
+        }
+        final int pos = parts[parts.length - 1].lastIndexOf(".");
+        final String type = parts[parts.length - 1].substring(pos + 1);
+        final String classifier;
+        if (pos > prefix.length()) {
+            if (parts[parts.length - 1].charAt(prefix.length()) != '-') {
+                throw new IllegalArgumentException("Invalid mvn path: " + path);
+            }
+            classifier = parts[parts.length - 1].substring(prefix.length() + 1, pos);
+        } else {
+            classifier = null;
+        }
+
+        return new ArtifactId(gId, aId, version, classifier, type);
+    }
+
+    /**
      * Return a mvn url
+     *
      * @return A mvn url
      * @see #fromMvnUrl(String)
      */

@@ -21,6 +21,9 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.Test;
 import org.osgi.framework.Version;
 
@@ -235,5 +238,32 @@ public class ArtifactIdTest {
         // we use mvn path to compare all parts together in a single check
         assertEquals("group/a/artifact/1.0/artifact-1.0-foo.json", a2.toMvnPath());
         assertEquals("group/a/artifact/1.0/artifact-1.0-foo.jar", a3.toMvnPath());
+    }
+
+    @Test
+    public void testFromMvnPath() {
+        final List<ArtifactId> ids = new ArrayList<>();
+        ids.add(new ArtifactId("group", "artifact", "1.0", null, "zip"));
+        ids.add(new ArtifactId("group", "artifact", "1.0", "foo", "zip"));
+        ids.add(new ArtifactId("group", "artifact", "1.0", "a-classifier", "zip"));
+        ids.add(new ArtifactId("group", "artifact", "1.alhpa", null, "zip"));
+        ids.add(new ArtifactId("group", "my-artifact", "1.0", null, "zip"));
+        ids.add(new ArtifactId("group", "my-artifact", "1.0", "a-classifier", "zip"));
+        ids.add(new ArtifactId("group", "my-artifact", "1.alhpa", null, "zip"));
+
+        ids.add(new ArtifactId("c.a.group", "artifact", "1.0", null, "zip"));
+        ids.add(new ArtifactId("c.a.group", "artifact", "1.0", "foo", "zip"));
+        ids.add(new ArtifactId("c.a.group", "artifact", "1.0", "a-classifier", "zip"));
+        ids.add(new ArtifactId("c.a.group", "artifact", "1.alhpa", null, "zip"));
+        ids.add(new ArtifactId("c.a.group", "my-artifact", "1.0", null, "zip"));
+        ids.add(new ArtifactId("c.a.group", "my-artifact", "1.0", "a-classifier", "zip"));
+        ids.add(new ArtifactId("c.a.group", "my-artifact", "1.alhpa", null, "zip"));
+
+        for (final ArtifactId id : ids) {
+            final String path = id.toMvnPath();
+            final ArtifactId newId = ArtifactId.fromMvnPath(path);
+
+            assertEquals(id, newId);
+        }
     }
 }
