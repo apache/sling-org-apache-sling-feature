@@ -35,8 +35,10 @@ import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.ExtensionState;
 import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.MatchingRequirement;
 import org.apache.sling.feature.Prototype;
 import org.osgi.framework.Version;
+import org.osgi.resource.Capability;
 
 public abstract class FeatureBuilder {
     /** This key is used to track origins while a prototype is merged in */
@@ -484,6 +486,16 @@ public abstract class FeatureBuilder {
                     break;
                 }
             }
+        }
+
+        // process requirement removals
+        for (final MatchingRequirement req : prototype.getRequirementRemovals()) {
+            feature.getRequirements().remove(req);
+        }
+
+        // process capability removals
+        for (final Capability cap : prototype.getCapabilityRemovals()) {
+            feature.getCapabilities().remove(cap);
         }
     }
 }

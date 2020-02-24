@@ -21,6 +21,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.osgi.resource.Capability;
+
 /**
  * A prototype is a blueprint of a feature with optional removals of
  * <ul>
@@ -28,12 +30,11 @@ import java.util.Map;
  * <li>Bundles
  * <li>Framework properties
  * <li>Extensions or artifacts from extensions
+ * <li>Capabilities
+ * <li>Requirements
  * </ul>
  *
  * This class is not thread-safe.
- *
- * TODO - requirement, capabilities
- *
  */
 public class Prototype implements Comparable<Prototype> {
 
@@ -48,6 +49,10 @@ public class Prototype implements Comparable<Prototype> {
     private final List<String> extensionRemovals = new ArrayList<>();
 
     private final Map<String, List<ArtifactId>> artifactExtensionRemovals = new HashMap<>();
+
+    private final List<MatchingRequirement> requirementRemovals = new ArrayList<>();
+
+    private final List<Capability> capabilityRemovals = new ArrayList<>();
 
     /**
      * Construct a new Include.
@@ -69,24 +74,71 @@ public class Prototype implements Comparable<Prototype> {
         return this.id;
     }
 
+    /**
+     * Get the list of configuration removals The returned object is modifiable.
+     * 
+     * @return List of {@code PID}s.
+     */
     public List<String> getConfigurationRemovals() {
         return configurationRemovals;
     }
 
+    /**
+     * Get the list of artifact removals The returned object is modifiable.
+     * 
+     * @return List of artifact ids.
+     */
     public List<ArtifactId> getBundleRemovals() {
         return bundleRemovals;
     }
 
+    /**
+     * Get the list of framework property removals The returned object is
+     * modifiable.
+     * 
+     * @return List of property names
+     */
     public List<String> getFrameworkPropertiesRemovals() {
         return frameworkPropertiesRemovals;
     }
 
+    /**
+     * Get the list of extension removals The returned object is modifiable.
+     * 
+     * @return List of extension names
+     */
     public List<String> getExtensionRemovals() {
         return extensionRemovals;
     }
 
+    /**
+     * Get the list of artifacts removed from extensions The returned object is
+     * modifiable.
+     * 
+     * @return Map where the extension name is the key, and the value is a list of
+     *         artifact ids
+     */
     public Map<String, List<ArtifactId>> getArtifactExtensionRemovals() {
         return artifactExtensionRemovals;
+    }
+
+    /**
+     * Get the list of requirement removals. The returned object is modifiable.
+     * 
+     * @return The list of requirements
+     * @since 1.3
+     */
+    public List<MatchingRequirement> getRequirementRemovals() {
+        return requirementRemovals;
+    }
+
+    /**
+     * Get the list of capability removals. The returned object is modifiable.
+     * 
+     * @return The list of capabilities
+     */
+    public List<Capability> getCapabilityRemovals() {
+        return capabilityRemovals;
     }
 
     @Override
