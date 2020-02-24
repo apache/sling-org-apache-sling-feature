@@ -218,7 +218,9 @@ abstract class JSONWriterBase {
         if ( inc.getArtifactExtensionRemovals().isEmpty()
              && inc.getBundleRemovals().isEmpty()
              && inc.getConfigurationRemovals().isEmpty()
-             && inc.getFrameworkPropertiesRemovals().isEmpty() ) {
+             && inc.getFrameworkPropertiesRemovals().isEmpty()
+             && inc.getRequirementRemovals().isEmpty()
+             && inc.getCapabilityRemovals().isEmpty() ) {
 
             generator.write(JSONConstants.FEATURE_PROTOTYPE, inc.getId().toMvnId());
         } else {
@@ -247,6 +249,9 @@ abstract class JSONWriterBase {
             writeList(generator, JSONConstants.FEATURE_CONFIGURATIONS, inc.getConfigurationRemovals());
             writeList(generator, JSONConstants.FEATURE_BUNDLES, inc.getBundleRemovals());
             writeList(generator, JSONConstants.FEATURE_FRAMEWORK_PROPERTIES, inc.getFrameworkPropertiesRemovals());
+
+            writeRequirements(generator, inc.getRequirementRemovals());
+            writeCapabilities(generator, inc.getCapabilityRemovals());
 
             generator.writeEnd().writeEnd();
         }

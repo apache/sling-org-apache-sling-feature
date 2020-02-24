@@ -577,6 +577,8 @@ abstract class JSONReaderBase {
                             }
                         }
                     }
+                    readRequirements(removalObj, prototype.getRequirementRemovals());
+                    readCapabilities(removalObj, prototype.getCapabilityRemovals());
 
                 }
             }
