@@ -19,11 +19,14 @@ package org.apache.sling.feature.io.archive;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
+import java.util.stream.Collectors;
 
 import org.apache.sling.feature.Artifact;
 import org.apache.sling.feature.ArtifactId;
@@ -62,48 +65,33 @@ public class ArchiveReader {
      * @return The feature models
      * @throws IOException If anything goes wrong
      */
-    @SuppressWarnings("resource")
     public static Set<Feature> read(final InputStream in,
                              final ArtifactConsumer consumer)
     throws IOException {
         final JarInputStream jis = new JarInputStream(in);
 
-        // check manifest
-        final Manifest manifest = jis.getManifest();
-        if ( manifest == null ) {
-            throw new IOException("Not a feature model archive - manifest is missing.");
-        }
-        // check manifest header
-        final String version = manifest.getMainAttributes().getValue(ArchiveWriter.MANIFEST_HEADER);
-        if ( version == null ) {
-            throw new IOException("Not a feature model archive - manifest header is missing.");
-        }
-        // validate manifest header
-        try {
-            final int number = Integer.valueOf(version);
-            if ( number < 1 || number > ArchiveWriter.ARCHIVE_VERSION ) {
-                throw new IOException("Not a feature model archive - invalid manifest header value: " + version);
-            }
-        } catch (final NumberFormatException nfe) {
-            throw new IOException("Not a feature model archive - invalid manifest header value: " + version);
-        }
+        // validate manifest and get feature ids
+        final String[] featureIds = checkHeaderAndExtractContents(jis.getManifest());
+        final List<String> featurePaths = Arrays.asList(featureIds).stream()
+                .map(id -> ArtifactId.fromMvnId(id).toMvnPath()).collect(Collectors.toList());
 
-        final Set<ArtifactId> artifacts = new HashSet<>();
 
         // read contents
         final Set<Feature> features = new HashSet<>();
+        final Set<ArtifactId> artifacts = new HashSet<>();
 
         JarEntry entry = null;
         while ( ( entry = jis.getNextJarEntry() ) != null ) {
-            if (!entry.isDirectory() && entry.getName().startsWith(ArchiveWriter.FEATURE_MODEL_PREFIX)) { // feature
-                features.add(FeatureJSONReader.read(new InputStreamReader(jis, "UTF-8"), entry.getName()));
-            } else if ( !entry.isDirectory() && entry.getName().startsWith(ArchiveWriter.ARTIFACTS_PREFIX) ) { // artifact
-                final ArtifactId id = ArtifactId
-                        .fromMvnPath(entry.getName().substring(ArchiveWriter.ARTIFACTS_PREFIX.length()));
-                if (consumer != null) {
-                    consumer.consume(id, jis);
+            if (!entry.isDirectory() && !entry.getName().startsWith("META-INF/")) {
+                if (featurePaths.contains(entry.getName())) { // feature
+                    features.add(FeatureJSONReader.read(new InputStreamReader(jis, "UTF-8"), entry.getName()));
+                } else { // artifact
+                    final ArtifactId id = ArtifactId.fromMvnPath(entry.getName());
+                    if (consumer != null) {
+                        consumer.consume(id, jis);
+                    }
+                    artifacts.add(id);
                 }
-                artifacts.add(id);
             }
             jis.closeEntry();
         }
@@ -130,5 +118,33 @@ public class ArchiveReader {
             }
         }
         return features;
+    }
+
+    private static String[] checkHeaderAndExtractContents(final Manifest manifest) throws IOException {
+        if (manifest == null) {
+            throw new IOException("Not a feature model archive - manifest is missing.");
+        }
+        // check version header
+        final String version = manifest.getMainAttributes().getValue(ArchiveWriter.VERSION_HEADER);
+        if (version == null) {
+            throw new IOException("Not a feature model archive - version manifest header is missing.");
+        }
+        // validate version header
+        try {
+            final int number = Integer.valueOf(version);
+            if (number < 1 || number > ArchiveWriter.ARCHIVE_VERSION) {
+                throw new IOException("Not a feature model archive - invalid manifest header value: " + version);
+            }
+        } catch (final NumberFormatException nfe) {
+            throw new IOException("Not a feature model archive - invalid manifest header value: " + version);
+        }
+
+        // check contents header
+        final String contents = manifest.getMainAttributes().getValue(ArchiveWriter.CONTENTS_HEADER);
+        if (contents == null) {
+            throw new IOException("Not a feature model archive - contents manifest header is missing.");
+        }
+
+        return contents.split(",");
     }
 }

@@ -22,11 +22,13 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
+import java.util.stream.Collectors;
 import java.util.zip.Deflater;
 
 import org.apache.sling.feature.Artifact;
@@ -39,21 +41,19 @@ import org.apache.sling.feature.io.json.FeatureJSONWriter;
 
 /**
  * The feature archive writer can be used to create an archive based on a
- * feature model. The archive contains the feature model file and all artifacts.
+ * feature model. The archive contains the feature model file and all artifacts
+ * using a maven repository layout.
  */
 public class ArchiveWriter {
 
     /** The manifest header marking an archive as a feature archive. */
-    public static final String MANIFEST_HEADER = "Feature-Archive-Version";
+    public static final String VERSION_HEADER = "Feature-Archive-Version";
+
+    /** The manifest header listing the features in this archive. */
+    public static final String CONTENTS_HEADER = "Feature-Archive-Contents";
 
     /** Current support version of the feature model archive. */
     public static final int ARCHIVE_VERSION = 1;
-
-    /** The directory in the archive holding the features */
-    public static final String FEATURE_MODEL_PREFIX = "features/";
-
-    /** The directory in the archive holding the artifacts */
-    public static final String ARTIFACTS_PREFIX = "artifacts/";
 
     /**
      * Create a feature model archive. The output stream will not be closed by this
@@ -82,7 +82,9 @@ public class ArchiveWriter {
         // create manifest
         final Manifest manifest = (baseManifest == null ? new Manifest() : new Manifest(baseManifest));
         manifest.getMainAttributes().putValue("Manifest-Version", "1.0");
-        manifest.getMainAttributes().putValue(MANIFEST_HEADER, String.valueOf(ARCHIVE_VERSION));
+        manifest.getMainAttributes().putValue(VERSION_HEADER, String.valueOf(ARCHIVE_VERSION));
+        manifest.getMainAttributes().putValue(CONTENTS_HEADER, String.join(",", Arrays.asList(features).stream()
+                .map(feature -> feature.getId().toMvnId()).collect(Collectors.toList())));
 
         // create archive
         final JarOutputStream jos = new JarOutputStream(out, manifest);
@@ -90,7 +92,7 @@ public class ArchiveWriter {
         // write models first with compression enabled
         jos.setLevel(Deflater.BEST_COMPRESSION);
         for (final Feature feature : features) {
-            final JarEntry entry = new JarEntry(FEATURE_MODEL_PREFIX.concat(feature.getId().toMvnPath()));
+            final JarEntry entry = new JarEntry(feature.getId().toMvnPath());
             jos.putNextEntry(entry);
             final Writer writer = new OutputStreamWriter(jos, "UTF-8");
             FeatureJSONWriter.write(writer, feature);
@@ -126,7 +128,7 @@ public class ArchiveWriter {
             final JarOutputStream jos,
             final byte[] buffer) throws IOException {
         if ( artifacts.add(artifact.getId())) {
-            final JarEntry artifactEntry = new JarEntry(ARTIFACTS_PREFIX + artifact.getId().toMvnPath());
+            final JarEntry artifactEntry = new JarEntry(artifact.getId().toMvnPath());
             jos.putNextEntry(artifactEntry);
 
             final URL url = provider.provide(artifact.getId());
