@@ -101,7 +101,7 @@ public class Configuration
      * Return the factory pid of a pid if it's a factory configuration
      *
      * @return The factory pid or {@code null}.
-     * @see {@link Configuration#isFactoryConfiguration()}
+     * @see #isFactoryConfiguration()
      * @since 1.3
      */
     public String getFactoryPid() {
@@ -112,7 +112,7 @@ public class Configuration
      * Return the name for a factory configuration if it is a factory configuration.
      *
      * @return The name or {@code null}.
-     * @see {@link Configuration#isFactoryConfiguration()}
+     * @see #isFactoryConfiguration()
      * @since 1.3
      */
     public String getName() {
@@ -134,7 +134,7 @@ public class Configuration
      *
      * @param pid The pid
      * @return The factory pid or {@code null}.
-     * @see {@link Configuration#isFactoryConfiguration(String)}
+     * @see #isFactoryConfiguration(String)
      */
     public static String getFactoryPid(final String pid) {
         final int pos = pid.indexOf('~');
@@ -149,7 +149,7 @@ public class Configuration
      *
      * @param pid The pid
      * @return The name or {@code null}.
-     * @see {@link Configuration#isFactoryConfiguration(String)}
+     * @see #isFactoryConfiguration(String)
      */
     public static String getName(final String pid) {
         final int pos = pid.indexOf('~');
@@ -163,7 +163,7 @@ public class Configuration
      * Get all properties of the configuration. This method returns a mutable
      * dictionary which can be mutated to alter the properties for this
      * configuration.
-     * 
+     *
      * @return The properties
      */
     public Dictionary<String, Object> getProperties() {
@@ -176,7 +176,7 @@ public class Configuration
      * configuration. Managing properties have to start with
      * {@code #CONFIGURATOR_PREFIX}. The returned copy is a mutable dictionary which
      * represents a snapshot of the properties at the time this method is called.
-     * 
+     *
      * @return The configuration properties
      */
     public Dictionary<String, Object> getConfigurationProperties() {
