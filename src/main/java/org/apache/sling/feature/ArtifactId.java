@@ -95,10 +95,10 @@ public class ArtifactId implements Comparable<ArtifactId> {
      * @throws IllegalArgumentException if the string can't be parsed to a valid artifact id.
      */
     public static ArtifactId parse(final String s) {
-        if ( s.contains(":") ) {
-            return ArtifactId.fromMvnId(s);
-        } else if ( s.contains("/") ) {
+        if ( s.contains("/") ) {
             return ArtifactId.fromMvnUrl(s);
+        } else if ( s.contains(":") ) {
+            return ArtifactId.fromMvnId(s);
         }
         throw new IllegalArgumentException("Unable to parse mvn coordinates/url: " + s);
     }

@@ -266,4 +266,11 @@ public class ArtifactIdTest {
             assertEquals(id, newId);
         }
     }
+
+    @Test
+    public void testParse() {
+        final ArtifactId a1 = new ArtifactId("group.a", "artifact", "1.0", "foo", "zip");
+        assertEquals(a1, ArtifactId.parse(a1.toMvnId()));
+        assertEquals(a1, ArtifactId.parse(a1.toMvnUrl()));
+    }
 }
