@@ -46,7 +46,6 @@ Maven coordinates are used to define the feature id and to refer to artifacts co
 
 In some cases only the coordinates are specified as a string in one of the above mentioned formats. In other cases, the artifact is described through a JSON object. In that case, the *id* property holds the coordinates in one of the formats.
 
-
 ```
 Example for specifying a feature id using a Maven id:
 {
@@ -95,32 +94,53 @@ Bundles usually have requirements, for example they contain package imports - su
 
 ## OSGi Configurations
 
-OSGi Configuration Admin configuration is specified in the `configurations` section of the feature model.
+OSGi configurations are specified in the `configurations` section of the feature model as a JSON object. The format for configurations is using the standard OSGi configuration resource format as defined by the [OSGi Configurator
+specification](https://osgi.org/specification/osgi.cmpn/7.0.0/service.configurator.html).
 
-The configurations are specified following the format defined by the OSGi Configurator
-specification: https://osgi.org/specification/osgi.cmpn/7.0.0/service.configurator.html
+The configuration section contains set of configuration dictionaries each with a `persistence identifier` (PID) key to target a specific PID in the `Configuration Admin Service` and zero or more configuration values for this PID. Factory configurations can be addressed using the `factory PID` and a name by starting with the factory PID, appending a tilde, and then appending the name. This ensures a well-known name for the factory configuration instance. In the case of single configurations, the PID is used as the key.
+
+```
+A feature with configurations:
+{
+  "id" : "org.apache.sling:org.apache.sling.core.feature:slingosgifeature:1.0.0",
+  "configurations" : {
+    // single configuration
+    "org.apache.sling.engine.MainServlet" : {
+      "title" : "Apache Sling",
+      "allowPost" : true,
+      "port:Integer" : "8080"
+    },
+    // a factory configuration
+    "org.apache.sling.logging.Logger~core" : {
+      "name" : "core",
+      "level" : "DEBUG"
+    }
+  }
+}
+
+```
+
+## Requirements and Capabilities
+
+In order to avoid a concept like *Require-Bundle* a feature does not explicitly declare dependencies to other features. These are declared by the required capabilities, either explicit or implicit. The implicit requirements are calculated by inspecting the contained bundles (and potentially other artifacts like content packages).
+
+Features can also explicitly declare additional requirements they have over and above the ones coming from the bundles. This is done in the `requirements` section of the feature.
+
+Features can declare additional capabilities that are provided by the feature in addition to the capabilities provided by the bundles. For example a number of bundles might together provide an `osgi.implementation` capability, which is not provided by any of those bundles individually. The Feature can be used to add this capability to the provided set. These additional capabilities are specified in the `capabilities` section of the feature.
+
+## Final and Complete Features
+
+Features can also be marked as `final` and/or `complete`.
+A `final` feature cannot be used as a prototype for another feature. A feature marked as `complete` indicates
+that all its dependencies are met by capabilities inside the feature, i.e. it has no external dependencies.
+
+## Variables
 
 Variables declared in the Feature Model variables section can be used for late binding of variables,
 they can be specified with the Launcher, or the default from the variables section is used.
 
-Factory configurations can be specified using the named factory syntax, which separates
-the factory PID and the name with a tilde '~'.
 
-
-## Requirements and Capabilities
-
-In order to avoid a concept like "Require-Bundle" a feature does not explicitly declare dependencies to other features. These are declared by the required capabilities, either explicit or implicit. The implicit requirements are calculated by inspecting the contained bundles (and potentially other artifacts like content packages).
-
-Features can also explicitly declare additional requirements they have over and above the ones coming from the bundles. This is done
-in the `requirements` section of the Feature Model.
-
-Features can declare additional capabilities that are provided by the feature in addition to the capabilities provided by
-the bundles. For example a number of bundles might together provide an `osgi.implementation` capability, which is not provided
-by any of those bundles individually. The Feature can be used to add this capability to the provided set.
-
-Additional capabilities are specified in the `capabilities` section of the Feature Model.
-
-Features can define OSGi Configurations that will be provided into the runtime and features can also declare additional requirements and capabilities over and above the ones coming from the bundles that are part of the feature.  
+## Prototype
 
 Features can be declared _from scratch_ or they can use another pre-existing feature as a prototype. In this case
 the new feature starts off as a feature identical to its prototype, with some exceptions:
@@ -128,38 +148,6 @@ the new feature starts off as a feature identical to its prototype, with some ex
 * it does not get the prototype's identity.
 * bundles, configurations and framework properties can be removed from the prototype, in the `removals` section.
 * anything declared in the feature definition of a feature based on a prototype adds or overrides to what came from the prototype.
-
-Features can also be marked as `final` and/or `complete`.
-A `final` feature cannot be used as a prototype for another feature. A feature marked as `complete` indicates
-that all its dependencies are met by capabilities inside the feature, i.e. it has no external dependencies.
-
-A Feature Launcher can be used to launch features into a running process with an OSGi Framework.
-The launcher is typically fed with a number of feature files that should be launched together.
-Overrides for variables defined in the feature models can be provided on the launcher commandline.
-
-Tooling exists to analyze and validate features, and to aggregate and merge multiple features into a single
-feature, which can be used to create higher level features from a combination of lower-level ones. Most of
-the tooling is accessible through the slingfeature-maven-plugin: https://github.com/apache/sling-slingfeature-maven-plugin  
-
-The following diagrams show a typical workflow when working with feature files:
-
-<img src="diagrams/Develop.jpg" width="700"/>
-
-Features are authored as JSON Feature Files.
-The slingfeature-maven-plugin provides analyzers and aggregators that check features and can combine them into larger features. The maven plugin can also be used to publish features to a Maven Repository.
-
-<img src="diagrams/RunningSystem.jpg" width="700"/>
-
-To create a running system from a number of feature files, features are selected from a Maven Repository,
-they are validated for completeness and optionally additional features are pulled in through the OSGi Resolver
-(not yet implemented). A final system feature has no unresolved dependencies. It is passed to the Feature Launcher
-along with optional additional features the provide functionality on top of what is defined in the system feature.
-The Feature Launcher creates a running process containing an OSGi Framework provisioned with the feature's contents.
-
-
-
-
-## Prototype
 
 A feature can be defined based on a prototype. This means that the feature starts out as a copy of the feature prototype.
 Everything in the prototype is copied to the new feature, except for its `id`. The new feature will get a new, different ID.
@@ -221,13 +209,43 @@ should continue.
 ]
 ```
 
+# Managing Features
+
+A Feature Launcher can be used to launch features into a running process with an OSGi Framework.
+The launcher is typically fed with a number of feature files that should be launched together.
+Overrides for variables defined in the feature models can be provided on the launcher commandline.
+
+Tooling exists to analyze and validate features, and to aggregate and merge multiple features into a single
+feature, which can be used to create higher level features from a combination of lower-level ones. Most of
+the tooling is accessible through the slingfeature-maven-plugin: https://github.com/apache/sling-slingfeature-maven-plugin  
+
+The following diagrams show a typical workflow when working with feature files:
+
+<img src="diagrams/Develop.jpg" width="700"/>
+
+Features are authored as JSON Feature Files.
+The slingfeature-maven-plugin provides analyzers and aggregators that check features and can combine them into larger features. The maven plugin can also be used to publish features to a Maven Repository.
+
+<img src="diagrams/RunningSystem.jpg" width="700"/>
+
+To create a running system from a number of feature files, features are selected from a Maven Repository,
+they are validated for completeness and optionally additional features are pulled in through the OSGi Resolver
+(not yet implemented). A final system feature has no unresolved dependencies. It is passed to the Feature Launcher
+along with optional additional features the provide functionality on top of what is defined in the system feature.
+The Feature Launcher creates a running process containing an OSGi Framework provisioned with the feature's contents.
+
+
+# Available Feature Extensions
+
+The feature model implementation supports some extensions out of the box. Other extensions are available through additional modules.
+
 ## Built-in extension: content-packages
 
 This extension of type `ARTIFACTS` allows listing content packages which will
 be installed by the launcher. Example:
 
 ```
-"content-packages:ARTIFACTS|true":[
+"content-packages:ARTIFACTS|required":[
     "org.apache.sling.myapp:my-content-package:zip:1.0.0"
 ]
 ```
