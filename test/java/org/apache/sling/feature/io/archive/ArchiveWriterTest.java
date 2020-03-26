@@ -26,6 +26,9 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -34,6 +37,7 @@ import java.util.Set;
 import org.apache.sling.feature.Artifact;
 import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.io.json.FeatureJSONReader;
 import org.junit.Test;
 
 public class ArchiveWriterTest {
@@ -65,15 +69,32 @@ public class ArchiveWriterTest {
         }
 
         final Set<ArtifactId> readIds = new HashSet<>();
+        final Set<ArtifactId> readFeatureIds = new HashSet<>();
+
         final List<Feature> features = new ArrayList<>();
         try (final InputStream in = new ByteArrayInputStream(archive)) {
             features.addAll(ArchiveReader.read(in, (id, is) -> {
-                readIds.add(id);
+
+                // read contents
                 byte[] read = readFromStream(is);
-                assertEquals(artifactBytes.length, read.length);
-                assertArrayEquals(artifactBytes, read);
+
+                // is feature?
+                if ( id.equals(f.getId()) ) {
+                    try ( final Reader reader = new StringReader(new String(read, StandardCharsets.UTF_8))) {
+                        final Feature readFeature = FeatureJSONReader.read(reader, id.toString());
+                        assertEquals(f.getId(), readFeature.getId());
+                        readFeatureIds.add(f.getId());
+                    }
+                } else {
+                    readIds.add(id);
+                    assertEquals(artifactBytes.length, read.length);
+                    assertArrayEquals(artifactBytes, read);
+                }
             }));
         }
+
+        assertEquals(1, readFeatureIds.size());
+        assertTrue(readFeatureIds.contains(f.getId()));
 
         assertEquals(1, readIds.size());
         assertTrue(readIds.contains(ArtifactId.parse("g:a:2")));

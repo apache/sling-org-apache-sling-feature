@@ -16,9 +16,14 @@
  */
 package org.apache.sling.feature.io.archive;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -60,9 +65,9 @@ public class ArchiveReader {
      * caller to close the input stream.
      *
      * @param in       The input stream to read from.
-     * @param consumer The plugin consuming the binaries, if {@code null} only the
-     *                 feature models are read
-     * @return The feature models
+     * @param consumer The plugin consuming the binaries, including the features.
+     *                 If no consumer is provided, only the features will be returned.
+     * @return The feature models mentioned in the manifest of the archive
      * @throws IOException If anything goes wrong
      */
     public static Set<Feature> read(final InputStream in,
@@ -83,10 +88,35 @@ public class ArchiveReader {
         JarEntry entry = null;
         while ( ( entry = jis.getNextJarEntry() ) != null ) {
             if (!entry.isDirectory() && !entry.getName().startsWith("META-INF/")) {
-                if (featurePaths.contains(entry.getName())) { // feature
-                    features.add(FeatureJSONReader.read(new InputStreamReader(jis, "UTF-8"), entry.getName()));
-                } else { // artifact
-                    final ArtifactId id = ArtifactId.fromMvnPath(entry.getName());
+                final ArtifactId id = ArtifactId.fromMvnPath(entry.getName());
+
+                if (featurePaths.contains(entry.getName())) {
+                    // feature - read to string first
+                    final String contents;
+                    try ( final StringWriter writer = new StringWriter()) {
+                        // don't close the input stream
+                        final Reader reader = new InputStreamReader(jis, "UTF-8");
+                        final char[] buffer = new char[2048];
+                        int l;
+                        while ( (l = reader.read(buffer)) > 0) {
+                            writer.write(buffer, 0, l);
+                        }
+                        writer.flush();
+                        contents = writer.toString();
+                    }
+                    // add to features
+                    try ( final Reader reader = new StringReader(contents) ) {
+                        final Feature feature = FeatureJSONReader.read(reader, entry.getName());
+                        features.add(feature);
+                    }
+                    // pass to consumer
+                    if ( consumer != null ) {
+                        try ( final InputStream is = new ByteArrayInputStream(contents.getBytes(StandardCharsets.UTF_8))) {
+                            consumer.consume(id, is);
+                        }
+                    }
+                } else {
+                    // artifact
                     if (consumer != null) {
                         consumer.consume(id, jis);
                     }
