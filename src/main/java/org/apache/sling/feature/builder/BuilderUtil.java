@@ -663,8 +663,8 @@ class BuilderUtil {
                     }
                 }
                 if ( !handled ) {
-                    // no merge handler, just add
-                    target.getExtensions().add(ext);
+                    // no merge handler, just add a copy
+                    target.getExtensions().add(ext.copy());
                 }
             }
         }

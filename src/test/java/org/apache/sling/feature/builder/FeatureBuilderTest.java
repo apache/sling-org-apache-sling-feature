@@ -1073,6 +1073,43 @@ public class FeatureBuilderTest {
         assertEquals(test, c);
     }
 
+    /**
+     * Merge three features. First feature has no extension, second and third have.
+     * Make sure that the extension of the second feature is not modified.
+     * Then use the aggregated result and merge another feature into it and
+     * merge sure thet the extension of the first aggregation is not modified
+     * (see SLING-9260)
+     */
+    @Test public void testCopyOfExtensionWhenMerging() {
+        final Feature f1 = new Feature(ArtifactId.parse("g/a/1"));
+
+        final Feature f2 = new Feature(ArtifactId.parse("g/b/1"));
+        Extension e2 = new Extension(ExtensionType.TEXT, Extension.EXTENSION_NAME_REPOINIT, ExtensionState.REQUIRED);
+        e2.setText("line2");
+        f2.getExtensions().add(e2);
+
+        final Feature f3 = new Feature(ArtifactId.parse("g/c/1"));
+        Extension e3 = new Extension(ExtensionType.TEXT, Extension.EXTENSION_NAME_REPOINIT, ExtensionState.REQUIRED);
+        e3.setText("line3");
+        f3.getExtensions().add(e3);
+
+        final BuilderContext bc = new BuilderContext(provider);
+        final Feature f = FeatureBuilder.assemble(ArtifactId.parse("f/f/1"), bc, f1, f2, f3);
+        assertEquals("line2\nline3", f.getExtensions().getByName(Extension.EXTENSION_NAME_REPOINIT).getText());
+
+        // e2 is not modified
+        assertEquals("line2", e2.getText());
+
+        final Feature f4 = new Feature(ArtifactId.parse("g/c/1"));
+        Extension e4 = new Extension(ExtensionType.TEXT, Extension.EXTENSION_NAME_REPOINIT, ExtensionState.REQUIRED);
+        e4.setText("line4");
+        f4.getExtensions().add(e4);
+
+        final Feature ff = FeatureBuilder.assemble(ArtifactId.parse("f/g/1"), bc, f, f4);
+        assertEquals("line2\nline3\nline4", ff.getExtensions().getByName(Extension.EXTENSION_NAME_REPOINIT).getText());
+        assertEquals("line2\nline3", f.getExtensions().getByName(Extension.EXTENSION_NAME_REPOINIT).getText());
+    }
+
     private static class MatchingRequirementImpl extends RequirementImpl implements MatchingRequirement {
 
         public MatchingRequirementImpl(Resource res, String ns, Map<String, String> dirs, Map<String, Object> attrs) {
