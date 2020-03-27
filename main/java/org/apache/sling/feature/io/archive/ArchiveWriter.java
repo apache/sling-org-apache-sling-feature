@@ -16,12 +16,16 @@
  */
 package org.apache.sling.feature.io.archive;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.StringReader;
 import java.io.Writer;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -37,6 +41,7 @@ import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.Feature;
 import org.apache.sling.feature.builder.ArtifactProvider;
+import org.apache.sling.feature.io.json.FeatureJSONReader;
 import org.apache.sling.feature.io.json.FeatureJSONWriter;
 
 /**
@@ -87,23 +92,19 @@ public class ArchiveWriter {
         manifest.getMainAttributes().putValue(CONTENTS_HEADER, String.join(",", Arrays.asList(features).stream()
                 .map(feature -> feature.getId().toMvnId()).collect(Collectors.toList())));
 
+        final Set<ArtifactId> artifacts = new HashSet<>();
+        final byte[] buffer = new byte[1024*1024*256];
+
         // create archive
         final JarOutputStream jos = new JarOutputStream(out, manifest);
 
         // write everything without compression
         jos.setLevel(Deflater.NO_COMPRESSION);
         for (final Feature feature : features) {
-            final JarEntry entry = new JarEntry(feature.getId().toMvnPath());
-            jos.putNextEntry(entry);
-            final Writer writer = new OutputStreamWriter(jos, "UTF-8");
-            FeatureJSONWriter.write(writer, feature);
-            writer.flush();
-            jos.closeEntry();
+            writeFeature(artifacts, feature, provider, jos, buffer);
         }
 
-        final byte[] buffer = new byte[1024*1024*256];
 
-        final Set<ArtifactId> artifacts = new HashSet<>();
 
         for (final Feature feature : features) {
             for (final Artifact a : feature.getBundles()) {
@@ -112,13 +113,57 @@ public class ArchiveWriter {
 
             for (final Extension e : feature.getExtensions()) {
                 if (e.getType() == ExtensionType.ARTIFACTS) {
+                    final boolean isFeature = Extension.EXTENSION_NAME_ASSEMBLED_FEATURES.equals(e.getName());
                     for (final Artifact a : e.getArtifacts()) {
-                        writeArtifact(artifacts, provider, a, jos, buffer);
+                        if ( isFeature ) {
+                            writeFeature(artifacts, provider, a.getId(), jos, buffer);
+                        } else {
+                            writeArtifact(artifacts, provider, a, jos, buffer);
+                        }
                     }
                 }
             }
         }
         return jos;
+    }
+
+    private static void writeFeature(final Set<ArtifactId> artifacts,
+            final Feature feature,
+            final ArtifactProvider provider,
+            final JarOutputStream jos, final byte[] buffer) throws IOException {
+        if ( artifacts.add(feature.getId())) {
+            final JarEntry entry = new JarEntry(feature.getId().toMvnPath());
+            jos.putNextEntry(entry);
+            final Writer writer = new OutputStreamWriter(jos, StandardCharsets.UTF_8);
+            FeatureJSONWriter.write(writer, feature);
+            writer.flush();
+            jos.closeEntry();
+
+            if ( feature.getPrototype() != null ) {
+                writeFeature(artifacts, provider, feature.getPrototype().getId(), jos, buffer);
+            }
+        }
+    }
+
+    private static void writeFeature(final Set<ArtifactId> artifacts,
+            final ArtifactProvider provider,
+            final ArtifactId featureId,
+            final JarOutputStream jos, final byte[] buffer) throws IOException {
+        if ( !artifacts.contains(featureId)) {
+            final URL url = provider.provide(featureId);
+            try ( final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                  final InputStream is = url.openStream()) {
+                int l = 0;
+                while ( (l = is.read(buffer)) > 0 ) {
+                    baos.write(buffer, 0, l);
+                }
+                final String contents = new String(baos.toByteArray(), StandardCharsets.UTF_8);
+                try ( final Reader reader = new StringReader(contents)) {
+                    final Feature feature = FeatureJSONReader.read(reader, featureId.toMvnId());
+                    writeFeature(artifacts, feature, provider, jos, buffer);
+                }
+            }
+        }
     }
 
     private static void writeArtifact(final Set<ArtifactId> artifacts,
