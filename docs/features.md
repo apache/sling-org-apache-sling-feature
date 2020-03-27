@@ -101,7 +101,18 @@ A feature with configurations:
 
 ## OSGi Framework properties
 
-TBD
+Apart from OSGi configurations, sometimes OSGi framework properties are used for configurations. Framework properties are key value pairs where the value is a string. They can be specified with the 'framework-properties' key in the feature:
+
+```
+A feature with framework properties:
+{
+  "id" : "org.apache.sling:org.apache.sling.core.feature:slingosgifeature:1.0.0",
+  "framework-properties" : {
+    "org.apache.sling.logging.default.level" : "DEBUG",
+    "org.apache.felix.framework.cache"  : "true"
+  }
+}
+```
 
 ## Requirements and Capabilities
 
