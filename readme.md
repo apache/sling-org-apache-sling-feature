@@ -27,17 +27,29 @@ In a nutshell, a feature is the central entity for the Feature Model. A feature 
 
 Read the [documentation about features](docs/features.md)
 
+## Feature Extensions
+
+The Feature Model is extensible, meaning that it can be augmented with custom content in a number of ways. Some extensions are supported out of the box. Other extensions are available through additional modules.
+
+Read the [documentation about available extensions](docs/extensions.md)
+
 ## Feature Archives
 
 Feature archives allow to distribute a feature together with all its referenced binaries.
 
 Read the [documentation about feature archives](docs/feature-archives.md)
 
-## Feature Extensions
+## Feature Reference Files
 
-The Feature Model is extensible, meaning that it can be augmented with custom content in a number of ways. Some extensions are supported out of the box. Other extensions are available through additional modules.
+Reference files can be used to mention a collection of feature files in a single file.
 
-Read the [documentation about available extensions](docs/extensions.md)
+Read the [documentation about feature archives](docs/feature-ref-files.md)
+
+## Feature Aggregation
+
+In order to create higher level features or a complete application, usually several features are aggregated into a single final feature.
+
+Read the [documentation about feature aggregation](docs/aggregation.md)
 
 # Managing Features
 
@@ -63,16 +75,6 @@ they are validated for completeness and optionally additional features are pulle
 (not yet implemented). A final system feature has no unresolved dependencies. It is passed to the Feature Launcher
 along with optional additional features the provide functionality on top of what is defined in the system feature.
 The Feature Launcher creates a running process containing an OSGi Framework provisioned with the feature's contents.
-
-## Feature Aggregation
-
-When creating aggregates, extensions are merged into the resulting aggregate feature. There are
-default rules for aggregating extension content, which essentially is appending
-all the extension content of a given type. However custom merge plugins can also
-be provided. After the merge a postprocessor is always run which can perform
-additional operations based on the extension content. Note that both the
-aggregate task of the `slingfeature-maven-plugin` as well as the launcher perform
-merge operations on all the feature models these are provided with.
 
 
 # Launching
