@@ -4,19 +4,17 @@
 
 # The Sling OSGi Feature Model
 
-OSGi is a platform capable of running large applications for a variety of purposes, including rich client applications,
-server-side systems and cloud and container based architectures.
+# An Introduction to the Sling Feature Model
 
-As these applications are generally based on many bundles, describing each bundle individually in the application
-definition becomes unwieldy once the number of bundles reaches a certain level. Additionally, OSGi has no mechanism to describe other elements of the application definition, such as configuration or custom artifacts.
+OSGi is a platform capable of running large applications for a variety of purposes, including rich client applications, server-side systems and cloud and container based architectures. Typical OSGi applications are assembled out of bundles and configured through both, OSGi configurations and framework properties (though these are less frequently used than OSGi configurations). Depending on the nature of the application, there might be additional artifact types involved.
 
-While bundles already provide a good way to define rather small, coherent modules, there is often a need to distribute or provision a set of such bundles together with some configuration. Or if you want to build a set of applications (for example microservices) which share certain parts
-(like a foundation) the need for a higher level building block arises.
+As these applications are generally based on many bundles, describing each bundle individually in the application definition becomes unwieldy once the number of bundles reaches a certain level. Additionally, OSGi has no mechanism to describe other elements of the application definition, such as configuration or custom artifacts.
 
-The Sling OSGi Feature Model introduces such a higher level building block to describe OSGi applications or parts of it that encapsulates
-the details of the various components that the feature is built up from. It allows the description of an entire OSGi-based application based
-on reusable components and includes everything related to this application, including bundles, configuration, framework properties, capabilities,
-requirements and custom artifacts.
+While bundles already provide a good way to define rather small, coherent modules, there is often a need to distribute or provision a set of such bundles together with some configuration. Or if you want to build a set of applications (for example microservices) which share certain parts (like a foundation) the need for a higher level building block arises.
+
+The Sling OSGi Feature Model introduces such a higher level building block to describe OSGi applications or parts of it that encapsulates the details of the various components that the feature is built up from. It allows the description of an entire OSGi-based application based on reusable components and includes everything related to this application, including bundles, configuration, framework properties, capabilities, requirements and custom artifacts.
+
+The model is a general purpose feature model and in no way tied to Apache Sling.
 
 ## Features
 
@@ -87,12 +85,3 @@ A launcher for feature models is available in this project: https://github.com/a
 The primary tooling around the feature model is provided through Maven by the Sling Feature Maven Plugin: https://github.com/apache/sling-slingfeature-maven-plugin
 
 See the readme of the plugin for more information.  
-
-# References
-
-The links below provide additional information regarding the Feature Model.
-
-* [Requirements](requirements.md)
-* [File format](https://github.com/apache/sling-org-apache-sling-feature-io/blob/master/design/feature-model.json)
-
-* [Prototype](prototype.md)

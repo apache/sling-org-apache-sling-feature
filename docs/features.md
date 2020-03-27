@@ -99,6 +99,30 @@ A feature with configurations:
 }
 ```
 
+### Configurations belonging to Bundles
+
+In most cases, configurations belong to a bundle. The most common use case is a configuration for a (Declarative Service) component. Therefore instead of having a separate configurations section, it is more intuitive to specify configurations as part of a bundle. The benefit of this approach is, that it can easily be decided if a configuration is to be used: if exactly that bundle is used, the configurations are used; otherwise they are not.
+
+Instead of defining configurations globally for the feature as seen above, a configuration can be specified as part of a bundle.
+
+```
+A feature with a configuration attached to a bundle:
+{
+  "id" : "org.apache.sling:org.apache.sling.core.feature:slingosgifeature:1.0.0",
+  "bundles" : [
+    {
+      "id" : "org.apache.sling:security-server:2.2.0",
+      "configurations" : {
+        "org.apache.sling.security.Server" : {
+          "debug" : true,
+          "port" : 4920
+        }
+      }
+    }
+  ]
+```
+}
+
 ## OSGi Framework properties
 
 Apart from OSGi configurations, sometimes OSGi framework properties are used for configurations. Framework properties are key value pairs where the value is a string. They can be specified with the 'framework-properties' key in the feature:
@@ -118,7 +142,7 @@ A feature with framework properties:
 
 In order to avoid a concept like *Require-Bundle* a feature does not explicitly declare dependencies to other features. These are declared by the required capabilities, either explicit or implicit. The implicit requirements are calculated by inspecting the contained bundles (and potentially other artifacts like content packages).
 
-Features can also explicitly declare additional requirements they have over and above the ones coming from the bundles. This is done in the `requirements` section of the feature.
+Features can also explicitly declare additional requirements they have over and above the ones coming from the bundles. This is done in the `requirements` section of the feature. Each requirement has a namespace and optional directives and attributes.
 
 ```
 A feature declaring additional requirements:
@@ -126,19 +150,16 @@ A feature declaring additional requirements:
   "id" : "org.apache.sling:org.apache.sling.core.feature:slingosgifeature:1.0.0",
   "requirements" : [
     {
-      "namespace" : "osgi.implementation",
-      "attributes" : {
-        "name" : "value"
-      },
+      "namespace" : "osgi.contract",
       "directives" : {
-        "name" : "value"
+          "filter" : "(&(osgi.contract=JavaServlet)(version=3.1))"
       }
     }
   ]
 }
 ```
 
-Features can declare additional capabilities that are provided by the feature in addition to the capabilities provided by the bundles. For example a number of bundles might together provide an `osgi.implementation` capability, which is not provided by any of those bundles individually. The Feature can be used to add this capability to the provided set. These additional capabilities are specified in the `capabilities` section of the feature.
+Features can declare additional capabilities that are provided by the feature in addition to the capabilities provided by the bundles. For example a number of bundles might together provide an `osgi.implementation` capability, which is not provided by any of those bundles individually. The Feature can be used to add this capability to the provided set. These additional capabilities are specified in the `capabilities` section of the feature. Each capability has a namespace and optional directives and attributes.
 
 ```
 A feature declaring additional capabilities:
@@ -146,13 +167,14 @@ A feature declaring additional capabilities:
   "id" : "org.apache.sling:org.apache.sling.core.feature:slingosgifeature:1.0.0",
   "capabilities" : [
     {
-      "namespace" : "osgi.implementation",
-      "attributes" : {
-        "name" : "value"
-      },
-      "directives" : {
-        "name" : "value"
-      }
+       "namespace" : "osgi.implementation",
+       "attributes" : {
+             "osgi.implementation" : "osgi.http",
+             "version:Version" : "1.1"
+       },
+       "directives" : {
+             "uses" : "javax.servlet,javax.servlet.http,org.osgi.service.http.context,org.osgi.service.http.whiteboard"
+       }
     }
   ]
 }
@@ -226,3 +248,13 @@ overrides the one coming from the prototype.
 `Artifact` these are handled just like bundles. Extension merge plugins can be configured to perform custom merging.
 
 Prototypes can provide a useful way to manipulate existing features. For example to replace a bundle in an existing feature and deliver this as a modified feature.
+
+## Relation to Repository Specification (Chapter 132)
+
+There are two major differences between a repository as described in the [Repository Service Description](https://osgi.org/specification/osgi.cmpn/7.0.0/service.repository.html) and the feature model. A repository contains a list of more or less unrelated resources whereas a feature describes resources as a unit. For example a feature allows to define a bundle together with OSGi configurations - which ensures that whenever this feature is used, the bundle *together with* the configurations are deployed. A repository can only describe the bundle as a separate resource and the OSGi configurations as additional unrelated resources.
+
+The second difference is the handling of requirements and capabilities. While a repository is supposed to list all requirements and capabilities of a resource as part of the description, the feature model does not require this. As the feature model refers to the bundle and the bundle has the requirements and capabilities as metadata, there is no need to repeat that information.
+
+By these two differences you can already tell, that a repository contents is usually generated by tools while a feature is usually a human created resource. While it is possible to create a repository index out of a feature, the other way round does not work as the repository has no standard way to define relationships between resources.
+
+However, the approaches can of course be combined. If a feature has requirements which are not fulfilled by the feature itself, a repository can be used to find the matching capabilities.
