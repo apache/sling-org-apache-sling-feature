@@ -78,7 +78,7 @@ public class ArchiveReader {
         // validate manifest and get feature ids
         final String[] featureIds = checkHeaderAndExtractContents(jis.getManifest());
         final List<String> featurePaths = Arrays.asList(featureIds).stream()
-                .map(id -> ArtifactId.fromMvnId(id).toMvnPath()).collect(Collectors.toList());
+                .map(id -> ArtifactId.parse(id).toMvnPath()).collect(Collectors.toList());
 
 
         // read contents
