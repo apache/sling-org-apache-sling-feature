@@ -1,0 +1,34 @@
+# Available Feature Extensions
+
+The Feature Model is extensible, meaning that it can be augmented with custom content in a number of ways. Some extensions are supported out of the box. Other extensions are available through additional modules.
+
+## Built-in extension: content-packages
+
+This extension of type `ARTIFACTS` allows listing content packages which will
+be installed by the launcher. Example:
+
+```
+"content-packages:ARTIFACTS|required":[
+    "org.apache.sling.myapp:my-content-package:zip:1.0.0"
+]
+```
+
+## Built-in extension: repoinit
+
+This extension is of type `TEXT`. It allows the specification of Sling Repository
+Initialization statements which will be executed on the repository at startup.
+Example:
+
+```
+"repoinit:TEXT|required":[
+  "create path /content/example.com(mixin mix:referenceable)",
+  "create path (nt:unstructured) /var"
+]
+```
+
+As initializing the repository is usually important for Sling based applications
+the extension should be marked as required as in the example above.
+
+## Further extensions
+
+* [API Controller and API Regions](../apicontroller.md)
