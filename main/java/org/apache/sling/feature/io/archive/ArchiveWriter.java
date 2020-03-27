@@ -57,9 +57,10 @@ public class ArchiveWriter {
 
     /**
      * Create a feature model archive. The output stream will not be closed by this
-     * method. The caller must call {@link JarOutputStream#close()} or
-     * {@link JarOutputStream#finish()} on the return output stream. The caller can
-     * add additional files through the return stream.
+     * method. The caller must call {@link JarOutputStream#close()}
+     * on the return output stream. The caller can
+     * add additional files through the return stream. However, the files
+     * should not be compressed (which is the default for the output stream).
      *
      * A feature model can be in different states: it might be a partial feature
      * model, a complete feature model or an assembled feature model. This method
@@ -89,8 +90,8 @@ public class ArchiveWriter {
         // create archive
         final JarOutputStream jos = new JarOutputStream(out, manifest);
 
-        // write models first with compression enabled
-        jos.setLevel(Deflater.BEST_COMPRESSION);
+        // write everything without compression
+        jos.setLevel(Deflater.NO_COMPRESSION);
         for (final Feature feature : features) {
             final JarEntry entry = new JarEntry(feature.getId().toMvnPath());
             jos.putNextEntry(entry);
@@ -100,8 +101,6 @@ public class ArchiveWriter {
             jos.closeEntry();
         }
 
-        // write artifacts with compression disabled
-        jos.setLevel(Deflater.NO_COMPRESSION);
         final byte[] buffer = new byte[1024*1024*256];
 
         final Set<ArtifactId> artifacts = new HashSet<>();
