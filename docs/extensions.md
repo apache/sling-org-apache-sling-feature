@@ -31,4 +31,4 @@ the extension should be marked as required as in the example above.
 
 ## Further extensions
 
-* [API Controller and API Regions](../apicontroller.md)
+* [API Controller and API Regions](https://github.com/apache/sling-org-apache-sling-feature-extension-apiregions/blob/master/docs/api-regions.md)

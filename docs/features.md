@@ -149,7 +149,7 @@ A feature declaring additional capabilities:
 
 ## Extensions
 
-The Feature Model is extensible, meaning that it can be augmented with custom content in a number of ways. Custom content be useful to co-locate metadata with its associated feature or to enhance the feature model with new functionality. The API Regions described in [apicontroller.md](../apicontroller.md) is an example of enhancing the feature functionality.
+The Feature Model is extensible, meaning that it can be augmented with custom content in a number of ways. Custom content be useful to co-locate metadata with its associated feature or to enhance the feature model with new functionality. The API Regions described in the [API Regions documentation](https://github.com/apache/sling-org-apache-sling-feature-extension-apiregions/blob/master/docs/api-regions.md) is an example of enhancing the feature functionality.
 
 Custom content can have one of the following formats/types:
 
