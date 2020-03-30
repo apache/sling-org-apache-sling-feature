@@ -209,45 +209,83 @@ For example, the following declaration defines an extension with name `api-regio
 ]
 ```
 
-## Final and Complete Features
-
-Features can also be marked as `final` and/or `complete`.
-A `final` feature cannot be used as a prototype for another feature. A feature marked as `complete` indicates
-that all its dependencies are met by capabilities inside the feature, i.e. it has no external dependencies.
-
 ## Variables
 
-Variables declared in the Feature Model variables section can be used for late binding of variables,
-they can be specified with the Launcher, or the default from the variables section is used.
+Variables can be declared with the 'variables' key in the feature. This can be used for late binding of values, for example when launching a feature.
+
+```
+A feature declaring variables:
+{
+  "id" : "org.apache.sling:org.apache.sling.core.feature:slingosgifeature:1.0.0",
+  "variables" : {
+    "port" : 8080
+  },
+  "framework-properties" : {
+    "org.apache.felix.http.port" : "${port}"
+  }
+}
+```
+
+Variables can be used in the values of framework properties and in the values of configurations.
 
 ## Prototype
 
-Features can be declared _from scratch_ or they can use another pre-existing feature as a prototype. In this case
-the new feature starts off as a feature identical to its prototype, with some exceptions:
+Features can be declared _from scratch_ or they can use another pre-existing feature as a prototype. Using a prototype is especially useful to make minor adjustments to an existing feature and use the modified feature instead of the original, for example replacing a single bundle.
 
-* it does not get the prototype's identity.
-* bundles, configurations and framework properties can be removed from the prototype, in the `removals` section.
-* anything declared in the feature definition of a feature based on a prototype adds or overrides to what came from the prototype.
+```
+A feature using a prototype:
+{
+  "id" : "org.apache.sling:my-sling-core-feature:slingosgifeature:1.0.0",
+  "prototype" : {
+     "id" : "org.apache.sling:org.apache.sling.core.feature:slingosgifeature:1.0.0",
+     "removals" : {
+         ...
+     }
+  }
+}
+```
 
-A feature can be defined based on a prototype. This means that the feature starts out as a copy of the feature prototype.
-Everything in the prototype is copied to the new feature, except for its `id`. The new feature will get a new, different ID.
-The prototype is processed with regard to the defined elements of the feature itself.
+If a feature uses a prototype, the following parts are copied from the prototype into the feature:
+* Variables
+* Bundles
+* Configurations
+* Framework properties
+* Extensions
+* Requirements and capabilities
 
-This processing happens as follows:
-* Removal instructions for a prototype are handled first.
-* A clash of artifacts (such as bundles) between the prototype and the feature is resolved by picking the version defined last, which
-is the one defined by the feature, not its prototype. Artifact clashes are detected based on Maven Coordinates, not on the content
-of the artifact. So if a prototype defines a bundle with artifact ID `org.sling:somebundle:1.2.0` and the feature itself declares
-`org.sling:somebundle:1.0.1` in its `bundles` section, the bundle with version `1.0.1` is used, i.e. the definition in the feature
-overrides the one coming from the prototype.
-* Configurations will be merged by default, later ones potentially overriding newer ones:
+Then the removal instructions of the prototype object are handled next.
+
+Finally, the contents from the prototype is then overlayed with the definitions from the feature using the prototype. In detail this means:
+* Variables from the feature overwrite variables from the prototype.
+* A clash of artifacts (such as bundles) between the prototype and the feature is resolved by picking the version from the feature, not its prototype. Artifact clashes are detected based on Maven Coordinates, not on the content of the artifact. So if a prototype defines a bundle with artifact ID `org.sling:somebundle:1.2.0` and the feature itself declares `org.sling:somebundle:1.0.1` in its `bundles` section, the bundle with version `1.0.1` is used.
+* Configurations will be merged by default, the ones from the feature potentially overwriting configurations from the prototype:
   * If the same property is declared in more than one feature, the last one wins - in case of an array value, this requires redeclaring all values (if they are meant to be kept).
-* Later framework properties overwrite newer ones.
+* Framework properties from the feature overwrite framework properties from the prototype.
+* Extensions are handled in an extension specific way, by default the contents are appended. In the case of extensions of type `Artifact` these are handled just like bundles. Extension merge plugins can be configured to perform custom merging.
 * Capabilities and requirements are appended - this might result in duplicates, but that doesn't really hurt in practice.
-* Extensions are handled in an extension specific way, by default the contents are appended. In the case of extensions of type
-`Artifact` these are handled just like bundles. Extension merge plugins can be configured to perform custom merging.
 
-Prototypes can provide a useful way to manipulate existing features. For example to replace a bundle in an existing feature and deliver this as a modified feature.
+## Final and Complete Features
+
+A feature might be self-contained, for example a feature describing a complete application has no external dependencies. Such a feature can be marked as `complete` indicating
+that all its dependencies and requirements are met by capabilities inside the feature.
+
+```
+A feature marked as complete
+{
+  "id" : "org.apache.sling:org.apache.sling.core.feature:slingosgifeature:1.0.0",
+  "complete" : true
+}
+```
+
+Features can also be marked as `final`. Such a feature cannot be used as a prototype for another feature, similar to the final classifier on a class file in Java.
+
+```
+A feature marked as final
+{
+  "id" : "org.apache.sling:org.apache.sling.core.feature:slingosgifeature:1.0.0",
+  "final" : true
+}
+```
 
 ## Relation to Repository Specification (Chapter 132)
 
