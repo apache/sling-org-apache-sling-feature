@@ -18,20 +18,18 @@ package org.apache.sling.feature.io.json;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.io.StringReader;
-import java.util.Collections;
+import java.util.Hashtable;
 import java.util.Map;
 
-import javax.json.Json;
-import javax.json.JsonObject;
-
-import org.apache.felix.configurator.impl.json.JSONUtil;
+import org.apache.felix.cm.json.ConfigurationReader;
+import org.apache.felix.cm.json.ConfigurationResource;
+import org.apache.sling.feature.Configuration;
 import org.apache.sling.feature.Configurations;
 
 /**
  * JSON Reader for configurations.
  */
-public class ConfigurationJSONReader extends JSONReaderBase {
+public class ConfigurationJSONReader {
 
     /**
      * Read a map of configurations from the reader
@@ -45,32 +43,28 @@ public class ConfigurationJSONReader extends JSONReaderBase {
     public static Configurations read(final Reader reader, final String location)
     throws IOException {
         try {
-            final ConfigurationJSONReader mr = new ConfigurationJSONReader(location);
-            return mr.readConfigurations(reader);
+            final ConfigurationJSONReader mr = new ConfigurationJSONReader();
+            return mr.readConfigurations(location, reader);
         } catch (final IllegalStateException | IllegalArgumentException e) {
             throw new IOException(e);
         }
     }
 
-    /**
-     * Private constructor
-     * @param location Optional location
-     */
-    ConfigurationJSONReader(final String location) {
-        super(location);
-    }
-
-    Configurations readConfigurations(final Reader reader) throws IOException {
+    Configurations readConfigurations(final String location, final Reader reader) throws IOException {
         final Configurations result = new Configurations();
 
-        final JsonObject json = Json.createReader(new StringReader(minify(reader))).readObject();
-
-        @SuppressWarnings("unchecked")
-        final Map<String, Object> map = (Map<String, Object>) JSONUtil.getValue(json);
-
-        final Map<String, Object> objMap = Collections.singletonMap(JSONConstants.FEATURE_CONFIGURATIONS, (Object)map);
-
-        readConfigurations(objMap, result);
+        final ConfigurationReader cfgReader = org.apache.felix.cm.json.Configurations
+            .buildReader()
+            .withIdentifier(location)
+            .verifyAsBundleResource(true)
+            .build(reader);
+        final ConfigurationResource rsrc = cfgReader.readConfigurationResource();
+        for(Map.Entry<String, Hashtable<String, Object>> entry : rsrc.getConfigurations().entrySet() ) {
+            final Configuration cf = new Configuration(entry.getKey());
+            for(final Map.Entry<String, Object> prop : entry.getValue().entrySet()) {
+                cf.getProperties().put(prop.getKey(), prop.getValue());
+            }
+        }
 
         return result;
     }

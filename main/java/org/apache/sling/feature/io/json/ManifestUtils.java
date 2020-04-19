@@ -16,11 +16,6 @@
  */
 package org.apache.sling.feature.io.json;
 
-import org.apache.felix.utils.resource.CapabilityImpl;
-import org.osgi.framework.BundleException;
-import org.osgi.framework.Version;
-import org.osgi.resource.Capability;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,21 +26,29 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import javax.json.JsonValue;
+
+import org.apache.felix.cm.json.Configurations;
+import org.apache.felix.utils.resource.CapabilityImpl;
+import org.osgi.framework.BundleException;
+import org.osgi.framework.Version;
+import org.osgi.resource.Capability;
+
 // This class can be picked up from Felix Utils once it has been moved there. At that point
 // this class can be removed.
 class ManifestUtils {
-    public static void unmarshalAttribute(String key, Object value, BiConsumer<String, Object> sink) throws IOException {
-        unmarshal(key + "=" + value, Capability::getAttributes, sink);
+    public static void unmarshalAttribute(String key, JsonValue value, BiConsumer<String, Object> sink) throws IOException {
+        unmarshal(key.concat("=").concat(Configurations.convertToObject(value).toString()), Capability::getAttributes, sink);
     }
 
-    public static void unmarshalDirective(String key, Object value, BiConsumer<String, String> sink) throws IOException {
-        unmarshal(key + ":=" + value, Capability::getDirectives, sink);
+    public static void unmarshalDirective(String key, JsonValue value, BiConsumer<String, String> sink) throws IOException {
+        unmarshal(key.concat(":=").concat(Configurations.convertToObject(value).toString()), Capability::getDirectives, sink);
     }
 
     private static <T> void unmarshal(String header, Function<Capability, Map<String, T>> lookup, BiConsumer<String, T> sink) throws IOException {
         try {
             convertProvideCapabilities(
-                    normalizeCapabilityClauses(parseStandardHeader("foo;" + header), "2"))
+                    normalizeCapabilityClauses(parseStandardHeader("foo;".concat(header)), "2"))
                     .forEach(capability -> lookup.apply(capability).forEach(sink));
         } catch (Exception e) {
             throw new IOException(e);

@@ -66,97 +66,105 @@ public class IOUtilsTest {
     }
 
     @Test public void testGetFileFromURL() throws IOException {
-        File file = File.createTempFile("IOUtilsTest \\\\+%23öäü^^^°$::", ".test");
+        File file = File.createTempFile("IOUtilsTest", ".test");
 
-        try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"))) {
-            writer.println("Hello");
-        }
-
-        assertEquals(file, IOUtils.getFileFromURL(new URL("file:" + file.getPath()), false, null));
-
-        assertEquals(file, IOUtils.getFileFromURL(file.toURI().toURL(), false, null));
-
-        URL url = new URL(null,"bla:" + file.toURI().toURL(), new URLStreamHandler() {
-            @Override
-            protected URLConnection openConnection(URL u){
-                return new URLConnection(u) {
-                    @Override
-                    public void connect()
-                    {
-
-                    }
-
-                    @Override
-                    public InputStream getInputStream() throws IOException
-                    {
-                        return new FileInputStream(file);
-                    }
-                };
+        try {
+            try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"))) {
+                writer.println("Hello");
             }
-        });
 
-        assertNull(IOUtils.getFileFromURL(url, false, null));
-        File tmp = IOUtils.getFileFromURL(url, true, null);
+            assertEquals(file, IOUtils.getFileFromURL(file.toURI().toURL(), false, null));
 
-        assertNotEquals(file, tmp);
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(tmp), "UTF-8"))) {
-            assertEquals("Hello", reader.readLine());
+            URL url = new URL(null,"bla:" + file.toURI().toURL(), new URLStreamHandler() {
+                @Override
+                protected URLConnection openConnection(URL u){
+                    return new URLConnection(u) {
+                        @Override
+                        public void connect()
+                        {
+
+                        }
+
+                        @Override
+                        public InputStream getInputStream() throws IOException
+                        {
+                            return new FileInputStream(file);
+                        }
+                    };
+                }
+            });
+
+            assertNull(IOUtils.getFileFromURL(url, false, null));
+            File tmp = IOUtils.getFileFromURL(url, true, null);
+
+            assertNotEquals(file, tmp);
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(tmp), "UTF-8"))) {
+                assertEquals("Hello", reader.readLine());
+            }
+        } finally {
+            file.delete();
         }
+        File jarFile = File.createTempFile("IOUtilsTes", ".jar");
+        try {
 
-        File jarFile = File.createTempFile("\"IOUtilsTest \\\\\\\\+%23öäü^^^°$::\"", ".jar");
+            try (JarOutputStream output = new JarOutputStream(new FileOutputStream(jarFile))) {
+                output.putNextEntry(new JarEntry("test"));
+                output.write("Hello".getBytes());
+                output.closeEntry();
+            }
 
-        try (JarOutputStream output = new JarOutputStream(new FileOutputStream(jarFile))) {
-            output.putNextEntry(new JarEntry("test"));
-            output.write("Hello".getBytes());
-            output.closeEntry();
+            assertEquals(jarFile, IOUtils.getFileFromURL(new URL("jar:" + jarFile.toURI().toURL() + "!/"), false, null));
+            assertNull(IOUtils.getFileFromURL(new URL("jar:file:" + jarFile.getPath() + "!/test"), false, null));
+            File tmpJar = IOUtils.getFileFromURL(new URL("jar:" + jarFile.toURI().toURL() + "!/test"), true, null);
+            assertNotNull(tmpJar);
+            assertNotEquals(jarFile, tmpJar);
+        } finally {
+            jarFile.delete();
         }
-
-        assertEquals(jarFile, IOUtils.getFileFromURL(new URL("jar:file:" + jarFile.getPath() + "!/"), false, null));
-        assertEquals(jarFile, IOUtils.getFileFromURL(new URL("jar:" + jarFile.toURI().toURL() + "!/"), false, null));
-        assertNull(IOUtils.getFileFromURL(new URL("jar:file:" + jarFile.getPath() + "!/test"), false, null));
-        File tmpJar = IOUtils.getFileFromURL(new URL("jar:" + jarFile.toURI().toURL() + "!/test"), true, null);
-        assertNotNull(tmpJar);
-        assertNotEquals(jarFile, tmpJar);
     }
 
     @Test public void testGetJarFileFromURL() throws IOException {
-        File jarFile = File.createTempFile("\"IOUtilsTest \\\\\\\\+%23öäü^^^°$::\"", ".jar");
+        File jarFile = File.createTempFile("IOUtilsTest", ".jar");
 
-        try (JarOutputStream output = new JarOutputStream(new FileOutputStream(jarFile))) {
-            output.putNextEntry(new JarEntry("test"));
-            output.write("Hello".getBytes());
-            output.closeEntry();
-            output.putNextEntry(new JarEntry("test.jar"));
-            try (JarOutputStream inner = new JarOutputStream(output)) {
-                inner.putNextEntry(new JarEntry("inner"));
-                inner.write("Hello".getBytes());
-                inner.closeEntry();
+        try {
+            try (JarOutputStream output = new JarOutputStream(new FileOutputStream(jarFile))) {
+                output.putNextEntry(new JarEntry("test"));
+                output.write("Hello".getBytes());
+                output.closeEntry();
+                output.putNextEntry(new JarEntry("test.jar"));
+                try (JarOutputStream inner = new JarOutputStream(output)) {
+                    inner.putNextEntry(new JarEntry("inner"));
+                    inner.write("Hello".getBytes());
+                    inner.closeEntry();
+                }
             }
-        }
 
-        JarFile jar = IOUtils.getJarFileFromURL(new URL("jar:" + jarFile.toURI().toURL() + "!/"), true, null);
-        assertNotNull(jar);
-        jar = IOUtils.getJarFileFromURL(jarFile.toURI().toURL(), true, null);
-        assertNotNull(jar);
+            JarFile jar = IOUtils.getJarFileFromURL(new URL("jar:" + jarFile.toURI().toURL() + "!/"), true, null);
+            assertNotNull(jar);
+            jar = IOUtils.getJarFileFromURL(jarFile.toURI().toURL(), true, null);
+            assertNotNull(jar);
 
-        assertNull(IOUtils.getFileFromURL(new URL("jar:" + jarFile.toURI().toURL() + "!/test"), false, null));
+            assertNull(IOUtils.getFileFromURL(new URL("jar:" + jarFile.toURI().toURL() + "!/test"), false, null));
 
-        JarFile tmpJar = IOUtils.getJarFileFromURL(new URL("jar:" + jarFile.toURI().toURL() + "!/test.jar"), true, null);
-        assertNotNull(tmpJar);
-        assertNotNull(tmpJar.getEntry("inner"));
+            JarFile tmpJar = IOUtils.getJarFileFromURL(new URL("jar:" + jarFile.toURI().toURL() + "!/test.jar"), true, null);
+            assertNotNull(tmpJar);
+            assertNotNull(tmpJar.getEntry("inner"));
 
-        try {
-            IOUtils.getJarFileFromURL(new URL("jar:" + jarFile.toURI().toURL() + "!/test"), true, null);
-            fail();
-        } catch (IOException ex) {
-            // Expected
-        }
+            try {
+                IOUtils.getJarFileFromURL(new URL("jar:" + jarFile.toURI().toURL() + "!/test"), true, null);
+                fail();
+            } catch (IOException ex) {
+                // Expected
+            }
 
-        try {
-            IOUtils.getJarFileFromURL(new URL("jar:" + jarFile.toURI().toURL() + "!/test.jar"), false, null);
-            fail();
-        } catch (IOException ex) {
-            // Expected
+            try {
+                IOUtils.getJarFileFromURL(new URL("jar:" + jarFile.toURI().toURL() + "!/test.jar"), false, null);
+                fail();
+            } catch (IOException ex) {
+                // Expected
+            }
+        } finally {
+            jarFile.delete();
         }
     }
 }

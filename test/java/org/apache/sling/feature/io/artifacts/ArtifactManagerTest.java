@@ -26,9 +26,6 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.sling.feature.io.artifacts.ArtifactHandler;
-import org.apache.sling.feature.io.artifacts.ArtifactManager;
-import org.apache.sling.feature.io.artifacts.ArtifactManagerConfig;
 import org.apache.sling.feature.io.artifacts.spi.ArtifactProvider;
 import org.junit.Test;
 

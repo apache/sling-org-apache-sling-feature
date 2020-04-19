@@ -17,20 +17,15 @@
 package org.apache.sling.feature.io;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.io.StringWriter;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Objects;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.felix.configurator.impl.json.JSONUtil;
-import org.apache.felix.configurator.impl.json.TypeConverter;
-import org.apache.felix.configurator.impl.model.ConfigurationFile;
-import org.apache.sling.feature.io.ConfiguratorUtil;
+import org.apache.felix.cm.json.Configurations;
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
 import org.hamcrest.core.Every;
@@ -86,22 +81,12 @@ public class ConfiguratorUtilTest {
         assertConfigurationJson(writer.toString(), props);
     }
 
-    protected void assertConfigurationJson(String json, Dictionary<String, Object> expectedProps) throws MalformedURLException {
-        final JSONUtil.Report report = new JSONUtil.Report();
-        StringBuilder sb = new StringBuilder("{ \"");
-        sb.append("myid");
-        sb.append("\" : ");
-        sb.append(json);
-        sb.append("}");
-        final ConfigurationFile configurationFile = JSONUtil.readJSON(new TypeConverter(null),"name", new URL("file:///configtest"),
-                0, sb.toString(), report);
-        if ( !report.errors.isEmpty() || !report.warnings.isEmpty() ) {
-            Assert.fail("JSON is not the right format: \nErrors: " + StringUtils.join(report.errors) + "\nWarnings: " + StringUtils.join(report.warnings));
-        }
+    protected void assertConfigurationJson(String json, Dictionary<String, Object> expectedProps) throws IOException {
+        final Hashtable<String, Object> readProps = Configurations.buildReader().verifyAsBundleResource(true).build(new StringReader(json)).readConfiguration();
         // convert to maps for easier comparison
         Converter converter = Converters.standardConverter();
         Map<String, Object> expectedPropsMap = converter.convert(expectedProps).to(new TypeReference<Map<String,Object>>(){});
-        Map<String, Object> actualPropsMap = converter.convert(configurationFile.getConfigurations().get(0).getProperties()).to(new TypeReference<Map<String,Object>>(){});
+        Map<String, Object> actualPropsMap = converter.convert(readProps).to(new TypeReference<Map<String,Object>>(){});
         Assert.assertThat(actualPropsMap.entrySet(), Every.everyItem(new MapEntryMatcher<>(expectedPropsMap)));
     }
 
@@ -127,7 +112,7 @@ public class ConfiguratorUtilTest {
                 boolean isEqual;
                 if (item.getValue().getClass().isArray()) {
                     isEqual = Objects.deepEquals(expectedMap.get(item.getKey()), item.getValue());
-                    
+
                 } else {
                     isEqual = expectedMap.get(item.getKey()).equals(item.getValue());
                 }

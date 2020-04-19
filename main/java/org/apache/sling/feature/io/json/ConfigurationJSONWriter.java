@@ -18,16 +18,19 @@ package org.apache.sling.feature.io.json;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Collections;
+import java.util.Hashtable;
 
-import javax.json.stream.JsonGenerator;
-
+import org.apache.felix.cm.json.ConfigurationResource;
+import org.apache.felix.cm.json.ConfigurationWriter;
+import org.apache.sling.feature.Configuration;
 import org.apache.sling.feature.Configurations;
 
 /** JSON writer for configurations */
-public class ConfigurationJSONWriter extends JSONWriterBase {
+public class ConfigurationJSONWriter {
 
     /** Writes the configurations to the writer. The writer is not closed.
-     * 
+     *
      * @param writer Writer
      * @param configs List of configurations
      * @throws IOException If writing fails */
@@ -39,10 +42,26 @@ public class ConfigurationJSONWriter extends JSONWriterBase {
 
     private void writeConfigurations(final Writer writer, final Configurations configs)
             throws IOException {
-        JsonGenerator generator = newGenerator(writer);
-        writeConfigurations(generator, configs);
-        generator.close();
+
+        final ConfigurationWriter cfgWriter = org.apache.felix.cm.json.Configurations
+            .buildWriter()
+            .build(writer);
+
+        final ConfigurationResource rsrc = new ConfigurationResource();
+        for(final Configuration cfg : configs) {
+            final Hashtable<String, Object> properties;
+            if ( cfg.getProperties() instanceof Hashtable ) {
+                properties = (Hashtable<String, Object>)cfg.getProperties();
+            } else {
+                properties = org.apache.felix.cm.json.Configurations.newConfiguration();
+                for(final String name : Collections.list(cfg.getProperties().keys()) ) {
+                    properties.put(name, cfg.getProperties().get(name));
+                }
+            }
+            rsrc.getConfigurations().put(cfg.getPid(), properties);
+        }
+        cfgWriter.writeConfigurationResource(rsrc);
     }
 
-    
+
 }
