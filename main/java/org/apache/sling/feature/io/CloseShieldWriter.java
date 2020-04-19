@@ -26,7 +26,9 @@ import java.io.Writer;
  * This class is typically used in cases where a writer needs to be passed to a component that wants to explicitly close
  * the writer even if other components would still use the writer for output.
  * </p>
+ * @deprecated
  */
+@Deprecated
 public class CloseShieldWriter extends FilterWriter {
 
     public CloseShieldWriter(Writer out) {

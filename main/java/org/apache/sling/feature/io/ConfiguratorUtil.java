@@ -33,8 +33,9 @@ import org.apache.sling.feature.Configuration;
 /**
  * Helper class to write JSON structures as defined in
  * <a href="https://osgi.org/specification/osgi.cmpn/7.0.0/service.configurator.html#d0e131765">OSGi Configurator Specification 1.0</a>.
- *
+ * @deprecated Use {@link org.apache.felix.cm.json.Configurations} instead.
  */
+@Deprecated
 public class ConfiguratorUtil {
 
     private ConfiguratorUtil() {
@@ -50,7 +51,7 @@ public class ConfiguratorUtil {
 
     /** Write the OSGi configuration to a JSON structure.
      * The writer is not closed.
-     * 
+     *
      * @param writer Writer
      * @param props The configuration properties to write */
     public static void writeConfiguration(final Writer writer, final Dictionary<String, Object> props) {
