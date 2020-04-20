@@ -102,12 +102,17 @@ public class FeatureJSONReader {
         }
     }
 
+    /**
+     * Get the feature id
+     * @param json The feature json
+     * @return The artifact id
+     * @throws IOException If the id is missing
+     */
     protected ArtifactId getFeatureId(final JsonObject json) throws IOException {
         if ( !json.containsKey(JSONConstants.FEATURE_ID) ) {
             throw new IOException(this.exceptionPrefix.concat("Feature id is missing"));
         }
-        final JsonValue idObj = json.get(JSONConstants.FEATURE_ID);
-        return ArtifactId.parse(checkTypeString(JSONConstants.FEATURE_ID, idObj));
+        return checkTypeArtifactId(JSONConstants.FEATURE_ID, json.get(JSONConstants.FEATURE_ID));
     }
 
     private String getProperty(final JsonObject json, final String key) throws IOException {
@@ -198,19 +203,17 @@ public class FeatureJSONReader {
             final Artifact artifact;
             checkType(artifactType, entry, ValueType.OBJECT, ValueType.STRING);
             if ( entry.getValueType() == ValueType.STRING ) {
-                final String value = org.apache.felix.cm.json.Configurations.convertToObject(entry).toString();
                 // skip comments
-                if ( value.startsWith("#") ) {
+                if ( ((JsonString)entry).getString().startsWith("#") ) {
                     continue;
                 }
-                artifact = new Artifact(ArtifactId.parse(value));
+                artifact = new Artifact(checkTypeArtifactId(artifactType, entry));
             } else {
                 final JsonObject bundleObj = (JsonObject) entry;
                 if ( !bundleObj.containsKey(JSONConstants.ARTIFACT_ID) ) {
                     throw new IOException(exceptionPrefix.concat(" ").concat(artifactType).concat(" is missing required artifact id"));
                 }
-                final String value = checkTypeString(artifactType.concat(" ").concat(JSONConstants.ARTIFACT_ID), bundleObj.get(JSONConstants.ARTIFACT_ID));
-                final ArtifactId id = ArtifactId.parse(value);
+                final ArtifactId id = checkTypeArtifactId(artifactType.concat(" ").concat(JSONConstants.ARTIFACT_ID), bundleObj.get(JSONConstants.ARTIFACT_ID));
 
                 artifact = new Artifact(id);
                 for(final Map.Entry<String, JsonValue> metadataEntry : bundleObj.entrySet()) {
@@ -424,6 +427,22 @@ public class FeatureJSONReader {
     }
 
     /**
+     * Check if the value is an artifact id
+     * @param key A key for the error message
+     * @param val The value to check
+     * @return The artifact id
+     * @throws IOException If the val is not a string and not a valid artifact id
+     */
+    private ArtifactId checkTypeArtifactId(final String key, final JsonValue val) throws IOException {
+        final String textValue = checkTypeString(key, val);
+        try {
+            return ArtifactId.parse(textValue);
+        } catch ( final IllegalArgumentException iae) {
+            throw new IOException(this.exceptionPrefix.concat("Key ").concat(key).concat(" is not a valid artifact id : ").concat(textValue));
+        }
+    }
+
+    /**
      * Check if the value is a string
      * @param key A key for the error message
      * @param val The value to check
@@ -458,28 +477,23 @@ public class FeatureJSONReader {
 
             final Prototype prototype;
             if ( prototypeObj.getValueType() == ValueType.STRING ) {
-                final String textValue = org.apache.felix.cm.json.Configurations.convertToObject(prototypeObj).toString();
-                final ArtifactId id = ArtifactId.parse(textValue);
-                prototype = new Prototype(id);
+                prototype = new Prototype(checkTypeArtifactId(JSONConstants.FEATURE_PROTOTYPE, prototypeObj));
             } else {
                 final JsonObject obj = (JsonObject) prototypeObj;
                 if ( !obj.containsKey(JSONConstants.ARTIFACT_ID) ) {
                     throw new IOException(exceptionPrefix.concat(" prototype is missing required artifact id"));
                 }
-                final String textValue = checkTypeString("Prototype ".concat(JSONConstants.ARTIFACT_ID), obj.get(JSONConstants.ARTIFACT_ID));
-                final ArtifactId id = ArtifactId.parse(textValue);
-                prototype = new Prototype(id);
+                prototype = new Prototype(checkTypeArtifactId("Prototype ".concat(JSONConstants.ARTIFACT_ID), obj.get(JSONConstants.ARTIFACT_ID)));
 
                 if ( obj.containsKey(JSONConstants.PROTOTYPE_REMOVALS) ) {
                     final JsonObject removalObj = checkTypeObject("Prototype removals", obj.get(JSONConstants.PROTOTYPE_REMOVALS));
                     if ( removalObj.containsKey(JSONConstants.FEATURE_BUNDLES) ) {
                         checkType("Prototype removal bundles", removalObj.get(JSONConstants.FEATURE_BUNDLES), ValueType.ARRAY);
                         for(final JsonValue val : (JsonArray)removalObj.get(JSONConstants.FEATURE_BUNDLES)) {
-                            final String propVal = checkTypeString("Prototype removal bundles", val);
-                            if ( propVal.startsWith("#")) {
+                            if ( checkTypeString("Prototype removal bundles", val).startsWith("#")) {
                                 continue;
                             }
-                            prototype.getBundleRemovals().add(ArtifactId.parse(propVal));
+                            prototype.getBundleRemovals().add(checkTypeArtifactId("Prototype removal bundles", val));
                         }
                     }
                     if ( removalObj.containsKey(JSONConstants.FEATURE_CONFIGURATIONS) ) {
@@ -520,11 +534,10 @@ public class FeatureJSONReader {
                                     checkType("Prototype removal extension artifacts", removalMap.get("artifacts"), ValueType.ARRAY);
                                     final List<ArtifactId> ids = new ArrayList<>();
                                     for(final JsonValue aid : removalMap.getJsonArray("artifacts")) {
-                                        final String propVal = checkTypeString("Prototype removal extension artifact", aid);
-                                        if ( propVal.startsWith("#")) {
+                                        if ( checkTypeString("Prototype removal extension artifact", aid).startsWith("#")) {
                                             continue;
                                         }
-                                        ids.add(ArtifactId.parse(propVal));
+                                        ids.add(checkTypeArtifactId("Prototype removal extension artifact", aid));
                                     }
                                     prototype.getArtifactExtensionRemovals().put(name, ids);
                                 } else {

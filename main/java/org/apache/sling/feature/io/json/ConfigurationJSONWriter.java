@@ -50,12 +50,14 @@ public class ConfigurationJSONWriter {
         final ConfigurationResource rsrc = new ConfigurationResource();
         for(final Configuration cfg : configs) {
             final Hashtable<String, Object> properties;
-            if ( cfg.getProperties() instanceof Hashtable ) {
+            if ( cfg.getProperties() instanceof Hashtable && cfg.getProperties().get(Configuration.PROP_ARTIFACT_ID) == null ) {
                 properties = (Hashtable<String, Object>)cfg.getProperties();
             } else {
                 properties = org.apache.felix.cm.json.Configurations.newConfiguration();
                 for(final String name : Collections.list(cfg.getProperties().keys()) ) {
-                    properties.put(name, cfg.getProperties().get(name));
+                    if ( !Configuration.PROP_ARTIFACT_ID.equals(name) ) {
+                        properties.put(name, cfg.getProperties().get(name));
+                    }
                 }
             }
             rsrc.getConfigurations().put(cfg.getPid(), properties);
