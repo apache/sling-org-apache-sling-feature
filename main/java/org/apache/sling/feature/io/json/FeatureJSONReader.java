@@ -30,12 +30,12 @@ import java.util.function.BiConsumer;
 
 import javax.json.Json;
 import javax.json.JsonArray;
+import javax.json.JsonException;
 import javax.json.JsonObject;
 import javax.json.JsonString;
 import javax.json.JsonStructure;
 import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
-import javax.json.stream.JsonParsingException;
 
 import org.apache.felix.cm.json.ConfigurationReader;
 import org.apache.felix.cm.json.ConfigurationResource;
@@ -75,7 +75,7 @@ public class FeatureJSONReader {
         try {
             final FeatureJSONReader mr = new FeatureJSONReader(location);
             return mr.readFeature(reader);
-        } catch (final IllegalStateException | IllegalArgumentException | JsonParsingException e) {
+        } catch (final IllegalStateException | IllegalArgumentException | JsonException e) {
             throw new IOException(e);
         }
     }
