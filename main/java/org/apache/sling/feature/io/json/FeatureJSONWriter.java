@@ -45,7 +45,7 @@ import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
 
 /**
- * Simple JSON writer for a feature
+ * This class offers a static method to write a feature using a writer.
  */
 public class FeatureJSONWriter {
 
@@ -60,10 +60,6 @@ public class FeatureJSONWriter {
     throws IOException {
         final FeatureJSONWriter w = new FeatureJSONWriter();
         w.writeFeature(writer, feature);
-    }
-
-    protected FeatureJSONWriter() {
-    	// protected constructor for subclassing
     }
 
     private final JsonGeneratorFactory generatorFactory = Json.createGeneratorFactory(Collections.singletonMap(JsonGenerator.PRETTY_PRINTING, true));
@@ -411,7 +407,7 @@ public class FeatureJSONWriter {
         generator.writeEnd().close();
     }
 
-    protected void writeFeatureId(final JsonGenerator generator,
+    private void writeFeatureId(final JsonGenerator generator,
     		final Feature feature) {
         writeProperty(generator, JSONConstants.FEATURE_ID, feature.getId().toMvnId());
     }

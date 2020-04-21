@@ -19,7 +19,6 @@ package org.apache.sling.feature.io.json;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -57,7 +56,7 @@ import org.osgi.resource.Capability;
 import org.osgi.resource.Resource;
 
 /**
- * This class offers a method to read a {@code Feature} using a {@code Reader} instance.
+ * This class offers a static method to read a {@code Feature} using a {@code Reader} instance.
  */
 public class FeatureJSONReader {
 
@@ -90,10 +89,10 @@ public class FeatureJSONReader {
     private final String exceptionPrefix;
 
     /**
-     * Protected constructor
+     * private constructor
      * @param location Optional location
      */
-    protected FeatureJSONReader(final String location) {
+    private FeatureJSONReader(final String location) {
         this.location = location;
         if ( location == null ) {
             exceptionPrefix = "";
@@ -108,7 +107,7 @@ public class FeatureJSONReader {
      * @return The artifact id
      * @throws IOException If the id is missing
      */
-    protected ArtifactId getFeatureId(final JsonObject json) throws IOException {
+    private ArtifactId getFeatureId(final JsonObject json) throws IOException {
         if ( !json.containsKey(JSONConstants.FEATURE_ID) ) {
             throw new IOException(this.exceptionPrefix.concat("Feature id is missing"));
         }
@@ -127,35 +126,24 @@ public class FeatureJSONReader {
      * Read the variables section
      * @param json The json describing the feature or application
      * @param kvMap The variables will be written to this Key Value Map
-     * @return The same variables as a normal map
      * @throws IOException If the json is invalid.
      */
-    private Map<String, String> readVariables(JsonObject json, Map<String,String> kvMap) throws IOException {
-        HashMap<String, String> variables = new HashMap<>();
-
+    private void readVariables(JsonObject json, Map<String,String> kvMap) throws IOException {
         if (json.containsKey(JSONConstants.FEATURE_VARIABLES)) {
             final JsonValue variablesObj = json.get(JSONConstants.FEATURE_VARIABLES);
 
             for (final Map.Entry<String, JsonValue> entry : checkTypeObject(JSONConstants.FEATURE_VARIABLES, variablesObj).entrySet()) {
+                final String key = entry.getKey();
                 // skip comments
-                if ( !entry.getKey().startsWith("#") ) {
-                    JsonValue val = entry.getValue();
-                    checkType("variable value", val, ValueType.STRING, ValueType.NUMBER, ValueType.FALSE, ValueType.TRUE, ValueType.NULL, null);
-
-                    String key = entry.getKey();
+                if ( !key.startsWith("#") ) {
                     if (kvMap.get(key) != null) {
                         throw new IOException(this.exceptionPrefix.concat("Duplicate variable ").concat(key));
                     }
-
-                    Object convertedVal = org.apache.felix.cm.json.Configurations.convertToObject(val);
-                    String value = convertedVal == null ? null : convertedVal.toString();
-
+                    final String value = checkScalarType("variable value", entry.getValue(), true);
                     kvMap.put(key, value);
-                    variables.put(key, value);
                 }
             }
         }
-        return variables;
     }
 
 
@@ -171,11 +159,8 @@ public class FeatureJSONReader {
             final Bundles container,
             final Configurations configContainer) throws IOException {
         if ( json.containsKey(JSONConstants.FEATURE_BUNDLES)) {
-            final JsonValue bundlesObj = json.get(JSONConstants.FEATURE_BUNDLES);
-            checkType(JSONConstants.FEATURE_BUNDLES, bundlesObj, ValueType.ARRAY);
-
             final List<Artifact> list = new ArrayList<>();
-            readArtifacts(JSONConstants.FEATURE_BUNDLES, "bundle", list, bundlesObj, configContainer);
+            readArtifacts(JSONConstants.FEATURE_BUNDLES, "bundle", list, json.get(JSONConstants.FEATURE_BUNDLES), configContainer);
 
             for(final Artifact a : list) {
                 if ( container.containsExact(a.getId())) {
@@ -198,10 +183,9 @@ public class FeatureJSONReader {
             final JsonValue listObj,
             final Configurations container)
     throws IOException {
-        checkType(section, listObj, ValueType.ARRAY);
-        for(final JsonValue entry : (JsonArray)listObj) {
+        for(final JsonValue entry : checkTypeArray(section, listObj)) {
             final Artifact artifact;
-            checkType(artifactType, entry, ValueType.OBJECT, ValueType.STRING);
+            checkTypeObjectOrString(artifactType, entry);
             if ( entry.getValueType() == ValueType.STRING ) {
                 // skip comments
                 if ( ((JsonString)entry).getString().startsWith("#") ) {
@@ -225,8 +209,7 @@ public class FeatureJSONReader {
                     if ( JSONConstants.ARTIFACT_KNOWN_PROPERTIES.contains(key) ) {
                         continue;
                     }
-                    checkType(artifactType.concat(" metadata ").concat(key), metadataEntry.getValue(), ValueType.STRING, ValueType.FALSE, ValueType.TRUE, ValueType.NUMBER);
-                    final String mval = org.apache.felix.cm.json.Configurations.convertToObject( metadataEntry.getValue()).toString();
+                    final String mval = checkScalarType(artifactType.concat(" metadata ").concat(key), metadataEntry.getValue(), false);
                     artifact.getMetadata().put(key, mval);
                 }
                 if ( bundleObj.containsKey(JSONConstants.FEATURE_CONFIGURATIONS) ) {
@@ -296,11 +279,10 @@ public class FeatureJSONReader {
                 if ( entry.getKey().startsWith("#") ) {
                     continue;
                 }
-                checkType("framework property value", entry.getValue(), ValueType.STRING, ValueType.NUMBER, ValueType.TRUE, ValueType.FALSE);
                 if ( container.get(entry.getKey()) != null ) {
                     throw new IOException(this.exceptionPrefix.concat("Duplicate framework property ").concat(entry.getKey()));
                 }
-                final String value = org.apache.felix.cm.json.Configurations.convertToObject( entry.getValue()).toString();
+                final String value = checkScalarType("framework property value", entry.getValue(), false);
                 container.put(entry.getKey(), value);
             }
 
@@ -376,18 +358,21 @@ public class FeatureJSONReader {
                                      ext.getArtifacts().add(a);
                                  }
                                  break;
-                case JSON : checkType("JSON Extension ".concat(name), value, ValueType.OBJECT, ValueType.ARRAY);
+                case JSON : if ( value.getValueType() != ValueType.ARRAY && value.getValueType() != ValueType.OBJECT ) {
+                                throw new IOException(this.exceptionPrefix.concat("JSON Extension ").concat(name).concat(" is neither an object nor an array : ").concat(value.getValueType().name()));
+                            }
                             ext.setJSONStructure((JsonStructure)value);
                             break;
-                case TEXT : checkType("Text Extension ".concat(name), value, ValueType.STRING, ValueType.ARRAY);
+                case TEXT : if ( value.getValueType() != ValueType.ARRAY && value.getValueType() != ValueType.STRING ) {
+                                throw new IOException(this.exceptionPrefix.concat("Text Extension ").concat(name).concat(" is neither a string nor an array : ").concat(value.getValueType().name()));
+                            }
                             if ( value.getValueType() == ValueType.STRING ) {
                                 // string
-                                final String textValue = org.apache.felix.cm.json.Configurations.convertToObject(value).toString();
-                                ext.setText(textValue);
+                                ext.setText(((JsonString)value).getString());
                             } else {
                                 // list (array of strings)
                                 final StringBuilder sb = new StringBuilder();
-                                for(final JsonValue o : ((JsonArray)value)) {
+                                for(final JsonValue o : value.asJsonArray()) {
                                     final String textValue = checkTypeString("Text Extension ".concat(name).concat(", value ").concat(o.toString()), o);
                                     sb.append(textValue);
                                     sb.append('\n');
@@ -402,39 +387,58 @@ public class FeatureJSONReader {
     }
 
     /**
-     * Check if the value is one of the provided types
+     * Check if the value is a scalar type
      * @param key A key for the error message
-     * @param val The value to check
-     * @param types The allowed types, can also include {@code null} if null is an allowed value.
-     * @throws IOException If the val is not of the specified types
+     * @param value The value to check
+     * @param allowNull Whether null is allowed as value
+     * @return A string representing the value or {@code null}
+     * @throws IOException If the value is not of the specified types
      */
-    private void checkType(final String key, final JsonValue val, ValueType... types) throws IOException {
-        boolean valid = false;
-        for(ValueType t : types) {
-            if (t == null) {
-                if ( val == null) {
-                    valid = true;
-                    break;
-                }
-            } else if ( val.getValueType() == t ) {
-                valid = true;
-                break;
-            }
+    private String checkScalarType(final String key, final JsonValue value, boolean allowNull) throws IOException {
+        if ( allowNull && value.getValueType() == ValueType.NULL ) {
+            return null;
         }
-        if ( !valid ) {
-            throw new IOException(this.exceptionPrefix.concat("Key ").concat(key).concat(" is not one of the allowed types ").concat(Arrays.toString(types)).concat(" : ").concat(val.getValueType().name()));
+        if ( value.getValueType() == ValueType.STRING || value.getValueType() == ValueType.NUMBER || value.getValueType() == ValueType.FALSE || value.getValueType() == ValueType.TRUE ) {
+            return org.apache.felix.cm.json.Configurations.convertToObject(value).toString();
         }
+        throw new IOException(this.exceptionPrefix.concat("Key ").concat(key).concat(" is not one of the allowed types string, number or boolean : ").concat(value.getValueType().name()));
+    }
+
+    /**
+     * Check if the value is an object or a string
+     * @param key A key for the error message
+     * @param value The value to check
+     * @throws IOException If the value is not of the specified types
+     */
+    private void checkTypeObjectOrString(final String key, final JsonValue value) throws IOException {
+        if ( value.getValueType() != ValueType.STRING && value.getValueType() != ValueType.OBJECT ) {
+            throw new IOException(this.exceptionPrefix.concat("Key ").concat(key).concat(" is neither a string nor an object : ").concat(value.getValueType().name()));
+        }
+    }
+
+    /**
+     * Check if the value is a boolean
+     * @param key A key for the error message
+     * @param value The value to check
+     * @return The boolean value
+     * @throws IOException If the value is not of the specified types
+     */
+    private boolean checkTypeBoolean(final String key, final JsonValue value) throws IOException {
+        if ( value.getValueType() == ValueType.TRUE || value.getValueType() == ValueType.FALSE ) {
+            return (Boolean)org.apache.felix.cm.json.Configurations.convertToObject(value);
+        }
+        throw new IOException(this.exceptionPrefix.concat("Key ").concat(key).concat(" is not of type boolean : ").concat(value.getValueType().name()));
     }
 
     /**
      * Check if the value is an artifact id
      * @param key A key for the error message
-     * @param val The value to check
+     * @param value The value to check
      * @return The artifact id
-     * @throws IOException If the val is not a string and not a valid artifact id
+     * @throws IOException If the value is not a string and not a valid artifact id
      */
-    private ArtifactId checkTypeArtifactId(final String key, final JsonValue val) throws IOException {
-        final String textValue = checkTypeString(key, val);
+    private ArtifactId checkTypeArtifactId(final String key, final JsonValue value) throws IOException {
+        final String textValue = checkTypeString(key, value);
         try {
             return ArtifactId.parse(textValue);
         } catch ( final IllegalArgumentException iae) {
@@ -445,35 +449,49 @@ public class FeatureJSONReader {
     /**
      * Check if the value is a string
      * @param key A key for the error message
-     * @param val The value to check
+     * @param value The value to check
      * @return The string value
-     * @throws IOException If the val is not of the specified types
+     * @throws IOException If the value is not a string
      */
-    private String checkTypeString(final String key, final JsonValue val) throws IOException {
-        if ( val.getValueType() == ValueType.STRING) {
-            return ((JsonString)val).getString();
+    private String checkTypeString(final String key, final JsonValue value) throws IOException {
+        if ( value.getValueType() == ValueType.STRING) {
+            return ((JsonString)value).getString();
         }
-        throw new IOException(this.exceptionPrefix.concat("Key ").concat(key).concat(" is not of type String : ").concat(val.getValueType().name()));
+        throw new IOException(this.exceptionPrefix.concat("Key ").concat(key).concat(" is not of type string : ").concat(value.getValueType().name()));
     }
 
     /**
      * Check if the value is an object
      * @param key A key for the error message
-     * @param val The value to check
+     * @param value The value to check
      * @return The object
-     * @throws IOException If the val is not of the specified types
+     * @throws IOException If the value is not an object
      */
-    private JsonObject checkTypeObject(final String key, final JsonValue val) throws IOException {
-        if ( val.getValueType() == ValueType.OBJECT) {
-            return val.asJsonObject();
+    private JsonObject checkTypeObject(final String key, final JsonValue value) throws IOException {
+        if ( value.getValueType() == ValueType.OBJECT) {
+            return value.asJsonObject();
         }
-        throw new IOException(this.exceptionPrefix.concat("Key ").concat(key).concat(" is not of type Object : ").concat(val.getValueType().name()));
+        throw new IOException(this.exceptionPrefix.concat("Key ").concat(key).concat(" is not of type object : ").concat(value.getValueType().name()));
+    }
+
+    /**
+     * Check if the value is an array
+     * @param key A key for the error message
+     * @param value The value to check
+     * @return The array
+     * @throws IOException If the value is not of the specified types
+     */
+    private JsonArray checkTypeArray(final String key, final JsonValue value) throws IOException {
+        if ( value.getValueType() == ValueType.ARRAY) {
+            return value.asJsonArray();
+        }
+        throw new IOException(this.exceptionPrefix.concat("Key ").concat(key).concat(" is not of type array : ").concat(value.getValueType().name()));
     }
 
     private Prototype readPrototype(final JsonObject json) throws IOException {
         if ( json.containsKey(JSONConstants.FEATURE_PROTOTYPE)) {
             final JsonValue prototypeObj = json.get(JSONConstants.FEATURE_PROTOTYPE);
-            checkType(JSONConstants.FEATURE_PROTOTYPE, prototypeObj, ValueType.STRING, ValueType.OBJECT);
+            checkTypeObjectOrString(JSONConstants.FEATURE_PROTOTYPE, prototypeObj);
 
             final Prototype prototype;
             if ( prototypeObj.getValueType() == ValueType.STRING ) {
@@ -488,8 +506,7 @@ public class FeatureJSONReader {
                 if ( obj.containsKey(JSONConstants.PROTOTYPE_REMOVALS) ) {
                     final JsonObject removalObj = checkTypeObject("Prototype removals", obj.get(JSONConstants.PROTOTYPE_REMOVALS));
                     if ( removalObj.containsKey(JSONConstants.FEATURE_BUNDLES) ) {
-                        checkType("Prototype removal bundles", removalObj.get(JSONConstants.FEATURE_BUNDLES), ValueType.ARRAY);
-                        for(final JsonValue val : (JsonArray)removalObj.get(JSONConstants.FEATURE_BUNDLES)) {
+                        for(final JsonValue val : checkTypeArray("Prototype removal bundles", removalObj.get(JSONConstants.FEATURE_BUNDLES))) {
                             if ( checkTypeString("Prototype removal bundles", val).startsWith("#")) {
                                 continue;
                             }
@@ -497,8 +514,7 @@ public class FeatureJSONReader {
                         }
                     }
                     if ( removalObj.containsKey(JSONConstants.FEATURE_CONFIGURATIONS) ) {
-                        checkType("Prototype removal configuration", removalObj.get(JSONConstants.FEATURE_CONFIGURATIONS), ValueType.ARRAY);
-                        for(final JsonValue val : (JsonArray)removalObj.get(JSONConstants.FEATURE_CONFIGURATIONS)) {
+                        for(final JsonValue val : checkTypeArray("Prototype removal configuration", removalObj.get(JSONConstants.FEATURE_CONFIGURATIONS))) {
                             final String propVal = checkTypeString("Prototype removal configuration", val);
                             if ( propVal.startsWith("#") ) {
                                 continue;
@@ -507,8 +523,7 @@ public class FeatureJSONReader {
                         }
                     }
                     if ( removalObj.containsKey(JSONConstants.FEATURE_FRAMEWORK_PROPERTIES) ) {
-                        checkType("Prototype removal framework properties", removalObj.get(JSONConstants.FEATURE_FRAMEWORK_PROPERTIES), ValueType.ARRAY);
-                        for(final JsonValue val : (JsonArray)removalObj.get(JSONConstants.FEATURE_FRAMEWORK_PROPERTIES)) {
+                        for(final JsonValue val : checkTypeArray("Prototype removal framework properties", removalObj.get(JSONConstants.FEATURE_FRAMEWORK_PROPERTIES))) {
                             final String propVal = checkTypeString("Prototype removal framework properties", val);
                             if ( propVal.startsWith("#") ) {
                                 continue;
@@ -517,9 +532,8 @@ public class FeatureJSONReader {
                         }
                     }
                     if ( removalObj.containsKey(JSONConstants.PROTOTYPE_EXTENSION_REMOVALS) ) {
-                        checkType("Prototype removal extensions", removalObj.get(JSONConstants.PROTOTYPE_EXTENSION_REMOVALS), ValueType.ARRAY);
-                        for(final JsonValue val :  (JsonArray)removalObj.get(JSONConstants.PROTOTYPE_EXTENSION_REMOVALS)) {
-                            checkType("Prototype removal extension", val, ValueType.STRING, ValueType.OBJECT);
+                        for(final JsonValue val : checkTypeArray("Prototype removal extensions", removalObj.get(JSONConstants.PROTOTYPE_EXTENSION_REMOVALS))) {
+                            checkTypeObjectOrString("Prototype removal extension", val);
                             if ( val.getValueType() == ValueType.STRING ) {
                                 final String propVal = org.apache.felix.cm.json.Configurations.convertToObject(val).toString();
                                 if ( propVal.startsWith("#")) {
@@ -531,9 +545,8 @@ public class FeatureJSONReader {
                                 final JsonValue nameObj = removalMap.get("name");
                                 final String name = checkTypeString("Prototype removal extension", nameObj);
                                 if ( removalMap.containsKey("artifacts") ) {
-                                    checkType("Prototype removal extension artifacts", removalMap.get("artifacts"), ValueType.ARRAY);
                                     final List<ArtifactId> ids = new ArrayList<>();
-                                    for(final JsonValue aid : removalMap.getJsonArray("artifacts")) {
+                                    for(final JsonValue aid : checkTypeArray("Prototype removal extension artifacts", removalMap.get("artifacts"))) {
                                         if ( checkTypeString("Prototype removal extension artifact", aid).startsWith("#")) {
                                             continue;
                                         }
@@ -559,10 +572,7 @@ public class FeatureJSONReader {
     private void readRequirements(final JsonObject json, final List<MatchingRequirement> container)
             throws IOException {
         if ( json.containsKey(JSONConstants.FEATURE_REQUIREMENTS)) {
-            final JsonValue reqObj = json.get(JSONConstants.FEATURE_REQUIREMENTS);
-            checkType(JSONConstants.FEATURE_REQUIREMENTS, reqObj, ValueType.ARRAY);
-
-            for(final JsonValue req : ((JsonArray)reqObj)) {
+            for(final JsonValue req : checkTypeArray(JSONConstants.FEATURE_REQUIREMENTS, json.get(JSONConstants.FEATURE_REQUIREMENTS))) {
                 final JsonObject obj = checkTypeObject("Requirement", req);
 
                 if ( !obj.containsKey(JSONConstants.REQCAP_NAMESPACE) ) {
@@ -591,10 +601,7 @@ public class FeatureJSONReader {
 
     private void readCapabilities(final JsonObject json, final List<Capability> container) throws IOException {
         if ( json.containsKey(JSONConstants.FEATURE_CAPABILITIES)) {
-            final JsonValue capObj = json.get(JSONConstants.FEATURE_CAPABILITIES);
-            checkType(JSONConstants.FEATURE_CAPABILITIES, capObj, ValueType.ARRAY);
-
-            for(final JsonValue cap : ((JsonArray)capObj)) {
+            for(final JsonValue cap : checkTypeArray(JSONConstants.FEATURE_REQUIREMENTS, json.get(JSONConstants.FEATURE_CAPABILITIES))) {
                 final JsonObject obj = checkTypeObject("Capability", cap);
 
                 if ( !obj.containsKey(JSONConstants.REQCAP_NAMESPACE) ) {
@@ -665,16 +672,12 @@ public class FeatureJSONReader {
 
         // final flag
         if (json.containsKey(JSONConstants.FEATURE_FINAL)) {
-            final JsonValue finalObj = json.get(JSONConstants.FEATURE_FINAL);
-            checkType(JSONConstants.FEATURE_FINAL, finalObj, JsonValue.ValueType.FALSE, JsonValue.ValueType.TRUE);
-            this.feature.setFinal(((Boolean)org.apache.felix.cm.json.Configurations.convertToObject(finalObj)).booleanValue());
+            this.feature.setFinal(checkTypeBoolean(JSONConstants.FEATURE_FINAL, json.get(JSONConstants.FEATURE_FINAL)));
         }
 
         // complete flag
         if (json.containsKey(JSONConstants.FEATURE_COMPLETE)) {
-            final JsonValue completeObj = json.get(JSONConstants.FEATURE_COMPLETE);
-            checkType(JSONConstants.FEATURE_COMPLETE, completeObj, JsonValue.ValueType.FALSE, JsonValue.ValueType.TRUE);
-            this.feature.setComplete(((Boolean)org.apache.felix.cm.json.Configurations.convertToObject(completeObj)).booleanValue());
+            this.feature.setComplete(checkTypeBoolean(JSONConstants.FEATURE_COMPLETE, json.get(JSONConstants.FEATURE_COMPLETE)));
         }
 
         // title, description, vendor and license
@@ -690,13 +693,13 @@ public class FeatureJSONReader {
 
         this.readCapabilities(json, feature.getCapabilities());
         this.readRequirements(json, feature.getRequirements());
-        feature.setPrototype(this.readPrototype(json));
+        this.feature.setPrototype(this.readPrototype(json));
 
         this.readExtensions(json,
                 JSONConstants.FEATURE_KNOWN_PROPERTIES,
                 this.feature.getExtensions(), this.feature.getConfigurations());
 
-        return feature;
+        return this.feature;
     }
 
     private void checkModelVersion(final JsonObject json) throws IOException {
