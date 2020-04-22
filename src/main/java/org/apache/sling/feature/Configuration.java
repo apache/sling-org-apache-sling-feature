@@ -16,14 +16,11 @@
  */
 package org.apache.sling.feature;
 
-import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+
+import org.apache.felix.cm.json.Configurations;
 
 
 /**
@@ -58,8 +55,8 @@ public class Configuration
     /** The pid or name for factory pids. */
     private final String pid;
 
-    /** The properties. */
-    private final Dictionary<String, Object> properties = new OrderedDictionary();
+    /** The ordered properties. */
+    private final Dictionary<String, Object> properties = Configurations.newConfiguration();
 
     /**
      * Create a new configuration
@@ -212,143 +209,5 @@ public class Configuration
         return "Configuration [pid=" + pid
                 + ", properties=" + properties
                 + "]";
-    }
-
-    static class OrderedDictionary extends Dictionary<String, Object> implements Map<String, Object> {
-
-        private static class EnumarationImpl<E> implements Enumeration<E> {
-            private final Iterator<E> iterator;
-
-            public EnumarationImpl(Iterator<E> iterator) {
-                this.iterator = iterator;
-            }
-
-            @Override
-            public boolean hasMoreElements() {
-                return iterator.hasNext();
-            }
-
-            @Override
-            public E nextElement() {
-                return iterator.next();
-            }
-        }
-
-        private final Map<String, Object> map = new LinkedHashMap<String, Object>();
-
-        @Override
-        public int size() {
-            return map.size();
-        }
-
-        @Override
-        public boolean isEmpty() {
-            return map.isEmpty();
-        }
-
-        @Override
-        public Enumeration<String> keys() {
-            return new EnumarationImpl<>(map.keySet().iterator());
-        }
-
-        @Override
-        public Enumeration<Object> elements() {
-            return new EnumarationImpl<>(map.values().iterator());
-        }
-
-        @Override
-        public Object get(Object key) {
-            return map.get(key);
-        }
-
-        @Override
-        public Object put(String key, Object value) {
-            // Make sure the value is not null
-            if (value == null) {
-                throw new NullPointerException();
-            }
-
-            return map.put(key, value);
-        }
-
-        @Override
-        public Object remove(Object key) {
-            return map.remove(key);
-        }
-
-        @Override
-		public boolean containsKey(Object key) {
-			return this.map.containsKey(key);
-		}
-
-		@Override
-		public boolean containsValue(Object value) {
-			return this.map.containsValue(value);
-		}
-
-		@Override
-		public void putAll(Map<? extends String, ? extends Object> m) {
-			this.map.putAll(m);
-		}
-
-		@Override
-		public void clear() {
-			this.map.clear();
-		}
-
-		@Override
-		public Set<String> keySet() {
-			return this.map.keySet();
-		}
-
-		@Override
-		public Collection<Object> values() {
-			return this.map.values();
-		}
-
-		@Override
-		public Set<Entry<String, Object>> entrySet() {
-			return this.map.entrySet();
-		}
-
-		@Override
-        public boolean equals(Object o) {
-        	if ( !(o instanceof OrderedDictionary) ) {
-        		if ( o instanceof Dictionary ) {
-        			@SuppressWarnings("rawtypes")
-					final Dictionary other = (Dictionary)o;
-        			if (other.size() == this.size() ) {
-        				final Enumeration<String> iter = this.keys();
-        				while ( iter.hasMoreElements() ) {
-        					final String key = iter.nextElement();
-        					final Object ov = other.get(key);
-        					if ( ov == null ) {
-        						return false;
-        					}
-        					final Object tv = this.get(key);
-        					if ( !tv.equals(ov) ) {
-        						return false;
-        					}
-        				}
-        				return true;
-        			}
-        		}
-        		if ( o instanceof Map ) {
-        			return map.equals(o);
-        		}
-        		return false;
-        	}
-            return map.equals(((OrderedDictionary)o).map);
-        }
-
-        @Override
-        public int hashCode() {
-            return map.hashCode();
-        }
-
-		@Override
-		public String toString() {
-			return map.toString();
-		}
     }
 }
