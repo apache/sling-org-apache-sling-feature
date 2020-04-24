@@ -1,0 +1,226 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://sling.apache.org/Feature/1.0.0",
+  "type": "object",
+  "properties": {
+    "model-version": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^(([^: ]+):([^: ]+)(:([^: ]*)(:([^: ]+))?)?:([^: ]+)|([^/ ]+)/([^/ ]+)(/([^/ ]+))?(/([^/ ]*)(/([^/ ]+))?)?)$"
+    },
+    "final": {
+      "type": "boolean"
+    },
+    "complete": {
+      "type": "boolean"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "vendor": {
+      "type": "string"
+    },
+    "license": {
+      "type": "string"
+    },
+    "variables": {
+      "type": "object",
+      "patternProperties": {
+        "^(.+)$": {
+          "type": ["string","null"]
+        }
+      }
+    },
+    "bundles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Bundle"
+      }
+    },
+    "framework-properties": {
+      "type": "object",
+      "patternProperties": {
+        "^(.+)$": {
+          "type": [ "string", "number", "boolean" ]
+        }
+      }
+    },
+    "configurations": {
+      "type": "object",
+      "patternProperties": {
+        "^(.+)$": {
+          "$ref": "#/definitions/Configuration"
+        }
+      }
+    },
+    "prototype": {
+      "$ref": "#/definitions/Prototype"
+    },
+    "requirements": {
+    " type": "array",
+      "items": {
+        "$ref": "#/definitions/Requirement"
+      }
+    },
+    "capabilities": {
+    " type": "array",
+      "items": {
+        "$ref": "#/definitions/Capability"
+      }
+    }
+  },
+  "patternProperties": {
+    "^[^:]+:ARTIFACTS\\|(true|false)$": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Bundle"
+      }
+    },
+    "^[^:]+:TEXT\\|(true|false)$": {
+      "type": [ "string", "array" ],
+      "items": {
+        "type": "string"
+      }
+    },
+    "^[^:]+:JSON\\|(true|false)$": {
+      "type": [
+        "object",
+        "array"
+      ]
+    }
+  },
+  "definitions": {
+    "Bundle": {
+      "$id": "#Bundle",
+      "type": [
+        "string",
+        "object"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^(([^: ]+):([^: ]+)(:([^: ]*)(:([^: ]+))?)?:([^: ]+)|(mvn:)?([^/ ]+)/([^/ ]+)(/([^/ ]+))?(/([^/ ]*)(/([^/ ]+))?)?)$"
+        },
+        "start-level": {
+          "type": [ "string", "number" ],
+          "pattern": "^\\d+$"
+        },
+        "run-modes": {
+          "type": [
+            "string",
+            "array"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "configurations": {
+          "type": "object",
+          "patternProperties": {
+            "^(.+)$": {
+              "$ref": "#/definitions/Configuration"
+            }
+          }
+        }
+      }
+    },
+    "Configuration": {
+      "$id": "#Configuration",
+      "patternProperties": {
+        "^(.+)$": {
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "array",
+            "object"
+          ]
+        }
+      }
+    },
+    "Prototype": {
+      "$id": "#Prototype",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^(([^: ]+):([^: ]+)(:([^: ]*)(:([^: ]+))?)?:([^: ]+)|(mvn:)?([^/ ]+)/([^/ ]+)(/([^/ ]+))?(/([^/ ]*)(/([^/ ]+))?)?)$"
+        },
+        "removals": {
+           "$ref": "#/definitions/Removals"
+        }
+      }
+    },
+    "Removals": {
+      "$id": "#Removals",
+      "type": "object",
+      "properties": {
+        "configurations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "bundles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "framework-properties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Requirement": {
+      "$id": "#Requirement",
+      "type": "object",
+      "properties": {
+        "namespace": {
+          "type": "string"
+        },
+        "directives": {
+          "type": "object",
+          "patternProperties": {
+            "^(.+)$": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "Capability": {
+      "$id": "#Capability",
+      "type": "object",
+      "properties": {
+        "namespace": {
+          "type": "string"
+        },
+        "directives": {
+          "type": "object",
+          "patternProperties": {
+            "^(.+)$": {
+              "type": "string"
+            }
+          }
+        },
+        "attributes": {
+          "type": "object",
+          "patternProperties": {
+            "^(.+)$": {
+              "type": [ "string", "number", "boolean" ]
+            }
+          }
+        }
+      }
+    }
+  }
+}
