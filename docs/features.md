@@ -41,12 +41,12 @@ Same id specified as a Maven url:
 
 ## Feature File Format
 
-Features are defined as a JSON object. An example feature file can be found here: https://github.com/apache/sling-org-apache-sling-feature-io/blob/master/design/feature-model.json
-and the JSON Schema for feature files is available from here: https://github.com/apache/sling-org-apache-sling-feature-io/blob/master/src/main/resources/META-INF/feature/Feature-1.0.0.schema.json.
+Features are defined as a JSON object. An example feature file can be found here: [feature-model.json](feature-model.json)
+and the JSON Schema for feature files is available from here: [Feature-1.0.0.schema.json](../src/main/resources/META-INF/feature/Feature-1.0.0.schema.json).
 
 Comments in the form of [JSMin (The JavaScript Minifier)](https://www.crockford.com/javascript/jsmin.html) comments are supported, that is, any text on the same line after // is ignored and any text between /* */ is ignored.
 
-Java API for Serialization/Deserialization into/from this format is available from https://github.com/apache/sling-org-apache-sling-feature-io.
+Java API for Serialization/Deserialization into/from this format is part of this module.
 
 ## OSGi Bundles
 
