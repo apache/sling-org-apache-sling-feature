@@ -43,7 +43,7 @@ Read the [documentation about feature archives](docs/feature-archives.md)
 
 Reference files can be used to mention a collection of feature files in a single file.
 
-Read the [documentation about feature archives](docs/feature-ref-files.md)
+Read the [documentation about feature reference files](docs/feature-ref-files.md)
 
 ## Feature Aggregation
 
