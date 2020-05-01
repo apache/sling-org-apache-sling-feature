@@ -40,6 +40,9 @@ public class IOUtils {
     /** The extension for a feature file. */
     public static final String EXTENSION_FEATURE_FILE = ".json";
 
+    /** The extension for a feature file. */
+    public static final String EXTENSION_FEATURE_ARCHIVE = ".far";
+
     /** The default directory to search for features. */
     public static final String DEFAULT_DIRECTORY = "features";
 
@@ -282,7 +285,9 @@ public class IOUtils {
         for(final File f : dir.listFiles()) {
             if ( f.isFile() && !f.getName().startsWith(".")) {
                 // check if file is a reference
-                if ( f.getName().endsWith(EXTENSION_REF_FILE) || f.getName().endsWith(EXTENSION_FEATURE_FILE) ) {
+                if ( f.getName().endsWith(EXTENSION_REF_FILE)
+                     || f.getName().endsWith(EXTENSION_FEATURE_FILE)
+                     || f.getName().endsWith(EXTENSION_FEATURE_ARCHIVE) ) {
                     processFile(paths, f);
                 }
             }
