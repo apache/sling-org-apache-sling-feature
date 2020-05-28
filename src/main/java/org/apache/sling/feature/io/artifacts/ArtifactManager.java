@@ -370,7 +370,7 @@ public class ArtifactManager
             // check if this is already a local file
             try {
                 final File f = new File(new URL(url).toURI());
-                if ( f.exists() ) {
+                if (f.exists()) {
                     this.config.incLocalArtifacts();
                     return f.toURI().toURL();
                 }
@@ -389,7 +389,13 @@ public class ArtifactManager
                     return null;
                 }
 
-                final String filePath = (this.cacheDir.getAbsolutePath() + File.separatorChar + relativeCachePath).replace('/', File.separatorChar);
+                String adjustedRelativePath = relativeCachePath;
+                // For Windows we need to remove the drive name from the path
+                int pos = adjustedRelativePath.indexOf(":/");
+                if(pos >= 0) {
+                    adjustedRelativePath = adjustedRelativePath.substring(pos + 2);
+                }
+                final String filePath = (this.cacheDir.getAbsolutePath() + File.separatorChar + adjustedRelativePath).replace('/', File.separatorChar);
                 final File cacheFile = new File(filePath);
 
                 if ( !cacheFile.exists() ) {
@@ -403,28 +409,12 @@ public class ArtifactManager
                     con.connect();
 
                     final InputStream readIS = con.getInputStream();
-                    final byte[] buffer = new byte[32768];
-                    int l;
-                    OutputStream os = null;
                     try {
-                        os = new FileOutputStream(cacheFile);
-                        while ( (l = readIS.read(buffer)) >= 0 ) {
-                            os.write(buffer, 0, l);
-                        }
-                    } finally {
-                        try {
-                            readIS.close();
-                        } catch ( final IOException ignore) {
-                            // ignore
-                        }
-                        if ( os != null ) {
-                            try {
-                                os.close();
-                            } catch ( final IOException ignore ) {
-                                // ignore
-
-                            }
-                        }
+                        copyFileContent(readIS, cacheFile, 32768);
+                    } catch(IOException e) {
+                        //TODO: Remove this logging statement when it settled down
+                        logger.debug("Failed to copy file", e);
+                        throw e;
                     }
                     this.config.incDownloadedArtifacts();
                 } else {
@@ -445,6 +435,31 @@ public class ArtifactManager
         @Override
         public String toString() {
             return "DefaultArtifactHandler";
+        }
+
+        private void copyFileContent(InputStream readIS, File cacheFile, int bufferSize) throws IOException {
+            final byte[] buffer = new byte[bufferSize];
+            int l;
+            OutputStream os = null;
+            try {
+                os = new FileOutputStream(cacheFile);
+                while ( (l = readIS.read(buffer)) >= 0 ) {
+                    os.write(buffer, 0, l);
+                }
+            } finally {
+                try {
+                    readIS.close();
+                } catch ( final IOException ignore) {
+                    // ignore
+                }
+                if ( os != null ) {
+                    try {
+                        os.close();
+                    } catch ( final IOException ignore ) {
+                        // ignore
+                    }
+                }
+            }
         }
     }
 
