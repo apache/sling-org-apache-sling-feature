@@ -54,7 +54,7 @@ public class ExecutionEnvironmentExtension {
             return null;
         }
         if ( ext.getType() != ExtensionType.JSON ) {
-            throw new IllegalStateException("Extension " + ext.getName() + " must have JSON type");
+            throw new IllegalArgumentException("Extension " + ext.getName() + " must have JSON type");
         }
         return new ExecutionEnvironmentExtension(ext.getJSONStructure());
     }
