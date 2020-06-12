@@ -29,6 +29,22 @@ Example:
 As initializing the repository is usually important for Sling based applications
 the extension should be marked as required as in the example above.
 
+## Built-in extension: execution-environment
+
+This extension is of type `JSON` and allows to specify the execution environment for a feature.
+Right now it only supports to set the artifact for the framework to launch the feature. The framework can either be specified as a string or a JSON object with an `id` property:
+
+The execution environment - if provided - is used by tooling like the feature launcher or the feature analysers.
+
+```
+"execution-environment:JSON|optional" : {
+  "framework" : {
+    "id" : "org.apache.felix:org.apache.felix.framework:6.0.3"
+  }
+}
+```
+
+
 ## Further extensions
 
 * [API Controller and API Regions](https://github.com/apache/sling-org-apache-sling-feature-extension-apiregions/blob/master/docs/api-regions.md)
