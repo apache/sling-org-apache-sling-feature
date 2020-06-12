@@ -26,6 +26,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.json.JsonString;
+import javax.json.JsonValue;
+import javax.json.JsonValue.ValueType;
+
 /**
  * An artifact consists of
  * <ul>
@@ -46,6 +50,8 @@ public class Artifact implements Comparable<Artifact> {
 
     public static final String KEY_FEATURE_ORIGINS = "feature-origins";
 
+    private static final String KEY_ID = "id";
+
     /** The artifact id. */
     private final ArtifactId id;
 
@@ -63,6 +69,43 @@ public class Artifact implements Comparable<Artifact> {
         }
         this.id = id;
     }
+
+    /**
+     * Construct a new artifact
+     * @param json The json for the artifact
+     * @throws IllegalArgumentException If json is {@code null} or wrongly formatted.
+     * @since 1.4
+     */
+    public Artifact(final JsonValue json) {
+        if ( json == null ) {
+            throw new IllegalArgumentException("json must not be null.");
+        }
+        if ( json.getValueType() == ValueType.STRING ) {
+            this.id = ArtifactId.parse(((JsonString)json).getString());
+        } else if ( json.getValueType() == ValueType.OBJECT) {
+            String id = json.asJsonObject().getString(KEY_ID, null);
+            if ( id == null ) {
+                throw new IllegalArgumentException("JSON for artifact is missing id property");
+            }
+            this.id = ArtifactId.parse(id);
+
+            for(final Map.Entry<String, JsonValue> metadataEntry : json.asJsonObject().entrySet()) {
+                final String key = metadataEntry.getKey();
+                if ( KEY_ID.equals(key) ) {
+                    continue;
+                }
+                final JsonValue value = metadataEntry.getValue();
+                if ( value.getValueType() == ValueType.STRING || value.getValueType() == ValueType.NUMBER || value.getValueType() == ValueType.FALSE || value.getValueType() == ValueType.TRUE ) {
+                    this.getMetadata().put(key, org.apache.felix.cm.json.Configurations.convertToObject(value).toString());
+                } else {
+                    throw new IllegalArgumentException("Key ".concat(key).concat(" is not one of the allowed types string, number or boolean : ").concat(value.getValueType().name()));
+                }
+            }
+        } else {
+            throw new IllegalArgumentException("JSON for artifact must be of type object or string");
+        }
+    }
+
 
     /**
      * Get the id of the artifact.

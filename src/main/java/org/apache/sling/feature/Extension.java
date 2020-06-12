@@ -215,7 +215,7 @@ public class Extension {
 
     /**
      * Set the JSON of the extension
-     * 
+     *
      * @param text The JSON
      * @throws IllegalStateException    if the type is not
      *                                  {@code ExtensionType#JSON}
