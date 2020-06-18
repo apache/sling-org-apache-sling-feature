@@ -45,7 +45,7 @@ public abstract class FeatureBuilder {
     private static final String TRACKING_KEY = "tracking-key";
 
     /** Pattern for using variables. */
-    private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\{[a-zA-Z0-9.-_]+\\}");
+    private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\{[a-zA-Z0-9.\\-_]+\\}");
 
     /**
      * Assemble the full feature by processing its prototype.
