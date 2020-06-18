@@ -6,6 +6,8 @@
 
 # An Introduction to the Sling Feature Model
 
+See also the [Sling Website Feature Model documentation](http://sling.apache.org/tags/featuremodel.html) which includes tutorials and examples.
+
 OSGi is a platform capable of running large applications for a variety of purposes, including rich client applications, server-side systems and cloud and container based architectures. Typical OSGi applications are assembled out of bundles and configured through both, OSGi configurations and framework properties (though these are less frequently used than OSGi configurations). Depending on the nature of the application, there might be additional artifact types involved.
 
 As these applications are generally based on many bundles, describing each bundle individually in the application definition becomes unwieldy once the number of bundles reaches a certain level. Additionally, OSGi has no mechanism to describe other elements of the application definition, such as configuration or custom artifacts.
