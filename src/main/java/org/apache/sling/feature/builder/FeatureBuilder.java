@@ -231,12 +231,20 @@ public abstract class FeatureBuilder {
         	final Set<String> keys = new HashSet<>(Collections.list(cfg.getProperties().keys()));
         	for(final String key : keys) {
                 final Object value = cfg.getProperties().get(key);
-                cfg.getProperties().put(key, replaceVariables(value, additionalVariables, feature));
+                if ( value instanceof String ) {
+                    cfg.getProperties().put(key, replaceVariables((String)value, additionalVariables, feature));
+                } else if ( value instanceof String[]) {
+                    final String[] values = (String[]) value;
+                    for(int i=0;i<values.length;i++) {
+                        values[i] = replaceVariables(values[i], additionalVariables, feature);
+                    }
+                    cfg.getProperties().put(key, values);
+                }
             }
         }
         for(final Map.Entry<String, String> entry : feature.getFrameworkProperties().entrySet()) {
             // the  value is always a string
-            entry.setValue((String)replaceVariables(entry.getValue(), additionalVariables, feature));
+            entry.setValue(replaceVariables(entry.getValue(), additionalVariables, feature));
         }
     }
 
@@ -252,12 +260,8 @@ public abstract class FeatureBuilder {
      * @param feature The feature containing variables
      * @return The value with the variables substituted.
      */
-    static Object replaceVariables(final Object value, final Map<String,String> additionalVariables, final Feature feature) {
-        if (!(value instanceof String)) {
-            return value;
-        }
-
-        final String textWithVars = (String) value;
+    static String replaceVariables(final String value, final Map<String,String> additionalVariables, final Feature feature) {
+        final String textWithVars = value;
 
         final Matcher m = VARIABLE_PATTERN.matcher(textWithVars.toString());
         final StringBuffer sb = new StringBuffer();

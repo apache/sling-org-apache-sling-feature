@@ -1112,6 +1112,21 @@ public class FeatureBuilderTest {
         assertEquals("line2\nline3", f.getExtensions().getByName(Extension.EXTENSION_NAME_REPOINIT).getText());
     }
 
+    @Test public void testReplaceVarInArray() {
+        final Feature f = new Feature(ArtifactId.parse("g/a/1"));
+        f.getVariables().put("key", "hello");
+        final Configuration c = new Configuration("pid");
+        c.getProperties().put("prop", new String[] {"${key}", "world"});
+        f.getConfigurations().add(c);
+
+        FeatureBuilder.resolveVariables(f, null);
+
+        String[] result = (String[]) c.getProperties().get("prop");
+        assertEquals(2, result.length);
+        assertEquals("hello", result[0]);
+        assertEquals("world", result[1]);
+    }
+
     private static class MatchingRequirementImpl extends RequirementImpl implements MatchingRequirement {
 
         public MatchingRequirementImpl(Resource res, String ns, Map<String, String> dirs, Map<String, Object> attrs) {
