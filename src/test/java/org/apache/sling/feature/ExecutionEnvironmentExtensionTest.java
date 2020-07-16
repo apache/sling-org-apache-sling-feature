@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
+import org.osgi.framework.Version;
 
 public class ExecutionEnvironmentExtensionTest {
 
@@ -42,15 +43,15 @@ public class ExecutionEnvironmentExtensionTest {
         ExecutionEnvironmentExtension.getExecutionEnvironmentExtension(f);
     }
 
-    public void testNoFramework() {
-        final Extension e = new Extension(ExtensionType.TEXT, ExecutionEnvironmentExtension.EXTENSION_NAME, ExtensionState.OPTIONAL);
+    @Test public void testNoFramework() {
+        final Extension e = new Extension(ExtensionType.JSON, ExecutionEnvironmentExtension.EXTENSION_NAME, ExtensionState.OPTIONAL);
         e.setJSON("{}");
 
         assertNull(ExecutionEnvironmentExtension.getExecutionEnvironmentExtension(e).getFramework());
     }
 
-    public void testFrameworkAsString() {
-        final Extension e = new Extension(ExtensionType.TEXT, ExecutionEnvironmentExtension.EXTENSION_NAME, ExtensionState.OPTIONAL);
+    @Test public void testFrameworkAsString() {
+        final Extension e = new Extension(ExtensionType.JSON, ExecutionEnvironmentExtension.EXTENSION_NAME, ExtensionState.OPTIONAL);
         e.setJSON("{ \"framework\" : \"g:a:1\" }");
 
         final ExecutionEnvironmentExtension eee = ExecutionEnvironmentExtension.getExecutionEnvironmentExtension(e);
@@ -58,13 +59,45 @@ public class ExecutionEnvironmentExtensionTest {
         assertEquals(ArtifactId.parse("g:a:1"), eee.getFramework().getId());
     }
 
-    public void testFrameworkAsObject() {
-        final Extension e = new Extension(ExtensionType.TEXT, ExecutionEnvironmentExtension.EXTENSION_NAME, ExtensionState.OPTIONAL);
-        e.setJSON("{ \"framework\" : { \"id\" : \"g:a:1\", \"p\" : \"v\" }");
+    @Test public void testFrameworkAsObject() {
+        final Extension e = new Extension(ExtensionType.JSON, ExecutionEnvironmentExtension.EXTENSION_NAME, ExtensionState.OPTIONAL);
+        e.setJSON("{ \"framework\" : { \"id\" : \"g:a:1\", \"p\" : \"v\" } }");
 
         final ExecutionEnvironmentExtension eee = ExecutionEnvironmentExtension.getExecutionEnvironmentExtension(e);
         assertNotNull(eee.getFramework());
         assertEquals(ArtifactId.parse("g:a:1"), eee.getFramework().getId());
         assertEquals("v", eee.getFramework().getMetadata().get("p"));
+    }
+
+    @Test public void testJavaOptions() {
+        final Extension e = new Extension(ExtensionType.JSON, ExecutionEnvironmentExtension.EXTENSION_NAME, ExtensionState.OPTIONAL);
+        e.setJSON("{ \"javaOptions\" : \"options\" }");
+
+        final ExecutionEnvironmentExtension eee = ExecutionEnvironmentExtension.getExecutionEnvironmentExtension(e);
+        assertEquals("options", eee.getJavaOptions());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testWrongJavaOptions() {
+        final Extension e = new Extension(ExtensionType.JSON, ExecutionEnvironmentExtension.EXTENSION_NAME, ExtensionState.OPTIONAL);
+        e.setJSON("{ \"javaOptions\" : true }");
+
+        ExecutionEnvironmentExtension.getExecutionEnvironmentExtension(e);
+    }
+
+    @Test public void testJavaVersion() {
+        final Extension e = new Extension(ExtensionType.JSON, ExecutionEnvironmentExtension.EXTENSION_NAME, ExtensionState.OPTIONAL);
+        e.setJSON("{ \"javaVersion\" : \"11\" }");
+
+        final ExecutionEnvironmentExtension eee = ExecutionEnvironmentExtension.getExecutionEnvironmentExtension(e);
+        assertEquals(new Version("11"), eee.getJavaVersion());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testWrongJavaVersion() {
+        final Extension e = new Extension(ExtensionType.JSON, ExecutionEnvironmentExtension.EXTENSION_NAME, ExtensionState.OPTIONAL);
+        e.setJSON("{ \"javaVersion\" : true }");
+
+        ExecutionEnvironmentExtension.getExecutionEnvironmentExtension(e);
     }
 }

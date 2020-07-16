@@ -16,8 +16,12 @@
  */
 package org.apache.sling.feature;
 
+import javax.json.JsonString;
 import javax.json.JsonStructure;
 import javax.json.JsonValue;
+import javax.json.JsonValue.ValueType;
+
+import org.osgi.framework.Version;
 
 /**
  * Execution environment extension
@@ -59,7 +63,14 @@ public class ExecutionEnvironmentExtension {
         return new ExecutionEnvironmentExtension(ext.getJSONStructure());
     }
 
+    /** Optional framework artifact. */
     private final Artifact framework;
+
+    /** Optional java version */
+    private final Version javaVersion;
+
+    /** Optional java options */
+    private final String javaOptions;
 
     private ExecutionEnvironmentExtension(final JsonStructure structure) {
         // get framework
@@ -69,6 +80,26 @@ public class ExecutionEnvironmentExtension {
         } else {
             this.framework = null;
         }
+        // get version
+        final JsonValue jv = structure.asJsonObject().getOrDefault("javaVersion", null);
+        if ( jv != null ) {
+            if ( jv.getValueType() != ValueType.STRING ) {
+                throw new IllegalArgumentException("javaVersion is not of type String");
+            }
+            this.javaVersion = Version.parseVersion(((JsonString)jv).getString());
+        } else {
+            this.javaVersion = null;
+        }
+        // get options
+        final JsonValue jo = structure.asJsonObject().getOrDefault("javaOptions", null);
+        if ( jo != null ) {
+            if ( jo.getValueType() != ValueType.STRING ) {
+                throw new IllegalArgumentException("javaOptions is not of type String");
+            }
+            this.javaOptions = ((JsonString)jo).getString();
+        } else {
+            this.javaOptions = null;
+        }
     }
 
     /**
@@ -77,5 +108,23 @@ public class ExecutionEnvironmentExtension {
      */
     public Artifact getFramework() {
         return this.framework;
+    }
+
+    /**
+     * Get the specified java version
+     * @return The version or {@code null}
+     * @since 1.5.0
+     */
+    public Version getJavaVersion() {
+        return javaVersion;
+    }
+
+    /**
+     * Get the specified java options
+     * @return The options or {@code null}
+     * @since 1.5.0
+     */
+    public String getJavaOptions() {
+        return javaOptions;
     }
 }
