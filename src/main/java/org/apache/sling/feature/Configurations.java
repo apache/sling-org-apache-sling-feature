@@ -17,6 +17,8 @@
 package org.apache.sling.feature;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * A container for configurations.
@@ -39,5 +41,21 @@ public class Configurations extends ArrayList<Configuration> {
             }
         }
         return null;
+    }
+
+    /**
+     * Get all factory configurations matching the factory pid.
+     * @param factoryPid The factory pid of the configurations
+     * @return The configurations - the collection might be empty
+     * @since 1.5
+     */
+    public Collection<Configuration> getFactoryConfigurations(final String factoryPid) {
+        final List<Configuration> result = new ArrayList<>();
+        for(final Configuration cfg : this) {
+            if (factoryPid.equals(cfg.getFactoryPid())) {
+                result.add(cfg);
+            }
+        }
+        return result;
     }
 }
