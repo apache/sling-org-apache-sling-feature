@@ -273,4 +273,14 @@ public class ArtifactIdTest {
         assertEquals(a1, ArtifactId.parse(a1.toMvnId()));
         assertEquals(a1, ArtifactId.parse(a1.toMvnUrl()));
     }
+
+    @Test
+    public void testCompareTo() {
+        final ArtifactId a1 = ArtifactId.parse("g:a:1.7");
+        final ArtifactId a2 = ArtifactId.parse("g:a:1.11");
+
+        assertTrue(a1.compareTo(a2) < 0);
+        assertTrue(a2.compareTo(a1) > 0);
+        assertTrue(a1.compareTo(a1) == 0);
+    }
 }

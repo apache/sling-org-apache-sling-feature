@@ -492,7 +492,43 @@ public class ArtifactId implements Comparable<ArtifactId> {
     @Override
     public int compareTo(final ArtifactId o) {
         if(o == null) return 1;
-        return toMvnUrl().compareTo(o.toMvnUrl());
+        // group id
+        int result = this.getGroupId().compareTo(o.getGroupId());
+        if ( result == 0 ) {
+            // artifact id
+            result = this.getArtifactId().compareTo(o.getArtifactId());
+            if ( result == 0 ) {
+                // version
+                Version v1 = null;
+                Version v2 = null;
+                try {
+                    v1 = this.getOSGiVersion();
+                    v2 = o.getOSGiVersion();
+                } catch (final IllegalArgumentException ignore) {
+                    // ignore
+                }
+                if ( v1 != null && v2 != null ) {
+                    result = v1.compareTo(v2);
+                } else {
+                    // we need to revert to string compare
+                    result = this.getVersion().compareTo(o.getVersion());
+                }
+
+                if ( result == 0 ) {
+                    // classifier
+                    if ( this.getClassifier() == null ) {
+                        result = o.getClassifier() == null ? 0 : -1;
+                    } else {
+                        result = o.getClassifier() == null ? 1 : this.getClassifier().compareTo(o.getClassifier());
+                    }
+                    if ( result == 0 ) {
+                        // type
+                        result = this.getType().compareTo(o.getType());
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     @Override
