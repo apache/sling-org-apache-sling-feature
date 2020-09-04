@@ -278,8 +278,9 @@ public abstract class FeatureBuilder {
                     val = feature.getVariables().get(name);
                 }
 
-                if (val != null) {
-                    m.appendReplacement(sb, Matcher.quoteReplacement(val));
+                if (val != null) { 
+                    String replaced = replaceVariables(val, additionalVariables, feature);
+                    m.appendReplacement(sb, Matcher.quoteReplacement(replaced));
                 }
                 else {
                     throw new IllegalStateException("Undefined variable: " + name);
