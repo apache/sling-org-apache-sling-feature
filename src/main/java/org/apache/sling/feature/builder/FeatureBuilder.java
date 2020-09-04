@@ -270,10 +270,11 @@ public abstract class FeatureBuilder {
 
             final int len = var.length();
             final String name = var.substring(2, len - 1);
-            if (BuilderUtil.contains(name, feature.getVariables().entrySet())) {
+            
+            if (feature.getVariables().containsKey(name)) {
                 String val = null;
                 if (additionalVariables != null)
-                    val = BuilderUtil.get(name, additionalVariables.entrySet());
+                    val = additionalVariables.get(name);
                 if (val == null) {
                     val = feature.getVariables().get(name);
                 }
