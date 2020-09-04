@@ -911,6 +911,7 @@ public class FeatureBuilderTest {
         kvMap.put("varvariable", "${myvar}");
         kvMap.put("var.2", "2");
         kvMap.put("var-3", "3");
+        kvMap.put("var-4", "${var1}");
 
 
         assertEquals("foobarfoo", FeatureBuilder.replaceVariables("foo${var1}foo", null, feature));
@@ -918,6 +919,7 @@ public class FeatureBuilderTest {
         assertEquals("${}test${myvar}2", FeatureBuilder.replaceVariables("${}test${varvariable}${var.2}", null, feature ));
         assertEquals("${undefined}",FeatureBuilder.replaceVariables("${undefined}", null, feature));
         assertEquals("var-3",FeatureBuilder.replaceVariables("var-${var-3}", null, feature));
+        assertEquals("bar", FeatureBuilder.replaceVariables("${var-4}", null, feature));
     }
 
     @Test public void testHandleVarsWithConflict() throws Exception {
