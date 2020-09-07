@@ -261,12 +261,28 @@ Then the removal instructions of the prototype object are handled next.
 Finally, the contents from the prototype is then overlayed with the definitions from the feature using the prototype. In detail this means:
 
 * Variables from the feature overwrite variables from the prototype.
-* A clash of artifacts (such as bundles) between the prototype and the feature is resolved by picking the version from the feature, not its prototype. Artifact clashes are detected based on Maven Coordinates, not on the content of the artifact. So if a prototype defines a bundle with artifact ID `org.sling:somebundle:1.2.0` and the feature itself declares `org.sling:somebundle:1.0.1` in its `bundles` section, the bundle with version `1.0.1` is used.
+* A clash of artifacts (such as bundles) between the prototype and the feature is not resolved and both versions end up in the featuree. Artifact clashes are detected based on Maven Coordinates, not on the content of the artifact. So if a prototype defines a bundle with artifact ID `org.sling:somebundle:1.2.0` and the feature itself declares `org.sling:somebundle:1.0.1` in its `bundles` section, version `1.0.1` and version `1.2.0` are used. The removals section can be used to remove the prototype bundle.
 * Configurations will be merged by default, the ones from the feature potentially overwriting configurations from the prototype:
   * If the same property is declared in more than one feature, the last one wins - in case of an array value, this requires redeclaring all values (if they are meant to be kept).
 * Framework properties from the feature overwrite framework properties from the prototype.
 * Extensions are handled in an extension specific way, by default the contents are appended. In the case of extensions of type `Artifact` these are handled just like bundles. Extension merge plugins can be configured to perform custom merging.
 * Capabilities and requirements are appended - this might result in duplicates, but that doesn't really hurt in practice.
+
+```json
+Example for removing artifacts:
+{
+  "id" : "org.apache.sling:my-sling-core-feature:slingosgifeature:1.0.0",
+  "prototype" : {
+     "id" : "org.apache.sling:org.apache.sling.core.feature:slingosgifeature:1.0.0",
+     "removals" : {
+       "bundles" : [
+         "org.apache.sling:org.apache.sling.foo:1.0.1", // only the exact version 1.0.1 is removed
+         "org.apache.sling:org.apache.sling.bar:0"      // any version from the prototype is removed
+       ]
+     }
+  }
+}
+```
 
 ## Final and Complete Features
 
