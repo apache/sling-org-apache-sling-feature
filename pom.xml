@@ -24,7 +24,7 @@
     <artifactId>org.apache.sling.feature</artifactId>
     <version>1.2.7-SNAPSHOT</version>
 
-    <name>Apache Sling Feature</name>
+    <name>Apache Sling Feature Model</name>
     <description>
         A feature describes an OSGi system
     </description>
