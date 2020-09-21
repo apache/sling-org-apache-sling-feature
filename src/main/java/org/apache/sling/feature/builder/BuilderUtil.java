@@ -668,8 +668,10 @@ class BuilderUtil {
                 }
             }
         }
+
         // post processing
-        for(final Extension ext : target.getExtensions()) {
+        // Make a defensive copy of the extensions, as the handlers may modify the extensions on the target
+        for(final Extension ext : new ArrayList<>(target.getExtensions())) {
             for(final PostProcessHandler ppe : context.getPostProcessExtensions()) {
                 ppe.postProcess(new HandlerContextImpl(context, ppe), target, ext);
             }

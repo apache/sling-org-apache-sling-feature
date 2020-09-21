@@ -27,9 +27,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -259,6 +261,39 @@ public class BuilderUtilTest {
 
         assertEquals(target.getJSON(), "[\"target1\",\"target2\",\"source1\",\"source2\"]");
 
+    }
+
+    @Test public void testPostProcessor() {
+        Feature f = new Feature(ArtifactId.fromMvnId("g:a:1"));
+
+        Extension e1 = new Extension(ExtensionType.TEXT, "foo", ExtensionState.OPTIONAL);
+        e1.setText("test");
+        f.getExtensions().add(e1);
+
+        Extension e2 = new Extension(ExtensionType.JSON, "bar", ExtensionState.REQUIRED);
+        e2.setJSON("[\"xyz\"]");
+        f.getExtensions().add(e2);
+
+        Extension e3 = new Extension(ExtensionType.ARTIFACTS, "lala", ExtensionState.TRANSIENT);
+        f.getExtensions().add(e3);
+
+        Feature f2 = new Feature(ArtifactId.fromMvnId("g:b:1"));
+
+        PostProcessHandler pph = (co, fe, ex) -> {
+            if ("lala".equals(ex.getName())) {
+                Extension barEx = fe.getExtensions().getByName("bar");
+                fe.getExtensions().remove(barEx);
+
+                fe.getExtensions().remove(ex);
+            }
+        };
+
+        BuilderContext bc = Mockito.mock(BuilderContext.class);
+        Mockito.when(bc.getPostProcessExtensions()).thenReturn(Collections.singletonList(pph));
+        BuilderUtil.mergeExtensions(f2, f, bc, Collections.emptyList(), "abc");
+
+        assertEquals(Collections.singleton("foo"),
+                f2.getExtensions().stream().map(Extension::getName).collect(Collectors.toSet()));
     }
 
     @Test public void testMergeVariables() {
