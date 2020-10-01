@@ -41,14 +41,17 @@ import javax.json.JsonValue.ValueType;
  * This class is not thread-safe.
  */
 public class Artifact implements Comparable<Artifact> {
+    
     /** Can be used in artifact metadata to specify an alias. Multiple aliases can be comma-separated. */
     public static final String KEY_ALIAS = "alias";
-
-
+    
     /** This key might be used by bundles to define the start order. */
     public static final String KEY_START_ORDER = "start-order";
 
     public static final String KEY_FEATURE_ORIGINS = "feature-origins";
+
+    /** This key might be used to set the resolution for an artifact. @since 1.6.0 */
+    public static final String KEY_RESOLUTION = "resolution";
 
     private static final String KEY_ID = "id";
 
@@ -219,6 +222,33 @@ public class Artifact implements Comparable<Artifact> {
         }
         else {
             this.getMetadata().remove(KEY_FEATURE_ORIGINS);
+        }
+    }
+
+    /**
+     * Get the artifact resolution
+     * @return The resolution
+     * @since 1.6.0
+     * @throws IllegalArgumentException  If the stored value is invalid
+     */
+    public ArtifactResolution getResolution() {
+        final String value = this.getMetadata().get(KEY_RESOLUTION);
+        if ( value == null ) {
+            return ArtifactResolution.MANDATORY;
+        }
+        return ArtifactResolution.valueOf(value.toUpperCase());
+    }
+
+    /**
+     * Set the artifact resolution
+     * @param value The resolution. If {@code null} the value will be removed.
+     * @since 1.6.0
+     */
+    public void setResolution(final ArtifactResolution value) {
+        if ( value == null ) {
+            this.getMetadata().remove(KEY_RESOLUTION);
+        } else {
+            this.getMetadata().put(KEY_RESOLUTION, value.name());
         }
     }
 
