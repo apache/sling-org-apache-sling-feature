@@ -241,7 +241,7 @@ class BuilderUtil {
                     String rule = override.getVersion();
 
                     if (BuilderContext.VERSION_OVERRIDE_ALL.equalsIgnoreCase(rule)) {
-                        result.add(addFeatureOrigin(fromTarget, source, fromSource, fromTarget));
+                        result.add(fromTarget);
                         result.add(fromSource);
                     } else if (BuilderContext.VERSION_OVERRIDE_HIGHEST.equalsIgnoreCase(rule)) {
                         Version a1v = fromTarget.getId().getOSGiVersion();

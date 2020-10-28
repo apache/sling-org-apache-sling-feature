@@ -230,10 +230,8 @@ public class FeatureBuilderTest {
 
         ab = new Feature(ArtifactId.fromMvnId("g:ab:1"));
         for (Artifact bundle : a.getBundles()) {
-            ab.getBundles()
-                    .add(BuilderUtilTest.createBundle(bundle.getId().toMvnId(), bundle.getStartOrder(),
-                            new AbstractMap.SimpleEntry<>(Artifact.KEY_FEATURE_ORIGINS,
-                                    a.getId() + "," + b.getId())));
+            ab.getBundles().add(BuilderUtilTest.createBundle(bundle.getId().toMvnId(), bundle.getStartOrder(),
+                    new AbstractMap.SimpleEntry<>(Artifact.KEY_FEATURE_ORIGINS, a.getId().toMvnId())));
         }
         for (Artifact bundle : b.getBundles()) {
             ab.getBundles().add(BuilderUtilTest.createBundle(bundle.getId().toMvnId(), bundle.getStartOrder(),
