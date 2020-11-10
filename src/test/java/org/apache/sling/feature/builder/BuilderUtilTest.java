@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -598,6 +597,8 @@ public class BuilderUtilTest {
         assertEquals(0, cfg.size());
     }
 
+    private static final ArtifactId SOURCE_ID = ArtifactId.parse("source:source:1");
+
     @Test public void testMergeConfigurations() {
         Configurations target = new Configurations();
         Configurations source = new Configurations();
@@ -607,10 +608,13 @@ public class BuilderUtilTest {
         Configuration bar = new Configuration("bar");
         bar.getProperties().put("barKey", "valueBAR");
         source.add(bar);
-        BuilderUtil.mergeConfigurations(target, source, Collections.emptyMap());
+        BuilderUtil.mergeConfigurations(target, source, Collections.emptyMap(), SOURCE_ID);
         assertEquals(2, target.size());
-        assertEquals(target.getConfiguration("foo").getProperties(), foo.getProperties());
-        assertEquals(target.getConfiguration("bar").getProperties(), bar.getProperties());
+        assertEquals(target.getConfiguration("foo").getConfigurationProperties(), foo.getConfigurationProperties());
+        assertTrue(target.getConfiguration("foo").getFeatureOrigins().isEmpty());
+        assertEquals(target.getConfiguration("bar").getConfigurationProperties(), bar.getConfigurationProperties());
+        assertEquals(1, target.getConfiguration("bar").getFeatureOrigins().size());
+        assertEquals(SOURCE_ID, target.getConfiguration("bar").getFeatureOrigins().get(0));
     }
 
     @Test public void testMergeConfigurationsCLASH() {
@@ -619,7 +623,7 @@ public class BuilderUtilTest {
         target.add(new Configuration("foo"));
         source.add(new Configuration("foo"));
         try {
-            BuilderUtil.mergeConfigurations(target, source, Collections.emptyMap());
+            BuilderUtil.mergeConfigurations(target, source, Collections.emptyMap(), SOURCE_ID);
             fail();
         } catch (IllegalStateException ex) {
 
@@ -635,13 +639,15 @@ public class BuilderUtilTest {
         Configuration foo2 = new Configuration("foo");
         foo2.getProperties().put("barKey", "valueBAR");
         source.add(foo2);
-        BuilderUtil.mergeConfigurations(target, source, Collections.singletonMap("fo*", BuilderContext.CONFIG_FAIL_ON_PROPERTY_CLASH));
+        BuilderUtil.mergeConfigurations(target, source, Collections.singletonMap("fo*", BuilderContext.CONFIG_FAIL_ON_PROPERTY_CLASH), SOURCE_ID);
 
-        assertEquals("valueFOO", target.getConfiguration("foo").getProperties().get("fooKey"));
-        assertEquals("valueBAR", target.getConfiguration("foo").getProperties().get("barKey"));
+        assertEquals("valueFOO", target.getConfiguration("foo").getConfigurationProperties().get("fooKey"));
+        assertEquals("valueBAR", target.getConfiguration("foo").getConfigurationProperties().get("barKey"));
+        assertEquals(1, target.getConfiguration("foo").getFeatureOrigins().size());
+        assertEquals(SOURCE_ID, target.getConfiguration("foo").getFeatureOrigins().get(0));
 
         try {
-            BuilderUtil.mergeConfigurations(target, source, Collections.singletonMap("fo*", BuilderContext.CONFIG_FAIL_ON_PROPERTY_CLASH));
+            BuilderUtil.mergeConfigurations(target, source, Collections.singletonMap("fo*", BuilderContext.CONFIG_FAIL_ON_PROPERTY_CLASH), SOURCE_ID);
             fail();
         } catch (IllegalStateException ex) {
 
@@ -657,10 +663,11 @@ public class BuilderUtilTest {
         Configuration foo2 = new Configuration("foo");
         foo2.getProperties().put("barKey", "valueBAR");
         source.add(foo2);
-        BuilderUtil.mergeConfigurations(target, source, Collections.singletonMap("fo*", BuilderContext.CONFIG_USE_FIRST));
+        BuilderUtil.mergeConfigurations(target, source, Collections.singletonMap("fo*", BuilderContext.CONFIG_USE_FIRST), SOURCE_ID);
 
-        assertEquals("valueFOO", target.getConfiguration("foo").getProperties().get("fooKey"));
-        assertNull(target.getConfiguration("foo").getProperties().get("barKey"));
+        assertEquals("valueFOO", target.getConfiguration("foo").getConfigurationProperties().get("fooKey"));
+        assertNull(target.getConfiguration("foo").getConfigurationProperties().get("barKey"));
+        assertTrue(target.getConfiguration("foo").getFeatureOrigins().isEmpty());
     }
 
     @Test public void testMergeConfigurationsUSELATEST() {
@@ -672,10 +679,12 @@ public class BuilderUtilTest {
         Configuration foo2 = new Configuration("foo");
         foo2.getProperties().put("barKey", "valueBAR");
         source.add(foo2);
-        BuilderUtil.mergeConfigurations(target, source, Collections.singletonMap("fo*", BuilderContext.CONFIG_USE_LATEST));
+        BuilderUtil.mergeConfigurations(target, source, Collections.singletonMap("fo*", BuilderContext.CONFIG_USE_LATEST), SOURCE_ID);
 
-        assertEquals("valueBAR", target.getConfiguration("foo").getProperties().get("barKey"));
-        assertNull(target.getConfiguration("foo").getProperties().get("fooKey"));
+        assertEquals("valueBAR", target.getConfiguration("foo").getConfigurationProperties().get("barKey"));
+        assertNull(target.getConfiguration("foo").getConfigurationProperties().get("fooKey"));
+        assertEquals(1, target.getConfiguration("foo").getFeatureOrigins().size());
+        assertEquals(SOURCE_ID, target.getConfiguration("foo").getFeatureOrigins().get(0));
     }
 
     @Test public void testMergeConfigurationsMERGELATEST() {
@@ -687,9 +696,11 @@ public class BuilderUtilTest {
         Configuration foo2 = new Configuration("foo");
         foo2.getProperties().put("fooKey", "valueBAR");
         source.add(foo2);
-        BuilderUtil.mergeConfigurations(target, source, Collections.singletonMap("fo*", BuilderContext.CONFIG_MERGE_LATEST));
+        BuilderUtil.mergeConfigurations(target, source, Collections.singletonMap("fo*", BuilderContext.CONFIG_MERGE_LATEST), SOURCE_ID);
 
-        assertEquals("valueBAR", target.getConfiguration("foo").getProperties().get("fooKey"));
+        assertEquals("valueBAR", target.getConfiguration("foo").getConfigurationProperties().get("fooKey"));
+        assertEquals(1, target.getConfiguration("foo").getFeatureOrigins().size());
+        assertEquals(SOURCE_ID, target.getConfiguration("foo").getFeatureOrigins().get(0));
     }
 
     @Test public void testMergeConfigurationsMERGEFIRST() {
@@ -702,10 +713,12 @@ public class BuilderUtilTest {
         foo2.getProperties().put("fooKey", "valueBAR");
         foo2.getProperties().put("barKey", "valueBAR");
         source.add(foo2);
-        BuilderUtil.mergeConfigurations(target, source, Collections.singletonMap("fo*", BuilderContext.CONFIG_MERGE_FIRST));
+        BuilderUtil.mergeConfigurations(target, source, Collections.singletonMap("fo*", BuilderContext.CONFIG_MERGE_FIRST), SOURCE_ID);
 
-        assertEquals("valueFOO", target.getConfiguration("foo").getProperties().get("fooKey"));
-        assertEquals("valueBAR", target.getConfiguration("foo").getProperties().get("barKey"));
+        assertEquals("valueFOO", target.getConfiguration("foo").getConfigurationProperties().get("fooKey"));
+        assertEquals("valueBAR", target.getConfiguration("foo").getConfigurationProperties().get("barKey"));
+        assertEquals(1, target.getConfiguration("foo").getFeatureOrigins().size());
+        assertEquals(SOURCE_ID, target.getConfiguration("foo").getFeatureOrigins().get(0));
     }
 
     @Test public void testMergeConfigurationsFactory() {
@@ -717,10 +730,13 @@ public class BuilderUtilTest {
         Configuration bar = new Configuration("bar~bar");
         bar.getProperties().put("barKey", "valueBAR");
         source.add(bar);
-        BuilderUtil.mergeConfigurations(target, source, Collections.emptyMap());
+        BuilderUtil.mergeConfigurations(target, source, Collections.emptyMap(), SOURCE_ID);
         assertEquals(2, target.size());
-        assertEquals(target.getConfiguration("foo~foo").getProperties(), foo.getProperties());
-        assertEquals(target.getConfiguration("bar~bar").getProperties(), bar.getProperties());
+        assertEquals(target.getConfiguration("foo~foo").getConfigurationProperties(), foo.getConfigurationProperties());
+        assertTrue(target.getConfiguration("foo~foo").getFeatureOrigins().isEmpty());
+        assertEquals(target.getConfiguration("bar~bar").getConfigurationProperties(), bar.getConfigurationProperties());
+        assertEquals(1, target.getConfiguration("bar~bar").getFeatureOrigins().size());
+        assertEquals(SOURCE_ID, target.getConfiguration("bar~bar").getFeatureOrigins().get(0));
     }
 
     @Test public void testMergeConfigurationsCLASHFactory() {
@@ -729,7 +745,7 @@ public class BuilderUtilTest {
         target.add(new Configuration("foo~foo"));
         source.add(new Configuration("foo~foo"));
         try {
-            BuilderUtil.mergeConfigurations(target, source, Collections.emptyMap());
+            BuilderUtil.mergeConfigurations(target, source, Collections.emptyMap(), SOURCE_ID);
             fail();
         } catch (IllegalStateException ex) {
 
@@ -745,13 +761,15 @@ public class BuilderUtilTest {
         Configuration foo2 = new Configuration("foo~foo");
         foo2.getProperties().put("barKey", "valueBAR");
         source.add(foo2);
-        BuilderUtil.mergeConfigurations(target, source, Collections.singletonMap("fo*~f*", BuilderContext.CONFIG_FAIL_ON_PROPERTY_CLASH));
+        BuilderUtil.mergeConfigurations(target, source, Collections.singletonMap("fo*~f*", BuilderContext.CONFIG_FAIL_ON_PROPERTY_CLASH), SOURCE_ID);
 
-        assertEquals("valueFOO", target.getConfiguration("foo~foo").getProperties().get("fooKey"));
-        assertEquals("valueBAR", target.getConfiguration("foo~foo").getProperties().get("barKey"));
-
+        assertEquals("valueFOO", target.getConfiguration("foo~foo").getConfigurationProperties().get("fooKey"));
+        assertEquals("valueBAR", target.getConfiguration("foo~foo").getConfigurationProperties().get("barKey"));
+        assertEquals(1, target.getConfiguration("foo~foo").getFeatureOrigins().size());
+        assertEquals(SOURCE_ID, target.getConfiguration("foo~foo").getFeatureOrigins().get(0));
+ 
         try {
-            BuilderUtil.mergeConfigurations(target, source, Collections.singletonMap("fo*~fo*", BuilderContext.CONFIG_FAIL_ON_PROPERTY_CLASH));
+            BuilderUtil.mergeConfigurations(target, source, Collections.singletonMap("fo*~fo*", BuilderContext.CONFIG_FAIL_ON_PROPERTY_CLASH), SOURCE_ID);
             fail();
         } catch (IllegalStateException ex) {
 
@@ -767,10 +785,12 @@ public class BuilderUtilTest {
         Configuration foo2 = new Configuration("foo~foo");
         foo2.getProperties().put("barKey", "valueBAR");
         source.add(foo2);
-        BuilderUtil.mergeConfigurations(target, source, Collections.singletonMap("fo*~f*", BuilderContext.CONFIG_USE_LATEST));
+        BuilderUtil.mergeConfigurations(target, source, Collections.singletonMap("fo*~f*", BuilderContext.CONFIG_USE_LATEST), SOURCE_ID);
 
-        assertEquals("valueBAR", target.getConfiguration("foo~foo").getProperties().get("barKey"));
-        assertNull(target.getConfiguration("foo~foo").getProperties().get("fooKey"));
+        assertEquals("valueBAR", target.getConfiguration("foo~foo").getConfigurationProperties().get("barKey"));
+        assertNull(target.getConfiguration("foo~foo").getConfigurationProperties().get("fooKey"));
+        assertEquals(1, target.getConfiguration("foo~foo").getFeatureOrigins().size());
+        assertEquals(SOURCE_ID, target.getConfiguration("foo~foo").getFeatureOrigins().get(0));
     }
 
     @Test public void testMergeConfigurationsMERGELATESTFactory() {
@@ -782,9 +802,11 @@ public class BuilderUtilTest {
         Configuration foo2 = new Configuration("foo~foo");
         foo2.getProperties().put("fooKey", "valueBAR");
         source.add(foo2);
-        BuilderUtil.mergeConfigurations(target, source, Collections.singletonMap("foo~foo", BuilderContext.CONFIG_MERGE_LATEST));
+        BuilderUtil.mergeConfigurations(target, source, Collections.singletonMap("foo~foo", BuilderContext.CONFIG_MERGE_LATEST), SOURCE_ID);
 
-        assertEquals("valueBAR", target.getConfiguration("foo~foo").getProperties().get("fooKey"));
+        assertEquals("valueBAR", target.getConfiguration("foo~foo").getConfigurationProperties().get("fooKey"));
+        assertEquals(1, target.getConfiguration("foo~foo").getFeatureOrigins().size());
+        assertEquals(SOURCE_ID, target.getConfiguration("foo~foo").getFeatureOrigins().get(0));
     }
 
     @Test public void testMergeConfigurationsMixed() {
@@ -798,17 +820,21 @@ public class BuilderUtilTest {
         source.add(foo4);
         Configuration foo2 = new Configuration("foo");
         foo2.getProperties().put("fooKey", "valueBAR");
-        source.add(foo2);
+        target.add(foo2);
         Configuration foo3 = new Configuration("foo");
         foo2.getProperties().put("fooKey", "valueBAR2");
         source.add(foo3);
         Map<String, String> overrides = new HashMap<>();
         overrides.put("foo", BuilderContext.CONFIG_MERGE_LATEST);
         overrides.put("foo~foo", BuilderContext.CONFIG_USE_LATEST);
-        BuilderUtil.mergeConfigurations(target, source, overrides);
+        BuilderUtil.mergeConfigurations(target, source, overrides, SOURCE_ID);
 
-        assertEquals("valueFOO4", target.getConfiguration("foo~foo").getProperties().get("fooKey"));
-        assertEquals("valueBAR2", target.getConfiguration("foo").getProperties().get("fooKey"));
+        assertEquals("valueFOO4", target.getConfiguration("foo~foo").getConfigurationProperties().get("fooKey"));
+        assertEquals("valueBAR2", target.getConfiguration("foo").getConfigurationProperties().get("fooKey"));
+        assertEquals(1, target.getConfiguration("foo").getFeatureOrigins().size());
+        assertEquals(SOURCE_ID, target.getConfiguration("foo").getFeatureOrigins().get(0));
+        assertEquals(1, target.getConfiguration("foo~foo").getFeatureOrigins().size());
+        assertEquals(SOURCE_ID, target.getConfiguration("foo~foo").getFeatureOrigins().get(0));
     }
 
     @SafeVarargs

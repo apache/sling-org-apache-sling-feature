@@ -472,68 +472,83 @@ class BuilderUtil {
     }
 
     // configurations - merge / override
-    static void mergeConfigurations(final Configurations target, final Configurations source, final Map<String, String> overrides) {
+    static void mergeConfigurations(final Configurations target, 
+        final Configurations source, 
+        final Map<String, String> overrides,
+        final ArtifactId sourceFeatureId) {
+
         for(final Configuration cfg : source) {
-            boolean found = false;
-            for(int c = 0; c < target.size();c++) {
-                final Configuration current = target.get(c);
+            final List<ArtifactId> sourceOrigins = cfg.getFeatureOrigins().isEmpty() ? Collections.singletonList(sourceFeatureId) : cfg.getFeatureOrigins();
+            Configuration found = target.getConfiguration(cfg.getPid());
 
-                if ( current.compareTo(cfg) == 0 ) {
-                    found = true;
-
-                    boolean handled = false;
-                    outer:
-                    for (Map.Entry<String, String> override : overrides.entrySet()) {
-                        if (match(cfg, override.getKey())) {
-                            if (BuilderContext.CONFIG_USE_LATEST.equals(override.getValue())) {
-                                int idx = target.indexOf(current);
-                                target.remove(current);
-                                target.add(idx, cfg.copy(cfg.getPid()));
-                                handled = true;
-                            }
-                            else if (BuilderContext.CONFIG_FAIL_ON_PROPERTY_CLASH.equals(override.getValue())){
-                                for (Enumeration<String> i = cfg.getProperties().keys(); i.hasMoreElements(); ) {
-                                    final String key = i.nextElement();
-                                    if (current.getProperties().get(key) != null) {
-                                        break outer;
-                                    }
-                                    else {
-                                        current.getProperties().put(key, cfg.getProperties().get(key));
-                                    }
+            if ( found != null ) {
+                boolean handled = false;
+                outer:
+                for (Map.Entry<String, String> override : overrides.entrySet()) {
+                    if (match(cfg, override.getKey())) {
+                        if (BuilderContext.CONFIG_USE_LATEST.equals(override.getValue())) {
+                            int idx = target.indexOf(found);
+                            target.remove(found);
+                            found = cfg.copy(cfg.getPid());
+                            target.add(idx, found);
+                            handled = true;
+                        } else if (BuilderContext.CONFIG_FAIL_ON_PROPERTY_CLASH.equals(override.getValue())){
+                            final List<ArtifactId> origins = found.getFeatureOrigins();
+                            for (Enumeration<String> i = cfg.getProperties().keys(); i.hasMoreElements(); ) {
+                                final String key = i.nextElement();
+                                if (found.getProperties().get(key) != null) {
+                                    break outer;
+                                } else {
+                                    found.getProperties().put(key, cfg.getProperties().get(key));
                                 }
-                                handled = true;
                             }
-                            else if (BuilderContext.CONFIG_MERGE_LATEST.equals(override.getValue())) {
-                                for (Enumeration<String> i = cfg.getProperties().keys(); i.hasMoreElements(); ) {
-                                    final String key = i.nextElement();
-                                    current.getProperties().put(key, cfg.getProperties().get(key));
+                            // restore origin
+                            found.setFeatureOrigins(origins);
+                            handled = true;
+                        } else if (BuilderContext.CONFIG_MERGE_LATEST.equals(override.getValue())) {
+                            final List<ArtifactId> origins = found.getFeatureOrigins();
+                            for (Enumeration<String> i = cfg.getProperties().keys(); i.hasMoreElements(); ) {
+                                final String key = i.nextElement();
+                                found.getProperties().put(key, cfg.getProperties().get(key));
+                            }
+                            // restore origin
+                            found.setFeatureOrigins(origins);
+                            handled = true;
+                        } else if (BuilderContext.CONFIG_USE_FIRST.equals(override.getValue())) {
+                            handled = true;
+                            found = null;
+                        } else if (BuilderContext.CONFIG_MERGE_FIRST.equals(override.getValue())) {
+                            final List<ArtifactId> origins = found.getFeatureOrigins();
+                            for (Enumeration<String> i = cfg.getProperties().keys(); i.hasMoreElements(); ) {
+                                final String key = i.nextElement();
+                                if (found.getProperties().get(key) == null) {
+                                    found.getProperties().put(key, cfg.getProperties().get(key));
                                 }
-                                handled = true;
                             }
-                            else if (BuilderContext.CONFIG_USE_FIRST.equals(override.getValue())) {
-                                handled = true;
-                            }
-                            else if (BuilderContext.CONFIG_MERGE_FIRST.equals(override.getValue())) {
-                                for (Enumeration<String> i = cfg.getProperties().keys(); i.hasMoreElements(); ) {
-                                    final String key = i.nextElement();
-                                    if (current.getProperties().get(key) == null) {
-                                        current.getProperties().put(key, cfg.getProperties().get(key));
-                                    }
-                                }
-                                handled = true;
-                            }
-                            break outer;
+                            // restore origin
+                            found.setFeatureOrigins(origins);
+                            handled = true;
                         }
-                    }
-                    if (!handled) {
-                        throw new IllegalStateException("Configuration override rule required to select between configurations for " +
-                            cfg.getPid());
+                        break outer;
                     }
                 }
+                if (!handled) {
+                    throw new IllegalStateException("Configuration override rule required to select between configurations for " +
+                        cfg.getPid());
+                }
+            } else {
+                // create new configuration
+                found = cfg.copy(cfg.getPid());
+                target.add(found);
+                if ( !found.getFeatureOrigins().isEmpty() ) {
+                    found = null;
+                }
             }
-            if ( !found ) {
-                final Configuration newCfg = cfg.copy(cfg.getPid());
-                target.add(newCfg);
+            if ( found != null ) {
+                // update origin
+                final List<ArtifactId> origins = new ArrayList<>(found.getFeatureOrigins());
+                origins.addAll(sourceOrigins);
+                found.setFeatureOrigins(origins);    
             }
         }
     }

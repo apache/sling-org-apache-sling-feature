@@ -16,11 +16,16 @@
  */
 package org.apache.sling.feature;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.felix.cm.json.Configurations;
+import org.osgi.util.converter.Converters;
 
 
 /**
@@ -51,6 +56,13 @@ public class Configuration
      * bundle this configuration belongs to.
      */
     public static final String PROP_ARTIFACT_ID = PROP_PREFIX + "service.bundleLocation";
+
+    /**
+     * This optional configuration property stores the artifact ids (array) of the
+     * features this configuration has been specified.
+     * @since 1.6
+     */
+    public static final String PROP_FEATURE_ORIGINS = PROP_PREFIX + "origins";
 
     /** The pid or name for factory pids. */
     private final String pid;
@@ -167,6 +179,40 @@ public class Configuration
         return this.properties;
     }
 
+    /**
+     * Get the feature origins - if recorded
+     * 
+     * @return A immutable list of feature artifact ids - list might be empty
+     * @since 1.6
+     * @throws IllegalArgumentException If the stored values are not valid artifact ids
+     */
+    public List<ArtifactId> getFeatureOrigins() {
+        final List<ArtifactId> list = new ArrayList<>();
+        final Object origins = this.properties.get(PROP_FEATURE_ORIGINS);
+        if ( origins != null ) {
+            final String[] values = Converters.standardConverter().convert(origins).to(String[].class);
+            for(final String v : values) {
+                list.add(ArtifactId.parse(v));
+            }
+        }
+        return Collections.unmodifiableList(list);
+    }
+
+    /**
+     * Set the feature origins
+     * @param featureOrigins the list of artifact ids or null to remove the info from this object
+     * @since 1.6
+     */
+    public void setFeatureOrigins(final List<ArtifactId> featureOrigins) {
+        if ( featureOrigins == null || featureOrigins.isEmpty() ) {
+            this.properties.remove(PROP_FEATURE_ORIGINS);
+        } else {
+            final List<String> list = featureOrigins.stream().map(ArtifactId::toMvnId).collect(Collectors.toList());
+            final String[] values = Converters.standardConverter().convert(list).to(String[].class);
+            this.properties.put(PROP_FEATURE_ORIGINS, values);
+        }
+    }
+    
     /**
      * Get the configuration properties of the configuration. This configuration
      * properties are all properties minus properties used to manage the

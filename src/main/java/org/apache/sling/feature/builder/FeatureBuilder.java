@@ -356,6 +356,13 @@ public abstract class FeatureBuilder {
                     }
                 }
             }
+            // correct feature origins
+            for(final Configuration cfg : result.getConfigurations()) {
+                final List<ArtifactId> origins = cfg.getFeatureOrigins();
+                if ( origins.size() == 1 && origins.contains(feature.getId())) {
+                    cfg.setFeatureOrigins(null);
+                }
+            }
         }
 
         result.setAssembled(true);
@@ -373,7 +380,7 @@ public abstract class FeatureBuilder {
             final String originKey) {
         BuilderUtil.mergeVariables(target.getVariables(), source.getVariables(), context);
         BuilderUtil.mergeArtifacts(target.getBundles(), source.getBundles(), source, artifactOverrides, originKey);
-        BuilderUtil.mergeConfigurations(target.getConfigurations(), source.getConfigurations(), configOverrides);
+        BuilderUtil.mergeConfigurations(target.getConfigurations(), source.getConfigurations(), configOverrides, source.getId());
         BuilderUtil.mergeFrameworkProperties(target.getFrameworkProperties(), source.getFrameworkProperties(), context);
         BuilderUtil.mergeRequirements(target.getRequirements(), source.getRequirements());
         BuilderUtil.mergeCapabilities(target.getCapabilities(), source.getCapabilities());

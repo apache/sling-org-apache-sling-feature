@@ -131,7 +131,7 @@ public class FeatureBuilderTest {
         for(final Configuration cfg : expected.getConfigurations()) {
             final Configuration found = actuals.getConfigurations().getConfiguration(cfg.getPid());
             assertNotNull("Configuration " + cfg, found);
-            assertEquals("Configuration " + cfg, cfg.getProperties(), found.getProperties());
+            assertEquals("Configuration " + cfg, cfg.getConfigurationProperties(), found.getConfigurationProperties());
         }
 
         // frameworkProperties
@@ -203,7 +203,6 @@ public class FeatureBuilderTest {
         Feature a = new Feature(ArtifactId.fromMvnId("g:a:1"));
         Feature b = new Feature(ArtifactId.fromMvnId("g:b:1"));
 
-
         a.getBundles().add(BuilderUtilTest.createBundle("o/a/1.0.0", 10));
         a.getBundles().add(BuilderUtilTest.createBundle("o/a/2.0.0", 9));
         a.getBundles().add(BuilderUtilTest.createBundle("o/a/3.0.0", 11));
@@ -263,7 +262,6 @@ public class FeatureBuilderTest {
     @Test public void testMergeMultipleVersionsNoConflict() {
         Feature a = new Feature(ArtifactId.fromMvnId("g:a:1"));
         Feature b = new Feature(ArtifactId.fromMvnId("g:b:1"));
-
 
         a.getBundles().add(BuilderUtilTest.createBundle("o/a/1.0.0", 10));
         a.getBundles().add(BuilderUtilTest.createBundle("o/a/2.0.0", 9));
@@ -1125,6 +1123,171 @@ public class FeatureBuilderTest {
         assertEquals(2, result.length);
         assertEquals("hello", result[0]);
         assertEquals("world", result[1]);
+    }
+
+    @Test public void testMergeConfigurationFeatureOrigins() {
+        final Feature f1 = new Feature(ArtifactId.parse("g:a:1"));
+        final Configuration c1 = new Configuration("c1");
+        f1.getConfigurations().add(c1);
+        final Configuration c2 = new Configuration("c2");
+        f1.getConfigurations().add(c2);
+
+        final Feature f2 = new Feature(ArtifactId.parse("g:b:1"));
+        final Configuration c3 = new Configuration("c2");
+        f2.getConfigurations().add(c3);
+        final Configuration c4 = new Configuration("c3");
+        f2.getConfigurations().add(c4);
+
+        final BuilderContext bc = new BuilderContext(provider);
+        bc.addConfigsOverrides(Collections.singletonMap("*", BuilderContext.CONFIG_MERGE_LATEST));
+        final Feature f = FeatureBuilder.assemble(ArtifactId.parse("g:f:1"), bc, f1, f2);
+
+        assertEquals(3, f.getConfigurations().size());
+        final Configuration fc1 = f.getConfigurations().getConfiguration("c1");
+        assertNotNull(fc1);
+        final Configuration fc2 = f.getConfigurations().getConfiguration("c2");
+        assertNotNull(fc2);
+        final Configuration fc3 = f.getConfigurations().getConfiguration("c3");
+        assertNotNull(fc3);
+        assertEquals(1, fc1.getFeatureOrigins().size());
+        assertEquals(f1.getId(), fc1.getFeatureOrigins().get(0));
+        assertEquals(2, fc2.getFeatureOrigins().size());
+        assertEquals(f1.getId(), fc2.getFeatureOrigins().get(0));
+        assertEquals(f2.getId(), fc2.getFeatureOrigins().get(1));
+        assertEquals(1, fc3.getFeatureOrigins().size());
+        assertEquals(f2.getId(), fc3.getFeatureOrigins().get(0));
+
+        // merge with empty feature - this should not change the origins
+        final Feature empty = new Feature(ArtifactId.parse("g:c:1"));
+        final Feature ft1 = FeatureBuilder.assemble(ArtifactId.parse("g:e:1"), bc, empty, f);
+
+        assertEquals(3, ft1.getConfigurations().size());
+        final Configuration cft1_1 = ft1.getConfigurations().getConfiguration("c1");
+        assertNotNull(cft1_1);
+        assertEquals(1, cft1_1.getFeatureOrigins().size());
+        assertEquals(f1.getId(), cft1_1.getFeatureOrigins().get(0));
+
+        final Configuration cft1_2 = ft1.getConfigurations().getConfiguration("c2");
+        assertNotNull(cft1_2);
+        assertEquals(2, cft1_2.getFeatureOrigins().size());
+        assertEquals(f1.getId(), cft1_2.getFeatureOrigins().get(0));
+        assertEquals(f2.getId(), cft1_2.getFeatureOrigins().get(1));
+
+        final Configuration cft1_3 = ft1.getConfigurations().getConfiguration("c3");
+        assertNotNull(cft1_3);
+        assertEquals(1, cft1_3.getFeatureOrigins().size());
+        assertEquals(f2.getId(), cft1_3.getFeatureOrigins().get(0));
+
+        // merge with empty feature, reverse order
+        final Feature ft2 = FeatureBuilder.assemble(ArtifactId.parse("g:e:1"), bc, f, empty);
+        assertEquals(3, ft2.getConfigurations().size());
+        final Configuration cft2_1 = ft2.getConfigurations().getConfiguration("c1");
+        assertNotNull(cft2_1);
+        assertEquals(1, cft2_1.getFeatureOrigins().size());
+        assertEquals(f1.getId(), cft2_1.getFeatureOrigins().get(0));
+
+        final Configuration cft2_2 = ft2.getConfigurations().getConfiguration("c2");
+        assertNotNull(cft2_2);
+        assertEquals(2, cft2_2.getFeatureOrigins().size());
+        assertEquals(f1.getId(), cft2_2.getFeatureOrigins().get(0));
+        assertEquals(f2.getId(), cft2_2.getFeatureOrigins().get(1));
+
+        final Configuration cft2_3 = ft2.getConfigurations().getConfiguration("c3");
+        assertNotNull(cft2_3);
+        assertEquals(1, cft2_3.getFeatureOrigins().size());
+        assertEquals(f2.getId(), cft2_3.getFeatureOrigins().get(0));
+
+        // merge with another feature containing c3
+        final Feature f3 = new Feature(ArtifactId.parse("g:x:1"));
+        final Configuration f3c3 = new Configuration("c3");
+        f3.getConfigurations().add(f3c3);
+        final Feature ft3 = FeatureBuilder.assemble(ArtifactId.parse("g:e:1"), bc, f3, f);
+        assertEquals(3, ft3.getConfigurations().size());
+        final Configuration cft3_1 = ft3.getConfigurations().getConfiguration("c1");
+        assertNotNull(cft3_1);
+        assertEquals(1, cft3_1.getFeatureOrigins().size());
+        assertEquals(f1.getId(), cft3_1.getFeatureOrigins().get(0));
+
+        final Configuration cft3_2 = ft3.getConfigurations().getConfiguration("c2");
+        assertNotNull(cft3_2);
+        assertEquals(2, cft3_2.getFeatureOrigins().size());
+        assertEquals(f1.getId(), cft3_2.getFeatureOrigins().get(0));
+        assertEquals(f2.getId(), cft3_2.getFeatureOrigins().get(1));
+
+        final Configuration cft3_3 = ft3.getConfigurations().getConfiguration("c3");
+        assertNotNull(cft3_3);
+        assertEquals(2, cft3_3.getFeatureOrigins().size());
+        assertEquals(f3.getId(), cft3_3.getFeatureOrigins().get(0));
+        assertEquals(f2.getId(), cft3_3.getFeatureOrigins().get(1));
+
+        // merge with another feature containing c3 - reverse order
+        final Feature ft4 = FeatureBuilder.assemble(ArtifactId.parse("g:e:1"), bc, f, f3);
+        assertEquals(3, ft4.getConfigurations().size());
+        final Configuration cft4_1 = ft4.getConfigurations().getConfiguration("c1");
+        assertNotNull(cft4_1);
+        assertEquals(1, cft4_1.getFeatureOrigins().size());
+        assertEquals(f1.getId(), cft4_1.getFeatureOrigins().get(0));
+
+        final Configuration cft4_2 = ft4.getConfigurations().getConfiguration("c2");
+        assertNotNull(cft4_2);
+        assertEquals(2, cft4_2.getFeatureOrigins().size());
+        assertEquals(f1.getId(), cft4_2.getFeatureOrigins().get(0));
+        assertEquals(f2.getId(), cft4_2.getFeatureOrigins().get(1));
+
+        final Configuration cft4_3 = ft4.getConfigurations().getConfiguration("c3");
+        assertNotNull(cft4_3);
+        assertEquals(2, cft4_3.getFeatureOrigins().size());
+        assertEquals(f2.getId(), cft4_3.getFeatureOrigins().get(0));
+        assertEquals(f3.getId(), cft4_3.getFeatureOrigins().get(1));
+    }
+
+    @Test public void testPrototypeConfigurationFeatureOrigins() {
+        final Feature prototype = new Feature(ArtifactId.parse("g:a:1"));
+        final Configuration c1 = new Configuration("c1");
+        prototype.getConfigurations().add(c1);
+        final Configuration c2 = new Configuration("c2");
+        prototype.getConfigurations().add(c2);
+
+        final Feature feature = new Feature(ArtifactId.parse("g:b:1"));
+        final Configuration c3 = new Configuration("c2");
+        feature.getConfigurations().add(c3);
+        final Configuration c4 = new Configuration("c3");
+        feature.getConfigurations().add(c4);
+
+        feature.setPrototype(new Prototype(prototype.getId()));
+        final BuilderContext bc = new BuilderContext(new FeatureProvider(){
+
+			@Override
+			public Feature provide(final ArtifactId id) {
+				if ( id.equals(prototype.getId()) ) {
+                    return prototype;
+                }
+				return provider.provide(id);
+			}
+            
+        });
+        bc.addConfigsOverrides(Collections.singletonMap("*", BuilderContext.CONFIG_MERGE_LATEST));
+        final Feature assembled = FeatureBuilder.assemble(feature, bc);
+
+        assertEquals(3, assembled.getConfigurations().size());
+
+        // c1 is only in the prototype - origin set to prototype
+        final Configuration fc1 = assembled.getConfigurations().getConfiguration("c1");
+        assertNotNull(fc1);
+        assertEquals(1, fc1.getFeatureOrigins().size());
+        assertEquals(prototype.getId(), fc1.getFeatureOrigins().get(0));
+
+        // c2 is in both - origin set to both
+        final Configuration fc2 = assembled.getConfigurations().getConfiguration("c2");
+        assertNotNull(fc2);
+        assertEquals(2, fc2.getFeatureOrigins().size());
+        assertEquals(prototype.getId(), fc2.getFeatureOrigins().get(0));
+        assertEquals(feature.getId(), fc2.getFeatureOrigins().get(1));
+
+        // c3 is only in the feature - no origins set
+        final Configuration fc3 = assembled.getConfigurations().getConfiguration("c3");
+        assertNotNull(fc3);
+        assertTrue(fc3.getFeatureOrigins().isEmpty());
     }
 
     private static class MatchingRequirementImpl extends RequirementImpl implements MatchingRequirement {

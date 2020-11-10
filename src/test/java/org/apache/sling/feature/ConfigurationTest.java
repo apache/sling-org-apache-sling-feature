@@ -16,11 +16,16 @@
  */
 package org.apache.sling.feature;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import java.util.Arrays;
+import java.util.Collections;
 
 import org.junit.Test;
 
@@ -66,5 +71,36 @@ public class ConfigurationTest {
         assertFalse(Configuration.isFactoryConfiguration(pid));
         assertNull(Configuration.getFactoryPid(pid));
         assertNull(Configuration.getName(pid));
+    }
+
+    @Test
+    public void testFeatureOrigins() {
+        final Configuration cfg = new Configuration("foo");
+        assertTrue(cfg.getFeatureOrigins().isEmpty());
+        assertNull(cfg.getConfigurationProperties().get(Configuration.PROP_FEATURE_ORIGINS));
+        assertNull(cfg.getProperties().get(Configuration.PROP_FEATURE_ORIGINS));
+
+        // single id
+        final ArtifactId id = ArtifactId.parse("g:a:1");
+        cfg.setFeatureOrigins(Collections.singletonList(id));
+        assertEquals(1, cfg.getFeatureOrigins().size());
+        assertEquals(id, cfg.getFeatureOrigins().get(0));
+
+        assertNull(cfg.getConfigurationProperties().get(Configuration.PROP_FEATURE_ORIGINS));
+        assertNotNull(cfg.getProperties().get(Configuration.PROP_FEATURE_ORIGINS));
+        final String[] array = (String[]) cfg.getProperties().get(Configuration.PROP_FEATURE_ORIGINS);
+        assertArrayEquals(new String[] {id.toMvnId()}, array);
+
+        // add another id
+        final ArtifactId id2 = ArtifactId.parse("g:b:2");
+        cfg.setFeatureOrigins(Arrays.asList(id, id2));
+        assertEquals(2, cfg.getFeatureOrigins().size());
+        assertEquals(id, cfg.getFeatureOrigins().get(0));
+        assertEquals(id2, cfg.getFeatureOrigins().get(1));
+
+        assertNull(cfg.getConfigurationProperties().get(Configuration.PROP_FEATURE_ORIGINS));
+        assertNotNull(cfg.getProperties().get(Configuration.PROP_FEATURE_ORIGINS));
+        final String[] array2 = (String[]) cfg.getProperties().get(Configuration.PROP_FEATURE_ORIGINS);
+        assertArrayEquals(new String[] {id.toMvnId(), id2.toMvnId()}, array2);
     }
 }
