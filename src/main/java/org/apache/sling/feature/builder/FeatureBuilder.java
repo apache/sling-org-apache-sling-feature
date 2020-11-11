@@ -201,12 +201,14 @@ public abstract class FeatureBuilder {
 
         // assemble feature
         boolean targetIsComplete = true;
+        boolean firstMerge = true;
         for(final Feature assembled : assembledFeatures) {
             if (!assembled.isComplete()) {
                 targetIsComplete = false;
             }
 
-            merge(target, assembled, context, context.getArtifactOverrides(), context.getConfigOverrides(),null);
+            merge(target, assembled, context, context.getArtifactOverrides(), context.getConfigOverrides(), null, false, firstMerge);
+            firstMerge = false;
         }
 
         // check complete flag
@@ -334,13 +336,13 @@ public abstract class FeatureBuilder {
             processPrototype(prototypeFeature, i);
 
             // and now merge the prototype feature into the result. No overrides should be needed since the result is empty before
-            merge(result, prototypeFeature, context, Collections.emptyList(), Collections.emptyMap(), TRACKING_KEY);
+            merge(result, prototypeFeature, context, Collections.emptyList(), Collections.emptyMap(), TRACKING_KEY, true, true);
 
             // and merge the current feature over the prototype feature into the result
             merge(result, feature, context, Collections.singletonList(
                     ArtifactId.parse(BuilderUtil.CATCHALL_OVERRIDE + BuilderContext.VERSION_OVERRIDE_ALL)),
                     Collections.singletonMap("*", BuilderContext.CONFIG_MERGE_LATEST),
-                    TRACKING_KEY);
+                    TRACKING_KEY, true, false);
 
             for (Artifact a : result.getBundles()) {
                 a.getMetadata().remove(TRACKING_KEY);
@@ -377,14 +379,16 @@ public abstract class FeatureBuilder {
             final BuilderContext context,
             final List<ArtifactId> artifactOverrides,
             final Map<String, String> configOverrides,
-            final String originKey) {
+            final String originKey,            
+            final boolean prototypeMerge,
+            final boolean initialMerge) {
         BuilderUtil.mergeVariables(target.getVariables(), source.getVariables(), context);
         BuilderUtil.mergeArtifacts(target.getBundles(), source.getBundles(), source, artifactOverrides, originKey);
         BuilderUtil.mergeConfigurations(target.getConfigurations(), source.getConfigurations(), configOverrides, source.getId());
         BuilderUtil.mergeFrameworkProperties(target.getFrameworkProperties(), source.getFrameworkProperties(), context);
         BuilderUtil.mergeRequirements(target.getRequirements(), source.getRequirements());
         BuilderUtil.mergeCapabilities(target.getCapabilities(), source.getCapabilities());
-        BuilderUtil.mergeExtensions(target, source, context, artifactOverrides, originKey);
+        BuilderUtil.mergeExtensions(target, source, context, artifactOverrides, originKey, prototypeMerge, initialMerge);
     }
 
     /**

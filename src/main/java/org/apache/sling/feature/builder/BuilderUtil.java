@@ -637,10 +637,12 @@ class BuilderUtil {
 
     // extensions (add/merge)
     static void mergeExtensions(final Feature target,
-        final Feature source,
-        final BuilderContext context,
+            final Feature source,
+            final BuilderContext context,
             final List<ArtifactId> artifactOverrides,
-        final String originKey) {
+            final String originKey,
+            final boolean prototypeMerge,
+            final boolean initialMerge) {
         for(final Extension ext : source.getExtensions()) {
             boolean found = false;
 
@@ -655,7 +657,7 @@ class BuilderUtil {
                     boolean handled = false;
                     for(final MergeHandler me : context.getMergeExtensions()) {
                         if ( me.canMerge(current) ) {
-                            me.merge(new HandlerContextImpl(context, me), target, source, current, ext);
+                            me.merge(new HandlerContextImpl(context, me, prototypeMerge, initialMerge), target, source, current, ext);
                             handled = true;
                             break;
                         }
@@ -672,7 +674,7 @@ class BuilderUtil {
                 boolean handled = false;
                 for (final MergeHandler mh : context.getMergeExtensions()) {
                     if (mh.canMerge(ext)) {
-                        mh.merge(new HandlerContextImpl(context, mh), target, source, null, ext);
+                        mh.merge(new HandlerContextImpl(context, mh, prototypeMerge, initialMerge), target, source, null, ext);
                         handled = true;
                         break;
                     }
@@ -688,7 +690,7 @@ class BuilderUtil {
         // Make a defensive copy of the extensions, as the handlers may modify the extensions on the target
         for(final Extension ext : new ArrayList<>(target.getExtensions())) {
             for(final PostProcessHandler ppe : context.getPostProcessExtensions()) {
-                ppe.postProcess(new HandlerContextImpl(context, ppe), target, ext);
+                ppe.postProcess(new HandlerContextImpl(context, ppe, prototypeMerge, initialMerge), target, ext);
             }
         }
     }
@@ -726,17 +728,27 @@ class BuilderUtil {
     }
 
     static class HandlerContextImpl implements HandlerContext {
+
         private final ArtifactProvider artifactProvider;
+        
         private final Map<String,String> configuration;
 
-        HandlerContextImpl(BuilderContext bc, MergeHandler handler) {
+        private final boolean prototypeMerge;
+
+        private final boolean initialMerge;
+
+        HandlerContextImpl(BuilderContext bc, MergeHandler handler, final boolean prototype, final boolean initial) {
             artifactProvider = bc.getArtifactProvider();
             configuration = getHandlerConfiguration(bc, handler);
+            this.prototypeMerge = prototype;
+            this.initialMerge = initial;
         }
 
-        HandlerContextImpl(BuilderContext bc, PostProcessHandler handler) {
+        HandlerContextImpl(BuilderContext bc, PostProcessHandler handler, final boolean prototype, final boolean initial) {
             artifactProvider = bc.getArtifactProvider();
             configuration = getHandlerConfiguration(bc, handler);
+            this.prototypeMerge = prototype;
+            this.initialMerge = initial;
         }
 
         private Map<String,String> getHandlerConfiguration(BuilderContext bc, Object handler) {
@@ -768,5 +780,15 @@ class BuilderUtil {
         public Map<String,String> getConfiguration() {
             return configuration;
         }
+
+		@Override
+		public boolean isInitialMerge() {
+			return this.initialMerge;
+		}
+
+		@Override
+		public boolean isPrototypeMerge() {
+			return this.prototypeMerge;
+		}
     }
 }

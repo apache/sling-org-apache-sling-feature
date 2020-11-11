@@ -26,9 +26,10 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @ProviderType
 public interface HandlerContext {
+
     /**
-     * Provide the artifact provider.
-     * @return The artifact provider.
+     * Provide the optional artifact provider.
+     * @return The artifact provider or {@code null}
      */
     ArtifactProvider getArtifactProvider();
 
@@ -38,4 +39,18 @@ public interface HandlerContext {
      * Never {@code null}.
      */
     Map<String,String> getConfiguration();
+
+    /**
+     * Is this merging a prototype into the defining feature?
+     * @return {@code true} if it is prototype processing
+     * @since 1.3.0
+     */
+    boolean isPrototypeMerge();
+
+    /**
+     * Is this the first feature being merged in?
+     * @return {@code true} if it is the first feature
+     * @since 1.3.0
+     */
+    boolean isInitialMerge();
 }

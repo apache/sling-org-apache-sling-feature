@@ -289,7 +289,7 @@ public class BuilderUtilTest {
 
         BuilderContext bc = Mockito.mock(BuilderContext.class);
         Mockito.when(bc.getPostProcessExtensions()).thenReturn(Collections.singletonList(pph));
-        BuilderUtil.mergeExtensions(f2, f, bc, Collections.emptyList(), "abc");
+        BuilderUtil.mergeExtensions(f2, f, bc, Collections.emptyList(), "abc", false, false);
 
         assertEquals(Collections.singleton("foo"),
                 f2.getExtensions().stream().map(Extension::getName).collect(Collectors.toSet()));
@@ -381,7 +381,7 @@ public class BuilderUtilTest {
         Feature ft = new Feature(ArtifactId.fromMvnId("g:t:1"));
 
         assertEquals("Precondition", 0, ft.getExtensions().size());
-        BuilderUtil.mergeExtensions(ft, fs, ctx, new ArrayList<>(), null);
+        BuilderUtil.mergeExtensions(ft, fs, ctx, new ArrayList<>(), null, false, false);
         assertEquals(1, ft.getExtensions().size());
 
         Extension actual = ft.getExtensions().get(0);
@@ -405,7 +405,7 @@ public class BuilderUtilTest {
         ft.getExtensions().add(et);
 
         assertEquals("Precondition", 1, ft.getExtensions().size());
-        BuilderUtil.mergeExtensions(ft, fs, ctx, new ArrayList<>(), null);
+        BuilderUtil.mergeExtensions(ft, fs, ctx, new ArrayList<>(), null, false, false);
         assertEquals(1, ft.getExtensions().size());
 
         Extension actual = ft.getExtensions().get(0);
@@ -432,7 +432,7 @@ public class BuilderUtilTest {
         Feature ft = new Feature(ArtifactId.fromMvnId("g:t:1"));
 
         assertEquals("Precondition", 0, ft.getExtensions().size());
-        BuilderUtil.mergeExtensions(ft, fs, ctx, new ArrayList<>(), null);
+        BuilderUtil.mergeExtensions(ft, fs, ctx, new ArrayList<>(), null, false, false);
         assertEquals(1, ft.getExtensions().size());
 
         Extension actual = ft.getExtensions().get(0);
@@ -457,7 +457,7 @@ public class BuilderUtilTest {
         ft.getExtensions().add(et);
 
         assertEquals("Precondition", 1, ft.getExtensions().size());
-        BuilderUtil.mergeExtensions(ft, fs, ctx, new ArrayList<>(), null);
+        BuilderUtil.mergeExtensions(ft, fs, ctx, new ArrayList<>(), null, false, false);
         assertEquals(1, ft.getExtensions().size());
 
         Extension actual = ft.getExtensions().get(0);
@@ -574,7 +574,7 @@ public class BuilderUtilTest {
         BuilderContext bc = Mockito.mock(BuilderContext.class);
         Mockito.when(bc.getHandlerConfigurations()).thenReturn(cm);
         TestMergeHandler mh = new TestMergeHandler();
-        HandlerContextImpl hc = new BuilderUtil.HandlerContextImpl(bc, mh);
+        HandlerContextImpl hc = new BuilderUtil.HandlerContextImpl(bc, mh, false, false);
         Map<String, String> cfg = hc.getConfiguration();
         assertEquals(2, cfg.size());
         assertEquals("d", cfg.get("c"));
@@ -592,7 +592,7 @@ public class BuilderUtilTest {
         BuilderContext bc = Mockito.mock(BuilderContext.class);
         Mockito.when(bc.getHandlerConfigurations()).thenReturn(cm);
         PostProcessHandler pph = Mockito.mock(PostProcessHandler.class);
-        HandlerContextImpl hc = new BuilderUtil.HandlerContextImpl(bc, pph);
+        HandlerContextImpl hc = new BuilderUtil.HandlerContextImpl(bc, pph, false, false);
         Map<String, String> cfg = hc.getConfiguration();
         assertEquals(0, cfg.size());
     }
