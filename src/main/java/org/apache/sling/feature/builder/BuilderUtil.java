@@ -250,6 +250,8 @@ class BuilderUtil {
                             addFeatureOrigin(
                                 selectStartOrder(fromTarget, fromSource, a1v.compareTo(a2v) > 0 ? fromTarget : fromSource),
                                 source, fromSource, fromTarget));
+                    } else if (BuilderContext.VERSION_OVERRIDE_FIRST.equalsIgnoreCase(rule)) {
+                        result.add(addFeatureOrigin(selectStartOrder(fromTarget, fromSource, fromTarget), source, fromSource, fromTarget));
                     } else if (BuilderContext.VERSION_OVERRIDE_LATEST.equalsIgnoreCase(rule)) {
                         result.add(addFeatureOrigin(selectStartOrder(fromTarget, fromSource, fromSource), source, fromSource, fromTarget));
                     } else {

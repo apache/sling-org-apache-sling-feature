@@ -41,6 +41,7 @@ import org.apache.sling.feature.ArtifactId;
  * An override rule is an artifact id. As the version for the rule, one of
  * {@link BuilderContext#VERSION_OVERRIDE_ALL},
  * {@link BuilderContext#VERSION_OVERRIDE_LATEST} or
+ * {@link BuilderContext#VERSION_OVERRIDE_FIRST} or
  * {@link BuilderContext#VERSION_OVERRIDE_HIGHEST} as well as any version can be
  * specified. If the artifact id should match more than a single artifact
  * {@link BuilderContext#COORDINATE_MATCH_ALL} can be specified as group id,
@@ -61,6 +62,9 @@ public class BuilderContext {
 
     /** Used in override rule to select the last candidate applied. */
     public static final String VERSION_OVERRIDE_LATEST = "LATEST";
+
+    /** Used in override rule to select the first candidate applied. */
+    public static final String VERSION_OVERRIDE_FIRST = "FIRST";
 
     /** Used in override rule to match all coordinates */
     public static final String COORDINATE_MATCH_ALL = "*";

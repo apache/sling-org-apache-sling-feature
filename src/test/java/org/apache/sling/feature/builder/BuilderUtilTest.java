@@ -145,6 +145,30 @@ public class BuilderUtilTest {
         assertContains(result, 3, ArtifactId.parse("g/c/2.5"));
     }
 
+    @Test public void testMergeBundlesWithAlgFirst() {
+        final Bundles target = new Bundles();
+
+        target.add(createBundle("g/a/1.0", 1));
+        target.add(createBundle("g/b/2.0", 2));
+        target.add(createBundle("g/c/2.5", 3));
+
+        final Bundles source = new Bundles();
+        source.add(createBundle("g/a/1.1", 1));
+        source.add(createBundle("g/b/1.9", 2));
+        source.add(createBundle("g/c/2.5", 3));
+
+        final Feature orgFeat = new Feature(new ArtifactId("gid", "aid", "123", null, null));
+
+        List<ArtifactId> overrides = Arrays.asList(ArtifactId.parse("g:a:FIRST"), ArtifactId.parse("g:b:FIRST"));
+        BuilderUtil.mergeArtifacts(target, source, orgFeat, overrides, null);
+
+        final List<Map.Entry<Integer, Artifact>> result = getBundles(target);
+        assertEquals(3, result.size());
+        assertContains(result, 1, ArtifactId.parse("g/a/1.0"));
+        assertContains(result, 2, ArtifactId.parse("g/b/2.0"));
+        assertContains(result, 3, ArtifactId.parse("g/c/2.5"));
+    }
+
     @Test public void testMergeBundlesWithAliasNoRule() {
         final Bundles target = new Bundles();
         Artifact b = createBundle("g/b/2.0", 2);
