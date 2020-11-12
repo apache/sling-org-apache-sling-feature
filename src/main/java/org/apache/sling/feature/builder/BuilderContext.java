@@ -63,7 +63,10 @@ public class BuilderContext {
     /** Used in override rule to select the last candidate applied. */
     public static final String VERSION_OVERRIDE_LATEST = "LATEST";
 
-    /** Used in override rule to select the first candidate applied. */
+    /** 
+     * Used in override rule to select the first candidate applied. 
+     * @since 1.3.0
+     */
     public static final String VERSION_OVERRIDE_FIRST = "FIRST";
 
     /** Used in override rule to match all coordinates */
