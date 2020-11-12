@@ -192,8 +192,8 @@ public class BuilderUtilTest {
 
     @Test public void testMergeBundlesWithAlias() {
         final Bundles target = new Bundles();
-        Artifact b = createBundle("g/b/2.0", 2);
-        b.getMetadata().put("alias", "x:z:1,a:a");
+        Artifact b = createBundle("g/b/1.0", 2);
+        b.getMetadata().put("alias", "x:z:2.0,a:a");
         target.add(b);
 
         final Bundles source = new Bundles();
@@ -206,7 +206,7 @@ public class BuilderUtilTest {
 
         final List<Map.Entry<Integer, Artifact>> result = getBundles(target);
         assertEquals(1, result.size());
-        assertContains(result, 2, ArtifactId.parse("g/b/2.0"));
+        assertContains(result, 2, ArtifactId.parse("g/b/1.0"));
     }
 
     @Test public void testMergeBundlesDifferentStartlevel() {

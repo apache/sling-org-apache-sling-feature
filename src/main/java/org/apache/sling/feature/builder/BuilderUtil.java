@@ -244,8 +244,8 @@ class BuilderUtil {
                         result.add(fromTarget);
                         result.add(fromSource);
                     } else if (BuilderContext.VERSION_OVERRIDE_HIGHEST.equalsIgnoreCase(rule)) {
-                        Version a1v = fromTarget.getId().getOSGiVersion();
-                        Version a2v = fromSource.getId().getOSGiVersion();
+                        Version a1v = fromTarget.getAliases(true).stream().filter(prefix::isSame).findFirst().get().getOSGiVersion();
+                        Version a2v = fromSource.getAliases(true).stream().filter(prefix::isSame).findFirst().get().getOSGiVersion();
                         result.add(
                             addFeatureOrigin(
                                 selectStartOrder(fromTarget, fromSource, a1v.compareTo(a2v) > 0 ? fromTarget : fromSource),
