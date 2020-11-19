@@ -60,51 +60,29 @@ class BuilderUtil {
     /** Used in override rule to have it apply to all artifacts. */
     static final String CATCHALL_OVERRIDE = "*:*:";
 
-    static boolean contains(String key, Iterable<Map.Entry<String, String>> iterable) {
-        if (iterable != null) {
-            for (Map.Entry<String, String> entry : iterable) {
-                if (key.equals(entry.getKey())) {
-                    return true;
-                }
-            }
+    private static void mergeWithContextOverride(final String type, final Map<String,String> target, final Map<String,String> source, Map<String,String> context) {
+        if ( context == null ) {
+            context = Collections.emptyMap();
         }
-        return false;
-    }
-
-    static String get(String key, Iterable<Map.Entry<String, String>> iterable) {
-        if (iterable != null) {
-            for (Map.Entry<String, String> entry : iterable) {
-                if (key.equals(entry.getKey())) {
-                    return entry.getValue();
-                }
-            }
-        }
-        return null;
-    }
-
-    private static void mergeWithContextOverride(String type, Map<String,String> target, Map<String,String> source, Iterable<Map.Entry<String,String>> context) {
-        Map<String,String> result = new HashMap<>();
+        final Map<String,String> result = new HashMap<>();
         for (Map.Entry<String, String> entry : target.entrySet()) {
-            result.put(entry.getKey(), contains(entry.getKey(), context) ? get(entry.getKey(), context) : entry.getValue());
+            result.put(entry.getKey(), context.containsKey(entry.getKey()) ? context.get(entry.getKey()) : entry.getValue());
         }
         for (Map.Entry<String, String> entry : source.entrySet()) {
-            if (contains(entry.getKey(), context)) {
-                result.put(entry.getKey(), get(entry.getKey(), context));
-            }
-            else {
-                String value = source.get(entry.getKey());
+            if ( context.containsKey(entry.getKey()) ) {
+                result.put(entry.getKey(), context.get(entry.getKey()));
+            } else {
+                String value = entry.getValue();
                 if (value != null) {
                     String targetValue = target.get(entry.getKey());
                     if (targetValue != null) {
                         if (!value.equals(targetValue)) {
                             throw new IllegalStateException(String.format("Can't merge %s '%s' defined twice (as '%s' v.s. '%s') and not overridden.", type, entry.getKey(), value, targetValue));
                         }
-                    }
-                    else {
+                    } else {
                         result.put(entry.getKey(), value);
                     }
-                }
-                else if (!contains(entry.getKey(), target.entrySet())) {
+                } else if (!target.containsKey(entry.getKey())) {
                     result.put(entry.getKey(), value);
                 }
             }
@@ -116,7 +94,7 @@ class BuilderUtil {
     // variables
     static void mergeVariables(Map<String,String> target, Map<String,String> source, BuilderContext context) {
         mergeWithContextOverride("Variable", target, source,
-                (null != context) ? context.getVariablesOverrides().entrySet() : null);
+                (null != context) ? context.getVariablesOverrides() : null);
     }
 
     /**
@@ -558,7 +536,7 @@ class BuilderUtil {
     // framework properties (add/merge)
     static void mergeFrameworkProperties(final Map<String,String> target, final Map<String,String> source, BuilderContext context) {
         mergeWithContextOverride("Property", target, source,
-                context != null ? context.getFrameworkPropertiesOverrides().entrySet() : null);
+                context != null ? context.getFrameworkPropertiesOverrides() : null);
     }
 
     // requirements (add)
