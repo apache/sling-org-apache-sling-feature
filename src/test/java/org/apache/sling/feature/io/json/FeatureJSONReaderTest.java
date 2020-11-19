@@ -113,4 +113,22 @@ public class FeatureJSONReaderTest {
         // we only test whether the feature can be read without problems
         U.readFeature("feature-model");
     }
+
+    @Test
+    public void testReadInternalData() throws Exception {
+        final Feature feature = U.readFeature("test-metadata");
+        assertNotNull(feature);
+        assertNotNull(feature.getId());
+
+        assertEquals("1", feature.getFrameworkProperties().get("foo"));
+        assertEquals("hello", feature.getVariables().get("bar"));
+
+        assertEquals(1, feature.getFrameworkPropertyMetadata("foo").size());
+        assertEquals(true, feature.getFrameworkPropertyMetadata("foo").get("bool"));
+
+        assertEquals(1, feature.getVariableMetadata("bar").size());
+        assertEquals("hello world", feature.getVariableMetadata("bar").get("string"));
+
+        assertNull(feature.getExtensions().getByName(Extension.EXTENSION_NAME_INTERNAL_DATA));
+    }
 }

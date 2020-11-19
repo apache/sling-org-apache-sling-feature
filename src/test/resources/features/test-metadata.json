@@ -1,0 +1,22 @@
+{
+    "id" : "org.apache.sling:test-feature:1.1",
+
+    "variables" : {
+        "bar" : "hello"
+    },
+    "framework-properties" : {
+        "foo" : "1"
+    },
+    "feature-internal-data:JSON|true" : {
+       "framework-properties-metadata" : {
+          "foo" : {
+              "bool" : true
+          }
+       },
+       "variables-metadata" : {
+          "bar" : {
+              "string" : "hello world"
+          }
+       }
+    }
+}

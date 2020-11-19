@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Arrays;
@@ -130,6 +131,21 @@ public class FeatureJSONWriterTest {
             final JsonValue val = resultJson.get(JSONConstants.FEATURE_FINAL);
             assertNotNull(val);
             assertEquals(ValueType.TRUE, val.getValueType());
+        }
+    }
+
+    @Test
+    public void testWriteInternalData() throws Exception {
+        try ( final Reader reader = new InputStreamReader(U.class.getResourceAsStream("/features/test-metadata.json"), "UTF-8") ) {
+            final JsonObject origJson = Json.createReader(reader).readObject();
+
+            final Feature feature = U.readFeature("test-metadata");
+            try (final StringWriter writer = new StringWriter()) {
+                FeatureJSONWriter.write(writer, feature);
+                final JsonObject resultJson = Json.createReader(new StringReader(writer.toString())).readObject();
+
+                assertEquals(origJson, resultJson);
+            }
         }
     }
 }

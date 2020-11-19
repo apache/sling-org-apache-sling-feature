@@ -75,16 +75,22 @@ public class ConfigurationTest {
 
     @Test
     public void testFeatureOrigins() {
+        final ArtifactId self = ArtifactId.parse("self:self:1");
+        
         final Configuration cfg = new Configuration("foo");
         assertTrue(cfg.getFeatureOrigins().isEmpty());
         assertNull(cfg.getConfigurationProperties().get(Configuration.PROP_FEATURE_ORIGINS));
         assertNull(cfg.getProperties().get(Configuration.PROP_FEATURE_ORIGINS));
+        assertEquals(1, cfg.getFeatureOrigins(self).size());
+        assertEquals(self, cfg.getFeatureOrigins(self).get(0));
 
         // single id
         final ArtifactId id = ArtifactId.parse("g:a:1");
         cfg.setFeatureOrigins(Collections.singletonList(id));
         assertEquals(1, cfg.getFeatureOrigins().size());
         assertEquals(id, cfg.getFeatureOrigins().get(0));
+        assertEquals(1, cfg.getFeatureOrigins(self).size());
+        assertEquals(id, cfg.getFeatureOrigins(self).get(0));
 
         assertNull(cfg.getConfigurationProperties().get(Configuration.PROP_FEATURE_ORIGINS));
         assertNotNull(cfg.getProperties().get(Configuration.PROP_FEATURE_ORIGINS));
@@ -97,6 +103,9 @@ public class ConfigurationTest {
         assertEquals(2, cfg.getFeatureOrigins().size());
         assertEquals(id, cfg.getFeatureOrigins().get(0));
         assertEquals(id2, cfg.getFeatureOrigins().get(1));
+        assertEquals(2, cfg.getFeatureOrigins(self).size());
+        assertEquals(id, cfg.getFeatureOrigins(self).get(0));
+        assertEquals(id2, cfg.getFeatureOrigins(self).get(1));
 
         assertNull(cfg.getConfigurationProperties().get(Configuration.PROP_FEATURE_ORIGINS));
         assertNotNull(cfg.getProperties().get(Configuration.PROP_FEATURE_ORIGINS));

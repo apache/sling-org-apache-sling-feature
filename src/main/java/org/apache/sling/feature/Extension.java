@@ -70,6 +70,14 @@ public class Extension {
      */
     public static final String EXTENSION_NAME_ASSEMBLED_FEATURES = "assembled-features";
 
+    /**
+     * Extension name containing internal data. An extension with this name must not be created by
+     * hand, it is managed by the feature model implementation.
+     * This extension is of type {@link ExtensionType#JSON} and is optional.
+     * @since 1.7.0
+     */
+    public static final String EXTENSION_NAME_INTERNAL_DATA = "feature-internal-data";
+
     /** The extension type */
     private final ExtensionType type;
 

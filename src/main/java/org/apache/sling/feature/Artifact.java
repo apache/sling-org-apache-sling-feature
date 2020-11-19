@@ -189,13 +189,18 @@ public class Artifact implements Comparable<Artifact> {
         }
     }
 
+     /**
+     * Get the feature origins - if recorded
+     * 
+     * @return A array of feature artifact ids - array might be empty
+     * @throws IllegalArgumentException If the stored values are not valid artifact ids
+     */
     public ArtifactId[] getFeatureOrigins() {
         String origins = this.getMetadata().get(KEY_FEATURE_ORIGINS);
         Set<ArtifactId> originFeatures;
         if (origins == null || origins.trim().isEmpty()) {
             originFeatures = Collections.emptySet();
-        }
-        else {
+        } else {
             originFeatures = new LinkedHashSet<>();
             for (String origin : origins.split(",")) {
                 if (!origin.trim().isEmpty()) {
@@ -206,18 +211,45 @@ public class Artifact implements Comparable<Artifact> {
         return originFeatures.toArray(new ArtifactId[0]);
     }
 
+     /**
+     * Get the feature origins
+     * If no origins are recorded, the provided artifact id is returned
+     * 
+     * @param self The id of the current feature
+     * @return An array of feature artifact ids
+     * @throws IllegalArgumentException If the stored values are not valid artifact ids
+     * @since 1.7.0
+     */
+    public ArtifactId[] getFeatureOrigins(final ArtifactId self) {
+        String origins = this.getMetadata().get(KEY_FEATURE_ORIGINS);
+        Set<ArtifactId> originFeatures;
+        if (origins == null || origins.trim().isEmpty()) {
+            originFeatures = Collections.singleton(self);
+        } else {
+            originFeatures = new LinkedHashSet<>();
+            for (String origin : origins.split(",")) {
+                if (!origin.trim().isEmpty()) {
+                    originFeatures.add(ArtifactId.parse(origin));
+                }
+            }
+        }
+        return originFeatures.toArray(new ArtifactId[0]);
+    }
+    
+    /**
+     * Set the feature origins
+     * @param featureOrigins the array of artifact ids or null to remove the info from this object
+     */
     public void setFeatureOrigins(ArtifactId... featureOrigins) {
         String origins;
         if (featureOrigins != null && featureOrigins.length > 0) {
             origins = Stream.of(featureOrigins).filter(Objects::nonNull).map(ArtifactId::toMvnId).distinct().collect(Collectors.joining(","));
-        }
-        else {
+        } else {
             origins = "";
         }
         if (!origins.trim().isEmpty()) {
             this.getMetadata().put(KEY_FEATURE_ORIGINS, origins);
-        }
-        else {
+        } else {
             this.getMetadata().remove(KEY_FEATURE_ORIGINS);
         }
     }

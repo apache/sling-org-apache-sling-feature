@@ -82,4 +82,8 @@ public abstract class JSONConstants {
     static final String REQCAP_NAMESPACE = "namespace";
     static final String REQCAP_ATTRIBUTES = "attributes";
     static final String REQCAP_DIRECTIVES = "directives";
+
+    static final String FRAMEWORK_PROPERTIES_METADATA = "framework-properties-metadata";
+
+    static final String VARIABLES_METADATA = "variables-metadata";
 }

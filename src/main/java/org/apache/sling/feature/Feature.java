@@ -17,14 +17,16 @@
 package org.apache.sling.feature;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.felix.utils.resource.CapabilityImpl;
 import org.apache.felix.utils.resource.RequirementImpl;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Resource;
+import org.osgi.util.converter.Converters;
 
 /**
  * A feature consists of
@@ -48,7 +50,7 @@ public class Feature implements Comparable<Feature> {
 
     private final Configurations configurations = new Configurations();
 
-    private final Map<String,String> frameworkProperties = new HashMap<>();
+    private final MapWithMetadata frameworkProperties = new MapWithMetadata();
 
     private final List<MatchingRequirement> requirements = new ArrayList<>();
 
@@ -56,7 +58,7 @@ public class Feature implements Comparable<Feature> {
 
     private final Extensions extensions = new Extensions();
 
-    private final Map<String,String> variables = new HashMap<>();
+    private final MapWithMetadata variables = new MapWithMetadata();
 
     /** The optional location. */
     private volatile String location;
@@ -145,7 +147,7 @@ public class Feature implements Comparable<Feature> {
      * The returned object is modifiable.
      * @return The framework properties
      */
-    public Map<String,String> getFrameworkProperties() {
+    public Map<String, String> getFrameworkProperties() {
         return this.frameworkProperties;
     }
 
@@ -318,6 +320,65 @@ public class Feature implements Comparable<Feature> {
      */
     public void setAssembled(final boolean flag) {
         this.assembled = flag;
+    }
+
+    /**
+     * Return a mutable map of metadata for the framework property
+     * @return A mutable map or {@code null} if the framework property does not exist
+     * @since 1.7.0
+     */
+    public Map<String, Object> getFrameworkPropertyMetadata(final String key) {
+        return this.frameworkProperties.getMetadata(key);
+    }
+
+    /**
+     * Return a mutable map of metadata for the variable
+     * @return A mutable map or {@code null} if the variable does not exist
+     * @since 1.7.0
+     */
+    public Map<String, Object> getVariableMetadata(final String key) {
+        return this.variables.getMetadata(key);
+    }
+
+    /**
+     * Get the feature origins for the metadata- if recorded
+     * 
+     * @param The metadata (for a variable or framework property)
+     * @return A immutable list of feature artifact ids - list is never empty
+     * @since 1.7
+     * @throws IllegalArgumentException If the stored values are not valid artifact ids
+     */
+    public List<ArtifactId> getFeatureOrigins(final Map<String, Object> metadata) {
+        final List<ArtifactId> list = new ArrayList<>();
+        final Object origins = metadata.get(Artifact.KEY_FEATURE_ORIGINS);
+        if ( origins != null ) {
+            final String[] values = Converters.standardConverter().convert(origins).to(String[].class);
+            for(final String v : values) {
+                list.add(ArtifactId.parse(v));
+            }
+        }
+        if ( list.isEmpty() ) {
+            list.add(this.getId());
+        }
+        return Collections.unmodifiableList(list);
+    }
+
+    /**
+     * Set the feature origins for the metadata
+     * @param The metadata (for a variable or framework property)
+     * @param featureOrigins the list of artifact ids or null to remove the info from this object
+     * @since 1.7
+     */
+    public void setFeatureOrigins(final Map<String, Object> metadata, final List<ArtifactId> featureOrigins) {
+        if ( featureOrigins == null || featureOrigins.isEmpty() ) {
+            metadata.remove(Artifact.KEY_FEATURE_ORIGINS);
+        } else if ( featureOrigins.size() == 1 && this.getId().equals(featureOrigins.get(0)) ) {
+            metadata.remove(Artifact.KEY_FEATURE_ORIGINS);
+        } else {
+            final List<String> list = featureOrigins.stream().map(ArtifactId::toMvnId).collect(Collectors.toList());
+            final String[] values = Converters.standardConverter().convert(list).to(String[].class);
+            metadata.put(Artifact.KEY_FEATURE_ORIGINS, values);
+        }
     }
 
     /**

@@ -198,6 +198,30 @@ public class Configuration
         return Collections.unmodifiableList(list);
     }
 
+   /**
+     * Get the feature origins.
+     * If no origins are recorded, the provided id is returned.
+     * 
+     * @param self The id of the current feature
+     * @return A immutable list of feature artifact ids
+     * @since 1.7
+     * @throws IllegalArgumentException If the stored values are not valid artifact ids
+     */
+    public List<ArtifactId> getFeatureOrigins(final ArtifactId self) {
+        final List<ArtifactId> list = new ArrayList<>();
+        final Object origins = this.properties.get(PROP_FEATURE_ORIGINS);
+        if ( origins != null ) {
+            final String[] values = Converters.standardConverter().convert(origins).to(String[].class);
+            for(final String v : values) {
+                list.add(ArtifactId.parse(v));
+            }
+        }
+        if ( list.isEmpty() ) {
+            list.add(self);
+        }
+        return Collections.unmodifiableList(list);
+    }
+
     /**
      * Set the feature origins
      * @param featureOrigins the list of artifact ids or null to remove the info from this object

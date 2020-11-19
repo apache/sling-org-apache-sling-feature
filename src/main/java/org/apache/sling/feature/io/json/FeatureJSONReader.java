@@ -699,6 +699,15 @@ public class FeatureJSONReader {
                 JSONConstants.FEATURE_KNOWN_PROPERTIES,
                 this.feature.getExtensions(), this.feature.getConfigurations());
 
+        // check for internal metadata extension
+        final Extension internalData = this.feature.getExtensions().getByName(Extension.EXTENSION_NAME_INTERNAL_DATA);
+        if ( internalData != null ) {
+            this.feature.getExtensions().remove(internalData);
+            if ( internalData.getType() != ExtensionType.JSON ) {
+                throw new IOException("Extension " + internalData.getName() + " must be of type JSON");
+            }
+            this.setInternalData(internalData);
+        }
         return this.feature;
     }
 
@@ -709,6 +718,37 @@ public class FeatureJSONReader {
         }
         if (!"1".equals(modelVersion)) {
             throw new IOException(this.exceptionPrefix.concat("Unsupported model version: ").concat(modelVersion));
+        }
+    }
+
+    private void setInternalData(final Extension internalData) throws IOException {
+        final JsonValue val = internalData.getJSONStructure();
+        for (final Map.Entry<String, JsonValue> entry : checkTypeObject("Extension ".concat(internalData.getName()), val).entrySet()) {
+            final String key = entry.getKey();
+            if ( JSONConstants.FRAMEWORK_PROPERTIES_METADATA.equals(key) ) {
+                for (final Map.Entry<String, JsonValue> propEntry : checkTypeObject(key, entry.getValue()).entrySet()) {
+                    final Map<String, Object> metadata = this.feature.getFrameworkPropertyMetadata(propEntry.getKey());
+                    if ( metadata == null ) {
+                        throw new IOException("Framework property " + propEntry.getKey() + " does not exists (metadata)");
+                    }
+                    for(final Map.Entry<String, JsonValue> ve : checkTypeObject(JSONConstants.FRAMEWORK_PROPERTIES_METADATA.concat(".").concat(propEntry.getKey()), propEntry.getValue()).entrySet()) {
+                        metadata.put(ve.getKey(), org.apache.felix.cm.json.Configurations.convertToObject(ve.getValue()));
+                    }
+                }
+            } else if ( JSONConstants.VARIABLES_METADATA.equals(key) ) {
+                for (final Map.Entry<String, JsonValue> varEntry : checkTypeObject(key, entry.getValue()).entrySet()) {
+                    final Map<String, Object> metadata = this.feature.getVariableMetadata(varEntry.getKey());
+                    if ( metadata == null ) {
+                        throw new IOException("Variable " + varEntry.getKey() + " does not exists (metadata)");
+                    }
+                    for(final Map.Entry<String, JsonValue> ve : checkTypeObject(JSONConstants.VARIABLES_METADATA.concat(".").concat(varEntry.getKey()), varEntry.getValue()).entrySet()) {
+                        metadata.put(ve.getKey(), org.apache.felix.cm.json.Configurations.convertToObject(ve.getValue()));
+                    }
+                }
+
+            } else {
+                throw new IOException("Unknown data in " + internalData.getName() + " : " + key);
+            }
         }
     }
 }
