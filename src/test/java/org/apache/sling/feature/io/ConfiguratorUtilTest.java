@@ -60,11 +60,11 @@ public class ConfiguratorUtilTest {
         props.put("Double-array", new Double[]{1.0d,2.0d});
         props.put("Double-list", Arrays.asList(1.0d, 2.0d));
         props.put("double-array", new double[]{1.0d,2.0d});
-        props.put("Byte-simple", new Byte((byte)1));
+        props.put("Byte-simple", (byte)1);
         props.put("Byte-array", new Byte[]{1,2});
         props.put("Byte-list", Arrays.asList((byte)1, (byte)2));
         props.put("byte-array", new byte[]{1,2});
-        props.put("Short-simple", new Short((short) 1));
+        props.put("Short-simple", (short) 1);
         props.put("Short-array", new Short[]{1,2});
         props.put("Short-list", Arrays.asList((short)1, (short)2));
         props.put("Short-array", new short[]{1,2});

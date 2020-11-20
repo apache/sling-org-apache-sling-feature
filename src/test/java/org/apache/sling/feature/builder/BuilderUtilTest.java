@@ -17,6 +17,7 @@
 package org.apache.sling.feature.builder;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -319,20 +320,286 @@ public class BuilderUtilTest {
                 f2.getExtensions().stream().map(Extension::getName).collect(Collectors.toSet()));
     }
 
-    @Test public void testMergeVariables() {
-        Map<String,String> target = new HashMap<>();
+    @Test public void testMergeVariablesNoClash() {
+        final Feature targetFeature = new Feature(ArtifactId.parse("a:a:1"));
+        final Feature sourceFeature = new Feature(ArtifactId.parse("a:b:1"));
+
+        Map<String,String> target = targetFeature.getVariables();
         target.put("x", "327");
+        target.put("o1", "o1");
+        targetFeature.getVariableMetadata("x").put("mx", "ma");
 
-        Map<String,String> source = new HashMap<>();
+        Map<String,String> source = sourceFeature.getVariables();
         source.put("a", "b");
+        source.put("o2", "o2");
+        sourceFeature.getVariableMetadata("a").put("ma", "mx");
 
-        BuilderUtil.mergeVariables(target, source, null);
-        assertEquals(1, source.size());
+        final Map<String, String> overrides = new HashMap<>();
+        overrides.put("o1", "foo");
+        overrides.put("o2", "bar");
+        overrides.put("something", "else");
+
+        BuilderUtil.mergeVariables(targetFeature, sourceFeature, overrides);
+
+        // source is unchanged
+        assertEquals(2, source.size());
         assertEquals("b", source.get("a"));
+        assertEquals("o2", source.get("o2"));
+        assertEquals(1, sourceFeature.getVariableMetadata("a").size());
+        assertEquals("mx", sourceFeature.getVariableMetadata("a").get("ma"));
+        assertTrue(sourceFeature.getVariableMetadata("o2").isEmpty());
 
-        assertEquals(2, target.size());
+        // target changed
+        assertEquals(4, target.size());
         assertEquals("b", target.get("a"));
         assertEquals("327", target.get("x"));
+        assertEquals("foo", target.get("o1"));
+        assertEquals("bar", target.get("o2"));
+        assertEquals(2, targetFeature.getVariableMetadata("a").size());
+        assertEquals("mx", targetFeature.getVariableMetadata("a").get("ma"));
+        assertFalse(targetFeature.getVariableMetadata("o2").isEmpty());
+        assertEquals(1, targetFeature.getVariableMetadata("x").size());
+        assertEquals("ma", targetFeature.getVariableMetadata("x").get("mx"));
+        assertTrue(targetFeature.getVariableMetadata("o1").isEmpty());
+        assertEquals(Collections.singletonList(sourceFeature.getId()), targetFeature.getFeatureOrigins(targetFeature.getVariableMetadata("a")));
+        assertEquals(Collections.singletonList(sourceFeature.getId()), targetFeature.getFeatureOrigins(targetFeature.getVariableMetadata("o2")));
+        assertEquals(Collections.singletonList(targetFeature.getId()), targetFeature.getFeatureOrigins(targetFeature.getVariableMetadata("x")));
+        assertEquals(Collections.singletonList(targetFeature.getId()), targetFeature.getFeatureOrigins(targetFeature.getVariableMetadata("o1")));
+    }
+
+    @Test public void testMergeVariablesClashSame() {
+        final Feature targetFeature = new Feature(ArtifactId.parse("a:a:1"));
+        final Feature sourceFeature = new Feature(ArtifactId.parse("a:b:1"));
+
+        Map<String,String> target = targetFeature.getVariables();
+        target.put("x", "327");
+        targetFeature.getVariableMetadata("x").put("m", "ma");
+
+        Map<String,String> source = sourceFeature.getVariables();
+        source.put("x", "327");
+        sourceFeature.getVariableMetadata("x").put("m", "mb");
+
+        BuilderUtil.mergeVariables(targetFeature, sourceFeature, Collections.emptyMap());
+        // source is unchanged
+        assertEquals(1, source.size());
+        assertEquals("327", source.get("x"));
+        assertEquals(1, sourceFeature.getVariableMetadata("x").size());
+        assertEquals("mb", sourceFeature.getVariableMetadata("x").get("m"));
+
+        // target changed
+        assertEquals(1, target.size());
+        assertEquals("327", target.get("x"));
+        assertEquals(2, targetFeature.getVariableMetadata("x").size());
+        assertEquals("mb", targetFeature.getVariableMetadata("x").get("m"));
+        assertEquals(Arrays.asList(targetFeature.getId(), sourceFeature.getId()), targetFeature.getFeatureOrigins(targetFeature.getVariableMetadata("x")));
+    }
+
+    @Test public void testMergeVariablesClashSameOverride() {
+        final Feature targetFeature = new Feature(ArtifactId.parse("a:a:1"));
+        final Feature sourceFeature = new Feature(ArtifactId.parse("a:b:1"));
+
+        Map<String,String> target = targetFeature.getVariables();
+        target.put("x", "327");
+        targetFeature.getVariableMetadata("x").put("m", "ma");
+
+        Map<String,String> source = sourceFeature.getVariables();
+        source.put("x", "327");
+        sourceFeature.getVariableMetadata("x").put("m", "mb");
+
+        BuilderUtil.mergeVariables(targetFeature, sourceFeature, Collections.singletonMap("x", "foo"));
+        // source is unchanged
+        assertEquals(1, source.size());
+        assertEquals("327", source.get("x"));
+        assertEquals(1, sourceFeature.getVariableMetadata("x").size());
+        assertEquals("mb", sourceFeature.getVariableMetadata("x").get("m"));
+
+        // target changed
+        assertEquals(1, target.size());
+        assertEquals("foo", target.get("x"));
+        assertEquals(2, targetFeature.getVariableMetadata("x").size());
+        assertEquals("mb", targetFeature.getVariableMetadata("x").get("m"));
+        assertEquals(Arrays.asList(targetFeature.getId(), sourceFeature.getId()), targetFeature.getFeatureOrigins(targetFeature.getVariableMetadata("x")));
+    }
+
+    @Test public void testMergeVariablesClashOverride() {
+        final Feature targetFeature = new Feature(ArtifactId.parse("a:a:1"));
+        final Feature sourceFeature = new Feature(ArtifactId.parse("a:b:1"));
+
+        Map<String,String> target = targetFeature.getVariables();
+        target.put("x", "1");
+        targetFeature.getVariableMetadata("x").put("m", "ma");
+
+        Map<String,String> source = sourceFeature.getVariables();
+        source.put("x", "2");
+        sourceFeature.getVariableMetadata("x").put("m", "mb");
+
+        BuilderUtil.mergeVariables(targetFeature, sourceFeature, Collections.singletonMap("x", "foo"));
+        // source is unchanged
+        assertEquals(1, source.size());
+        assertEquals("2", source.get("x"));
+        assertEquals(1, sourceFeature.getVariableMetadata("x").size());
+        assertEquals("mb", sourceFeature.getVariableMetadata("x").get("m"));
+
+        // target changed
+        assertEquals(1, target.size());
+        assertEquals("foo", target.get("x"));
+        assertEquals(2, targetFeature.getVariableMetadata("x").size());
+        assertEquals("mb", targetFeature.getVariableMetadata("x").get("m"));
+        assertEquals(Arrays.asList(targetFeature.getId(), sourceFeature.getId()), targetFeature.getFeatureOrigins(targetFeature.getVariableMetadata("x")));
+    }
+
+    @Test(expected = IllegalStateException.class) public void testMergeVariablesClashNoOverride() {
+        final Feature targetFeature = new Feature(ArtifactId.parse("a:a:1"));
+        final Feature sourceFeature = new Feature(ArtifactId.parse("a:b:1"));
+
+        Map<String,String> target = targetFeature.getVariables();
+        target.put("x", "1");
+
+        Map<String,String> source = sourceFeature.getVariables();
+        source.put("x", "2");
+
+        BuilderUtil.mergeVariables(targetFeature, sourceFeature, Collections.emptyMap());
+    }
+
+    @Test public void testMergeFrameworkPropertiesNoClash() {
+        final Feature targetFeature = new Feature(ArtifactId.parse("a:a:1"));
+        final Feature sourceFeature = new Feature(ArtifactId.parse("a:b:1"));
+
+        Map<String,String> target = targetFeature.getFrameworkProperties();
+        target.put("x", "327");
+        target.put("o1", "o1");
+        targetFeature.getFrameworkPropertyMetadata("x").put("mx", "ma");
+
+        Map<String,String> source = sourceFeature.getFrameworkProperties();
+        source.put("a", "b");
+        source.put("o2", "o2");
+        sourceFeature.getFrameworkPropertyMetadata("a").put("ma", "mx");
+
+        final Map<String, String> overrides = new HashMap<>();
+        overrides.put("o1", "foo");
+        overrides.put("o2", "bar");
+        overrides.put("something", "else");
+
+        BuilderUtil.mergeFrameworkProperties(targetFeature, sourceFeature, overrides);
+
+        // source is unchanged
+        assertEquals(2, source.size());
+        assertEquals("b", source.get("a"));
+        assertEquals("o2", source.get("o2"));
+        assertEquals(1, sourceFeature.getFrameworkPropertyMetadata("a").size());
+        assertEquals("mx", sourceFeature.getFrameworkPropertyMetadata("a").get("ma"));
+         assertTrue(sourceFeature.getFrameworkPropertyMetadata("o2").isEmpty());
+
+        // target changed
+        assertEquals(4, target.size());
+        assertEquals("b", target.get("a"));
+        assertEquals("327", target.get("x"));
+        assertEquals("foo", target.get("o1"));
+        assertEquals("bar", target.get("o2"));
+        assertEquals(2, targetFeature.getFrameworkPropertyMetadata("a").size());
+        assertEquals("mx", targetFeature.getFrameworkPropertyMetadata("a").get("ma"));
+        assertFalse(targetFeature.getFrameworkPropertyMetadata("o2").isEmpty());
+        assertEquals(1, targetFeature.getFrameworkPropertyMetadata("x").size());
+        assertEquals("ma", targetFeature.getFrameworkPropertyMetadata("x").get("mx"));
+        assertTrue(targetFeature.getFrameworkPropertyMetadata("o1").isEmpty());
+        assertEquals(Collections.singletonList(sourceFeature.getId()), targetFeature.getFeatureOrigins(targetFeature.getFrameworkPropertyMetadata("a")));
+        assertEquals(Collections.singletonList(sourceFeature.getId()), targetFeature.getFeatureOrigins(targetFeature.getFrameworkPropertyMetadata("o2")));
+        assertEquals(Collections.singletonList(targetFeature.getId()), targetFeature.getFeatureOrigins(targetFeature.getFrameworkPropertyMetadata("x")));
+        assertEquals(Collections.singletonList(targetFeature.getId()), targetFeature.getFeatureOrigins(targetFeature.getFrameworkPropertyMetadata("o1")));
+    }
+
+    @Test public void testMergeFrameworkPropertiesClashSame() {
+        final Feature targetFeature = new Feature(ArtifactId.parse("a:a:1"));
+        final Feature sourceFeature = new Feature(ArtifactId.parse("a:b:1"));
+
+        Map<String,String> target = targetFeature.getFrameworkProperties();
+        target.put("x", "327");
+        targetFeature.getFrameworkPropertyMetadata("x").put("m", "ma");
+
+        Map<String,String> source = sourceFeature.getFrameworkProperties();
+        source.put("x", "327");
+        sourceFeature.getFrameworkPropertyMetadata("x").put("m", "mb");
+
+        BuilderUtil.mergeFrameworkProperties(targetFeature, sourceFeature, Collections.emptyMap());
+        // source is unchanged
+        assertEquals(1, source.size());
+        assertEquals("327", source.get("x"));
+        assertEquals(1, sourceFeature.getFrameworkPropertyMetadata("x").size());
+        assertEquals("mb", sourceFeature.getFrameworkPropertyMetadata("x").get("m"));
+
+        // target changed
+        assertEquals(1, target.size());
+        assertEquals("327", target.get("x"));
+        assertEquals(2, targetFeature.getFrameworkPropertyMetadata("x").size());
+        assertEquals("mb", targetFeature.getFrameworkPropertyMetadata("x").get("m"));
+        assertEquals(Arrays.asList(targetFeature.getId(), sourceFeature.getId()), targetFeature.getFeatureOrigins(targetFeature.getFrameworkPropertyMetadata("x")));
+    }
+
+    @Test public void testMergeFrameworkPropertiesClashSameOverride() {
+        final Feature targetFeature = new Feature(ArtifactId.parse("a:a:1"));
+        final Feature sourceFeature = new Feature(ArtifactId.parse("a:b:1"));
+
+        Map<String,String> target = targetFeature.getFrameworkProperties();
+        target.put("x", "327");
+        targetFeature.getFrameworkPropertyMetadata("x").put("m", "ma");
+
+        Map<String,String> source = sourceFeature.getFrameworkProperties();
+        source.put("x", "327");
+        sourceFeature.getFrameworkPropertyMetadata("x").put("m", "mb");
+
+        BuilderUtil.mergeFrameworkProperties(targetFeature, sourceFeature, Collections.singletonMap("x", "foo"));
+        // source is unchanged
+        assertEquals(1, source.size());
+        assertEquals("327", source.get("x"));
+        assertEquals(1, sourceFeature.getFrameworkPropertyMetadata("x").size());
+        assertEquals("mb", sourceFeature.getFrameworkPropertyMetadata("x").get("m"));
+
+        // target changed
+        assertEquals(1, target.size());
+        assertEquals("foo", target.get("x"));
+        assertEquals(2, targetFeature.getFrameworkPropertyMetadata("x").size());
+        assertEquals("mb", targetFeature.getFrameworkPropertyMetadata("x").get("m"));
+        assertEquals(Arrays.asList(targetFeature.getId(), sourceFeature.getId()), targetFeature.getFeatureOrigins(targetFeature.getFrameworkPropertyMetadata("x")));
+    }
+
+    @Test public void testMergeFrameworkPropertiesClashOverride() {
+        final Feature targetFeature = new Feature(ArtifactId.parse("a:a:1"));
+        final Feature sourceFeature = new Feature(ArtifactId.parse("a:b:1"));
+
+        Map<String,String> target = targetFeature.getFrameworkProperties();
+        target.put("x", "1");
+        targetFeature.getFrameworkPropertyMetadata("x").put("m", "ma");
+
+        Map<String,String> source = sourceFeature.getFrameworkProperties();
+        source.put("x", "2");
+        sourceFeature.getFrameworkPropertyMetadata("x").put("m", "mb");
+
+        BuilderUtil.mergeFrameworkProperties(targetFeature, sourceFeature, Collections.singletonMap("x", "foo"));
+        // source is unchanged
+        assertEquals(1, source.size());
+        assertEquals("2", source.get("x"));
+        assertEquals(1, sourceFeature.getFrameworkPropertyMetadata("x").size());
+        assertEquals("mb", sourceFeature.getFrameworkPropertyMetadata("x").get("m"));
+
+        // target changed
+        assertEquals(1, target.size());
+        assertEquals("foo", target.get("x"));
+        assertEquals(2, targetFeature.getFrameworkPropertyMetadata("x").size());
+        assertEquals("mb", targetFeature.getFrameworkPropertyMetadata("x").get("m"));
+        assertEquals(Arrays.asList(targetFeature.getId(), sourceFeature.getId()), targetFeature.getFeatureOrigins(targetFeature.getFrameworkPropertyMetadata("x")));
+    }
+
+    @Test(expected = IllegalStateException.class) public void testMergeFrameworkPropertiesClashNoOverride() {
+        final Feature targetFeature = new Feature(ArtifactId.parse("a:a:1"));
+        final Feature sourceFeature = new Feature(ArtifactId.parse("a:b:1"));
+
+        Map<String,String> target = targetFeature.getFrameworkProperties();
+        target.put("x", "1");
+
+        Map<String,String> source = sourceFeature.getFrameworkProperties();
+        source.put("x", "2");
+
+        BuilderUtil.mergeFrameworkProperties(targetFeature, sourceFeature, Collections.emptyMap());
     }
 
     static class TestMergeHandler implements MergeHandler {

@@ -382,10 +382,10 @@ public abstract class FeatureBuilder {
             final String originKey,            
             final boolean prototypeMerge,
             final boolean initialMerge) {
-        BuilderUtil.mergeVariables(target.getVariables(), source.getVariables(), context);
+        BuilderUtil.mergeVariables(target, source, context.getVariablesOverrides());
         BuilderUtil.mergeArtifacts(target.getBundles(), source.getBundles(), source, artifactOverrides, originKey);
         BuilderUtil.mergeConfigurations(target.getConfigurations(), source.getConfigurations(), configOverrides, source.getId());
-        BuilderUtil.mergeFrameworkProperties(target.getFrameworkProperties(), source.getFrameworkProperties(), context);
+        BuilderUtil.mergeFrameworkProperties(target, source, context.getFrameworkPropertiesOverrides());
         BuilderUtil.mergeRequirements(target.getRequirements(), source.getRequirements());
         BuilderUtil.mergeCapabilities(target.getCapabilities(), source.getCapabilities());
         BuilderUtil.mergeExtensions(target, source, context, artifactOverrides, originKey, prototypeMerge, initialMerge);

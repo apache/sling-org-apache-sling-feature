@@ -27,8 +27,8 @@ import java.util.stream.Collectors;
 import org.apache.sling.feature.ArtifactId;
 
 /**
- * Builder context holds services used by {@link FeatureBuilder} and controls
- * how features are assembled and aggregated.
+ * Builder context holds services and configuration used by {@link FeatureBuilder} 
+ * and controls how features are assembled and aggregated.
  *
  * <p>
  * When two features are merged, being it a prototype with the feature using the
@@ -46,6 +46,9 @@ import org.apache.sling.feature.ArtifactId;
  * specified. If the artifact id should match more than a single artifact
  * {@link BuilderContext#COORDINATE_MATCH_ALL} can be specified as group id,
  * artifact id, type and/or classifier.
+ * <p>
+ * A clash might also happen with framework properties or variables. In this case
+ * an override must be provided for that variable or framework property as well.
  * <p>
  * This class is not thread-safe.
  */
@@ -107,11 +110,11 @@ public class BuilderContext {
     private final Map<String,String> frameworkProperties = new HashMap<>();
     private final Map<String,String> configOverrides = new LinkedHashMap<>();
 
-
     /**
      * Create a new context.
-     *
-     * @param provider A provider providing the prototype features
+     * The feature provider is for example used to get a prototype feature.
+     * 
+     * @param provider A provider providing required features for processing
      * @throws IllegalArgumentException If feature provider is {@code null}
      */
     public BuilderContext(final FeatureProvider provider) {
@@ -136,8 +139,13 @@ public class BuilderContext {
 
     /**
      * Add overrides for the variables.
-     *
-     * @param vars The overrides
+     * Variables can be overridden if any feature in the aggregation/assembly process
+     * contains an overriden variable. If multiple definitions of the same variable
+     * are found in the features that are to be aggregated and the values for these
+     * variables are different, they must be overridden, otherwise the aggregation will
+     * fail.
+     * 
+     * @param vars The overrides keyed by variable name
      * @return The builder context
      */
     public BuilderContext addVariablesOverrides(final Map<String,String> vars) {
@@ -147,8 +155,12 @@ public class BuilderContext {
 
     /**
      * Add overrides for the framework properties.
+     * Framework properties can be overridden if any feature in the aggregation/assembly process
+     * contains an overriden framework property. If multiple definitions of the same framework
+     * property are found in the features that are to be aggregated and the values for these
+     * properties are different, they must be overridden, otherwise the aggregation will fail.
      *
-     * @param props The overrides
+     * @param props The overrides keyed by framework property name
      * @return The builder context
      */
     public BuilderContext addFrameworkPropertiesOverrides(final Map<String,String> props) {

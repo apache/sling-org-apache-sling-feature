@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -60,41 +61,50 @@ class BuilderUtil {
     /** Used in override rule to have it apply to all artifacts. */
     static final String CATCHALL_OVERRIDE = "*:*:";
 
-    private static void mergeWithContextOverride(final String type, final Map<String,String> target, final Map<String,String> source, Map<String,String> context) {
-        if ( context == null ) {
-            context = Collections.emptyMap();
+    /**
+     * Merge the variables
+     * @param targetFeature The target feature
+     * @param sourceFeature The source feature
+     * @param context Non-null map of overrides
+     */
+    static void mergeVariables(final Feature targetFeature, final Feature sourceFeature, final Map<String,String> overrides) {
+        final Map<String,String> result = new LinkedHashMap<>();
+        final Map<String, Map<String, Object>> metadata = new HashMap<>();
+        // keep values from target features, no need to update origin
+        for (Map.Entry<String, String> entry : targetFeature.getVariables().entrySet()) {
+            result.put(entry.getKey(), overrides.containsKey(entry.getKey()) ? overrides.get(entry.getKey()) : entry.getValue());
+            metadata.put(entry.getKey(), targetFeature.getVariableMetadata(entry.getKey()));
         }
-        final Map<String,String> result = new HashMap<>();
-        for (Map.Entry<String, String> entry : target.entrySet()) {
-            result.put(entry.getKey(), context.containsKey(entry.getKey()) ? context.get(entry.getKey()) : entry.getValue());
-        }
-        for (Map.Entry<String, String> entry : source.entrySet()) {
-            if ( context.containsKey(entry.getKey()) ) {
-                result.put(entry.getKey(), context.get(entry.getKey()));
+        // merge in from source feature
+        for (Map.Entry<String, String> entry : sourceFeature.getVariables().entrySet()) {
+            final List<ArtifactId> targetIds = (metadata.containsKey(entry.getKey())) ?
+                  new ArrayList<>(targetFeature.getFeatureOrigins(metadata.get(entry.getKey()))) : new ArrayList<>();
+            targetIds.add(sourceFeature.getId());
+            if ( overrides.containsKey(entry.getKey()) ) {
+                result.put(entry.getKey(), overrides.get(entry.getKey()));
             } else {
                 String value = entry.getValue();
                 if (value != null) {
-                    String targetValue = target.get(entry.getKey());
+                    String targetValue = targetFeature.getVariables().get(entry.getKey());
                     if (targetValue != null) {
                         if (!value.equals(targetValue)) {
-                            throw new IllegalStateException(String.format("Can't merge %s '%s' defined twice (as '%s' v.s. '%s') and not overridden.", type, entry.getKey(), value, targetValue));
+                            throw new IllegalStateException(String.format("Can't merge variable '%s' defined twice (as '%s' v.s. '%s') and not overridden.", entry.getKey(), value, targetValue));
                         }
                     } else {
                         result.put(entry.getKey(), value);
                     }
-                } else if (!target.containsKey(entry.getKey())) {
+                } else if (!targetFeature.getVariables().containsKey(entry.getKey())) {
                     result.put(entry.getKey(), value);
                 }
             }
+            metadata.put(entry.getKey(), new LinkedHashMap<>(sourceFeature.getVariableMetadata(entry.getKey())));
+            targetFeature.setFeatureOrigins(metadata.get(entry.getKey()), targetIds);
         }
-        target.clear();
-        target.putAll(result);
-    }
-
-    // variables
-    static void mergeVariables(Map<String,String> target, Map<String,String> source, BuilderContext context) {
-        mergeWithContextOverride("Variable", target, source,
-                (null != context) ? context.getVariablesOverrides() : null);
+        targetFeature.getVariables().clear();
+        targetFeature.getVariables().putAll(result);
+        for(final Map.Entry<String, Map<String, Object>> entry : metadata.entrySet()) {
+            targetFeature.getVariableMetadata(entry.getKey()).putAll(entry.getValue());
+        }
     }
 
     /**
@@ -328,37 +338,6 @@ class BuilderUtil {
         }
     }
 
-    /*private static Artifact addFeatureOrigin(Artifact target, Artifact... artifacts) {
-        return addFeatureOrigin(null, target, artifacts);
-    }
-
-    private static Artifact addFeatureOrigin(Feature feature, Artifact target, Artifact... artifacts) {
-        LinkedHashSet<ArtifactId> originFeatures = new LinkedHashSet<>();
-        if (artifacts != null && artifacts.length > 0) {
-            for (Artifact artifact : artifacts) {
-                originFeatures.addAll();
-            }
-        }
-        else {
-            originFeatures.addAll(Arrays.asList(target.getFeatureOrigins()));
-            if (feature != null && originFeatures.isEmpty()) {
-                originFeatures.add(feature.getId());
-            }
-        }
-        if (feature != null && originFeatures.isEmpty()) {
-            originFeatures.add(feature.getId());
-        }
-        ArtifactId[] origins = originFeatures.toArray(new ArtifactId[0]);
-        if (Arrays.equals(origins,target.getFeatureOrigins())) {
-            return target;
-        }
-        else {
-            Artifact result = target.copy(target.getId());
-            result.setFeatureOrigins(origins);
-            return result;
-        }
-    }*/
-
     private static boolean match(final ArtifactId id, final ArtifactId override) {
         int matchCount = 0;
         // check group id
@@ -533,10 +512,50 @@ class BuilderUtil {
         }
     }
 
-    // framework properties (add/merge)
-    static void mergeFrameworkProperties(final Map<String,String> target, final Map<String,String> source, BuilderContext context) {
-        mergeWithContextOverride("Property", target, source,
-                context != null ? context.getFrameworkPropertiesOverrides() : null);
+   /**
+     * Merge the framework properties
+     * @param targetFeature The target feature
+     * @param sourceFeature The source feature
+     * @param context Non-null map of overrides
+     */
+    static void mergeFrameworkProperties(final Feature targetFeature, final Feature sourceFeature, final Map<String,String> overrides) {
+        final Map<String,String> result = new LinkedHashMap<>();
+        final Map<String, Map<String, Object>> metadata = new HashMap<>();
+        // keep values from target features, no need to update origin
+        for (Map.Entry<String, String> entry : targetFeature.getFrameworkProperties().entrySet()) {
+            result.put(entry.getKey(), overrides.containsKey(entry.getKey()) ? overrides.get(entry.getKey()) : entry.getValue());
+            metadata.put(entry.getKey(), targetFeature.getFrameworkPropertyMetadata(entry.getKey()));
+        }
+        // merge in from source feature
+        for (Map.Entry<String, String> entry : sourceFeature.getFrameworkProperties().entrySet()) {
+            final List<ArtifactId> targetIds = (metadata.containsKey(entry.getKey())) ?
+                  new ArrayList<>(targetFeature.getFeatureOrigins(metadata.get(entry.getKey()))) : new ArrayList<>();
+            targetIds.add(sourceFeature.getId());
+            if ( overrides.containsKey(entry.getKey()) ) {
+                result.put(entry.getKey(), overrides.get(entry.getKey()));
+            } else {
+                String value = entry.getValue();
+                if (value != null) {
+                    String targetValue = targetFeature.getFrameworkProperties().get(entry.getKey());
+                    if (targetValue != null) {
+                        if (!value.equals(targetValue)) {
+                            throw new IllegalStateException(String.format("Can't merge framework property '%s' defined twice (as '%s' v.s. '%s') and not overridden.", entry.getKey(), value, targetValue));
+                        }
+                    } else {
+                        result.put(entry.getKey(), value);
+                    }
+                } else if (!targetFeature.getFrameworkProperties().containsKey(entry.getKey())) {
+                    result.put(entry.getKey(), value);
+                }
+            }
+            metadata.put(entry.getKey(), new HashMap<>(sourceFeature.getFrameworkPropertyMetadata(entry.getKey())));
+            targetFeature.setFeatureOrigins(metadata.get(entry.getKey()), targetIds);
+        }
+        targetFeature.getFrameworkProperties().clear();
+        targetFeature.getFrameworkProperties().putAll(result);
+        for(final Map.Entry<String, Map<String, Object>> entry : metadata.entrySet()) {
+            targetFeature.getFrameworkPropertyMetadata(entry.getKey()).putAll(entry.getValue());
+        }
     }
 
     // requirements (add)

@@ -411,6 +411,9 @@ public class Feature implements Comparable<Feature> {
 
         // variables
         result.getVariables().putAll(this.getVariables());
+        for(final String key : this.getVariables().keySet()) {
+             result.getVariableMetadata(key).putAll(this.getVariableMetadata(key));
+        }
 
         // bundles
         for(final Artifact b : this.getBundles()) {
@@ -424,6 +427,9 @@ public class Feature implements Comparable<Feature> {
 
         // framework properties
         result.getFrameworkProperties().putAll(this.getFrameworkProperties());
+        for(final String key : this.getFrameworkProperties().keySet()) {
+            result.getFrameworkPropertyMetadata(key).putAll(this.getFrameworkPropertyMetadata(key));
+       }
 
         // requirements
         for (final MatchingRequirement r : this.getRequirements()) {
