@@ -324,6 +324,7 @@ public class Feature implements Comparable<Feature> {
 
     /**
      * Return a mutable map of metadata for the framework property
+     * @param key The name of the property.
      * @return A mutable map or {@code null} if the framework property does not exist
      * @since 1.7.0
      */
@@ -333,6 +334,7 @@ public class Feature implements Comparable<Feature> {
 
     /**
      * Return a mutable map of metadata for the variable
+     * @param key The name of the variable.
      * @return A mutable map or {@code null} if the variable does not exist
      * @since 1.7.0
      */
@@ -343,7 +345,7 @@ public class Feature implements Comparable<Feature> {
     /**
      * Get the feature origins for the metadata- if recorded
      * 
-     * @param The metadata (for a variable or framework property)
+     * @param metadata The metadata (for a variable or framework property)
      * @return A immutable list of feature artifact ids - list is never empty
      * @since 1.7
      * @throws IllegalArgumentException If the stored values are not valid artifact ids
@@ -365,7 +367,7 @@ public class Feature implements Comparable<Feature> {
 
     /**
      * Set the feature origins for the metadata
-     * @param The metadata (for a variable or framework property)
+     * @param metadata The metadata (for a variable or framework property)
      * @param featureOrigins the list of artifact ids or null to remove the info from this object
      * @since 1.7
      */

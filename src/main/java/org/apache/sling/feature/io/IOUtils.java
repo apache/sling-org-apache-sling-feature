@@ -174,7 +174,7 @@ public class IOUtils {
      *              if it can not be presented as a file directly
      * @param tmpDir the tmpDir to use (null for default)
      * @return the file the url points to (or null if none) - or a tmp file if cache is true and the url could be cached
-     * @throws IOException
+     * @throws IOException When an IO Exception occurs.
      */
     public static File getFileFromURL(URL url, boolean cache, File tmpDir) throws IOException {
         File result;

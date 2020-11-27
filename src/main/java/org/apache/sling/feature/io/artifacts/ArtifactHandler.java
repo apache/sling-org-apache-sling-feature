@@ -44,7 +44,7 @@ public class ArtifactHandler {
      * Create a new handler.
      *
      * @param file The file for the artifact
-     * @throws MalformedURLException
+     * @throws MalformedURLException If the file name cannot be converted to a URL.
      * @since 1.1.0
      */
     public ArtifactHandler(final File file) throws MalformedURLException {
