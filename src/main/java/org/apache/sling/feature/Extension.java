@@ -88,10 +88,10 @@ public class Extension {
     private final Artifacts artifacts;
 
     /** The text or json (if corresponding type) */
-    private volatile String text;
+    private String text;
 
     /** The json structure (if corresponding type) */
-    private volatile JsonStructure json;
+    private JsonStructure json;
 
     /** Extension state. */
     private final ExtensionState state;

@@ -25,7 +25,8 @@ import java.util.TreeMap;
 
 /**
  * Groups a list of bundles {@code Artifact} and provides a means to sort them
- * based on start order. This class is not thread-safe.
+ * based on start order. 
+ * This class is not thread-safe.
  */
 public class Bundles extends Artifacts {
 

@@ -343,9 +343,9 @@ public class ArtifactManager
 
         private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-        private volatile File cacheDir;
+        private File cacheDir;
 
-        private volatile ArtifactProviderContext config;
+        private ArtifactProviderContext config;
 
         @Override
         public String getProtocol() {

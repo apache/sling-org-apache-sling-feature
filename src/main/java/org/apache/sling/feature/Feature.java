@@ -61,31 +61,31 @@ public class Feature implements Comparable<Feature> {
     private final MapWithMetadata variables = new MapWithMetadata();
 
     /** The optional location. */
-    private volatile String location;
+    private String location;
 
     /** The optional title. */
-    private volatile String title;
+    private String title;
 
     /** The optional description. */
-    private volatile String description;
+    private String description;
 
     /** The optional vendor. */
-    private volatile String vendor;
+    private String vendor;
 
     /** The optional license. */
-    private volatile String license;
+    private String license;
 
     /** Flag indicating whether this is an assembled feature */
-    private volatile boolean assembled = false;
+    private boolean assembled = false;
 
     /** Flag indicating whether this is a final feature */
-    private volatile boolean finalFlag = false;
+    private boolean finalFlag = false;
 
     /** Flag indicating whether this is a complete feature */
-    private volatile boolean completeFlag = false;
+    private boolean completeFlag = false;
 
     /** The optional prototype. */
-    private volatile Prototype prototype;
+    private Prototype prototype;
 
     /**
      * Construct a new feature.

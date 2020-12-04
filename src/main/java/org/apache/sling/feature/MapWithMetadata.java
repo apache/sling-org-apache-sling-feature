@@ -23,7 +23,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Helper class to maintain metadata for a map
+ * Helper class to maintain metadata for a map.
+ * This class is not thread-safe.
  * @since 1.7.0
  */
 class MapWithMetadata implements Map<String, String> {

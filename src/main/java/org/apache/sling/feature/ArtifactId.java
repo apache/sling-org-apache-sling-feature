@@ -29,7 +29,7 @@ import org.osgi.framework.Version;
  * id, artifact id, and version. In addition, the classifier and type can be
  * specified. If no type is specified, {@code jar} is assumed.
  *
- * This class is not thread-safe.
+ * This class is thread-safe.
  */
 public class ArtifactId implements Comparable<ArtifactId> {
 

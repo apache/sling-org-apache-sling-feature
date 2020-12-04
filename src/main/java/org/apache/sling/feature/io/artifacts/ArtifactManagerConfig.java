@@ -25,14 +25,15 @@ import org.apache.sling.feature.io.artifacts.spi.ArtifactProviderContext;
 
 /**
  * This class holds the configuration of artifact manager.
+ * This class is not thread-safe.
  */
 public class ArtifactManagerConfig implements ArtifactProviderContext {
 
     /** The repository urls. */
-    private volatile String[] repositoryUrls;
+    private String[] repositoryUrls;
 
     /** The cache directory. */
-    private volatile File cacheDirectory;
+    private File cacheDirectory;
 
     /** Metrics for artifacts used from the cache. */
     private final AtomicLong cachedArtifacts = new AtomicLong();
@@ -44,7 +45,7 @@ public class ArtifactManagerConfig implements ArtifactProviderContext {
     private final AtomicLong localArtifacts = new AtomicLong();
 
     /** Whether locally mvn command can be used to download artifacts. */
-    private volatile boolean useMvn = false;
+    private boolean useMvn = false;
 
     /**
      * The .m2 directory.

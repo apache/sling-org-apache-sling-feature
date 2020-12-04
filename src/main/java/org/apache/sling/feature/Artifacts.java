@@ -19,7 +19,8 @@ package org.apache.sling.feature;
 import java.util.ArrayList;
 
 /**
- * Groups a list of {@code Artifact}s. This class is not thread-safe.
+ * Groups a list of {@code Artifact}s. 
+ * This class is not thread-safe.
  */
 public class Artifacts extends ArrayList<Artifact> {
 

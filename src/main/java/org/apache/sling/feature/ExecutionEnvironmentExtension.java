@@ -24,7 +24,8 @@ import javax.json.JsonValue.ValueType;
 import org.osgi.framework.Version;
 
 /**
- * Execution environment extension
+ * Execution environment extension.
+ * This class is thread-safe.
  * @since 1.4.0
  */
 public class ExecutionEnvironmentExtension {
