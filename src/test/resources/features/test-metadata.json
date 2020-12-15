@@ -7,7 +7,7 @@
     "framework-properties" : {
         "foo" : "1"
     },
-    "feature-internal-data:JSON|true" : {
+    "feature-internal-data:JSON|false" : {
        "framework-properties-metadata" : {
           "foo" : {
               "bool" : true

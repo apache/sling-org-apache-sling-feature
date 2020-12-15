@@ -459,7 +459,7 @@ public class FeatureJSONWriter {
             }
         }
         if ( !output.isEmpty() ) {
-            final Extension ext = new Extension(ExtensionType.JSON, Extension.EXTENSION_NAME_INTERNAL_DATA, ExtensionState.REQUIRED);
+            final Extension ext = new Extension(ExtensionType.JSON, Extension.EXTENSION_NAME_INTERNAL_DATA, ExtensionState.OPTIONAL);
             ext.setJSONStructure(org.apache.felix.cm.json.Configurations.convertToJsonValue(output).asJsonObject());
             this.writeExtension(generator, ext, null);
         }
