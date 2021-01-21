@@ -19,7 +19,9 @@ package org.apache.sling.feature.io.json;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.Set;
 
 import org.apache.felix.cm.json.ConfigurationResource;
 import org.apache.felix.cm.json.ConfigurationWriter;
@@ -47,8 +49,15 @@ public class ConfigurationJSONWriter {
             .buildWriter()
             .build(writer);
 
+        final Set<String> visitedPids = new HashSet<>();
         final ConfigurationResource rsrc = new ConfigurationResource();
         for(final Configuration cfg : configs) {
+            for (String pid : visitedPids) {
+                if (pid.equalsIgnoreCase(cfg.getPid()))
+                    throw new IOException("Duplicate Configuration PIDs: " + pid + " and " + cfg.getPid());
+            }
+            visitedPids.add(cfg.getPid());
+
             final Hashtable<String, Object> properties;
             if ( cfg.getProperties() instanceof Hashtable && cfg.getProperties().get(Configuration.PROP_ARTIFACT_ID) == null ) {
                 properties = (Hashtable<String, Object>)cfg.getProperties();
