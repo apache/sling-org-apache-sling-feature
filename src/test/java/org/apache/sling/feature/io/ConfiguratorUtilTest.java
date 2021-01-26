@@ -47,7 +47,7 @@ public class ConfiguratorUtilTest {
         props.put("Long-simple", 1);
         props.put("Long-array", new Long[]{1L,2L});
         props.put("Long-list", Arrays.asList(1l, 2l));
-        props.put("long-array", new long[]{1,2});
+        props.put("long.array", new long[]{1,2});
         props.put("Boolean-simple", Boolean.TRUE);
         props.put("Boolean-array", new Boolean[] {Boolean.TRUE, Boolean.FALSE});
         props.put("Boolean-list", Arrays.asList(Boolean.TRUE, Boolean.FALSE));
@@ -55,15 +55,15 @@ public class ConfiguratorUtilTest {
         props.put("Float-simple", 1.0d);
         props.put("Float-array", new Float[]{1.0f, 2.0f});
         props.put("Float-list", Arrays.asList(1.0f, 2.0f));
-        props.put("float-array", new float[]{1.0f,2.0f});
+        props.put("float.array", new float[]{1.0f,2.0f});
         props.put("Double-simple", 1.0d);
         props.put("Double-array", new Double[]{1.0d,2.0d});
         props.put("Double-list", Arrays.asList(1.0d, 2.0d));
-        props.put("double-array", new double[]{1.0d,2.0d});
+        props.put("double.array", new double[]{1.0d,2.0d});
         props.put("Byte-simple", (byte)1);
         props.put("Byte-array", new Byte[]{1,2});
         props.put("Byte-list", Arrays.asList((byte)1, (byte)2));
-        props.put("byte-array", new byte[]{1,2});
+        props.put("byte.array", new byte[]{1,2});
         props.put("Short-simple", (short) 1);
         props.put("Short-array", new Short[]{1,2});
         props.put("Short-list", Arrays.asList((short)1, (short)2));

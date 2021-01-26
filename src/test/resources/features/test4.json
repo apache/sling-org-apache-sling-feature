@@ -1,0 +1,10 @@
+{
+    "id" : "org.apache.sling/test-feature4/1",
+    "configurations": {
+        "a.b.c": {
+          "foo": 123,
+          "bar": 456,
+          "Foo": 789
+        }   
+    }
+}

@@ -76,7 +76,7 @@ public class ConfigurationTest {
     @Test
     public void testFeatureOrigins() {
         final ArtifactId self = ArtifactId.parse("self:self:1");
-        
+
         final Configuration cfg = new Configuration("foo");
         assertTrue(cfg.getFeatureOrigins().isEmpty());
         assertNull(cfg.getConfigurationProperties().get(Configuration.PROP_FEATURE_ORIGINS));
@@ -111,5 +111,15 @@ public class ConfigurationTest {
         assertNotNull(cfg.getProperties().get(Configuration.PROP_FEATURE_ORIGINS));
         final String[] array2 = (String[]) cfg.getProperties().get(Configuration.PROP_FEATURE_ORIGINS);
         assertArrayEquals(new String[] {id.toMvnId(), id2.toMvnId()}, array2);
+    }
+
+    @Test
+    public void testDuplicateConfigKeys() throws Exception {
+        Configuration c1 = new Configuration("a.b.c");
+        c1.getProperties().put("aaa", "123");
+        c1.getProperties().put("AaA", "456");
+
+        assertEquals("As keys are case insensitive, there should just be 1 key",
+                1, c1.getProperties().size());
     }
 }

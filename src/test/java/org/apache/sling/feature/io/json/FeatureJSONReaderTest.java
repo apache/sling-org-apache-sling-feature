@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.util.Arrays;
 
 import org.apache.sling.feature.ArtifactId;
@@ -130,5 +131,11 @@ public class FeatureJSONReaderTest {
         assertEquals("hello world", feature.getVariableMetadata("bar").get("string"));
 
         assertNull(feature.getExtensions().getByName(Extension.EXTENSION_NAME_INTERNAL_DATA));
+    }
+
+    @Test(expected = IOException.class)
+    public void testReadConflictingConfigKeys() throws Exception {
+        // This is expected to throw an exception since the same key is defined twice
+        U.readFeature("test4");
     }
 }
