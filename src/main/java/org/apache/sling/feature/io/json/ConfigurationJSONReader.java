@@ -64,6 +64,7 @@ public class ConfigurationJSONReader {
             for(final Map.Entry<String, Object> prop : entry.getValue().entrySet()) {
                 cf.getProperties().put(prop.getKey(), prop.getValue());
             }
+            result.add(cf);
         }
 
         return result;
