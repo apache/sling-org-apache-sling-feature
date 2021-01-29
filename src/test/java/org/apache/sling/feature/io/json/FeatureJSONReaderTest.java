@@ -16,6 +16,7 @@
  */
 package org.apache.sling.feature.io.json;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -24,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 
 import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Bundles;
@@ -137,5 +139,23 @@ public class FeatureJSONReaderTest {
     public void testReadConflictingConfigKeys() throws Exception {
         // This is expected to throw an exception since the same key is defined twice
         U.readFeature("test4");
+    }
+
+    @Test
+    public void testInternalConfigurationProperties() throws Exception {
+        final Feature f = U.readFeature("internal-prop");
+        final Configuration c = f.getConfigurations().get(0);
+        assertEquals(1, c.getConfigurationProperties().size());
+        assertEquals(5L, c.getConfigurationProperties().get("foo"));
+
+        assertEquals(3, c.getProperties().size());
+        assertEquals(5L, c.getProperties().get("foo"));
+        assertEquals(7L, c.getProperties().get(Configuration.PROP_PREFIX.concat("number")));
+        assertArrayEquals(new String[] {"org.apache.sling/test-feature/1.1"}, 
+              (String[])c.getProperties().get(Configuration.PROP_FEATURE_ORIGINS));
+
+        final List<ArtifactId> origins = c.getFeatureOrigins();
+        assertEquals(1, origins.size());
+        assertEquals(ArtifactId.parse("org.apache.sling/test-feature/1.1"), origins.get(0));
     }
 }

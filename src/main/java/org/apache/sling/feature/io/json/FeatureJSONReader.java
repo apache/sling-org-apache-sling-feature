@@ -37,6 +37,7 @@ import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
 
 import org.apache.felix.cm.json.ConfigurationReader;
+import org.apache.felix.cm.json.ConfigurationReader.ConfiguratorPropertyHandler;
 import org.apache.felix.cm.json.ConfigurationResource;
 import org.apache.felix.utils.resource.CapabilityImpl;
 import org.apache.felix.utils.resource.RequirementImpl;
@@ -227,6 +228,18 @@ public class FeatureJSONReader {
         final ConfigurationReader reader = org.apache.felix.cm.json.Configurations.buildReader()
                 .verifyAsBundleResource(true)
                 .withIdentifier(this.location)
+                .withConfiguratorPropertyHandler(new ConfiguratorPropertyHandler(){
+
+					@Override
+					public void handleConfiguratorProperty(final String pid, final String property, final Object value) {
+                        Configuration cfg = container.getConfiguration(pid);
+                        if ( cfg == null ) {
+                            cfg = new Configuration(pid);
+                            container.add(cfg);
+                        }                      
+                        cfg.getProperties().put(Configuration.CONFIGURATOR_PREFIX.concat(property), value);						
+					}                                    
+                })
                 .build(json);
         final ConfigurationResource rsrc = reader.readConfigurationResource();
         if ( !reader.getIgnoredErrors().isEmpty() ) {
@@ -240,7 +253,11 @@ public class FeatureJSONReader {
         }
 
         for(final Map.Entry<String, Hashtable<String, Object>> c : rsrc.getConfigurations().entrySet()) {
-            final Configuration config = new Configuration(c.getKey());
+            Configuration config = container.getConfiguration(c.getKey());
+            if ( config == null ) {
+                config = new Configuration(c.getKey());
+                container.add(config);
+            }                      
 
             for(final Map.Entry<String, Object> prop : c.getValue().entrySet()) {
                 config.getProperties().put(prop.getKey(), prop.getValue());
@@ -251,12 +268,6 @@ public class FeatureJSONReader {
             if ( artifact != null ) {
                 config.getProperties().put(Configuration.PROP_ARTIFACT_ID, artifact.getId().toMvnId());
             }
-            for(final Configuration current : container) {
-                if ( current.equals(config) ) {
-                    throw new IOException(exceptionPrefix.concat("Duplicate configuration ").concat(config.getPid()));
-                }
-            }
-            container.add(config);
         }
     }
 

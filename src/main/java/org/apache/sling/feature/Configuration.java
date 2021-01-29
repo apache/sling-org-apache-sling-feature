@@ -49,7 +49,7 @@ public class Configuration
     /**
      * Prefix for special properties which are not configuration properties.
      */
-    public static final String PROP_PREFIX = CONFIGURATOR_PREFIX + "feature:";
+    public static final String PROP_PREFIX = CONFIGURATOR_PREFIX + "feature-";
 
     /**
      * This optional configuration property stores the artifact id (mvn id) of the

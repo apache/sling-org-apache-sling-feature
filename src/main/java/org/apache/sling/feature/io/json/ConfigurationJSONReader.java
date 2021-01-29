@@ -22,6 +22,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import org.apache.felix.cm.json.ConfigurationReader;
+import org.apache.felix.cm.json.ConfigurationReader.ConfiguratorPropertyHandler;
 import org.apache.felix.cm.json.ConfigurationResource;
 import org.apache.sling.feature.Configuration;
 import org.apache.sling.feature.Configurations;
@@ -57,14 +58,29 @@ public class ConfigurationJSONReader {
             .buildReader()
             .withIdentifier(location)
             .verifyAsBundleResource(true)
-            .build(reader);
+            .withConfiguratorPropertyHandler(new ConfiguratorPropertyHandler() {
+
+                @Override
+                public void handleConfiguratorProperty(final String pid, final String property, final Object value) {
+                    Configuration cfg = result.getConfiguration(pid);
+                    if ( cfg == null ) {
+                        cfg = new Configuration(pid);
+                        result.add(cfg);
+                    }                      
+                    cfg.getProperties().put(Configuration.CONFIGURATOR_PREFIX.concat(property), value);						
+                }                                    
+            })
+          .build(reader);
         final ConfigurationResource rsrc = cfgReader.readConfigurationResource();
         for(Map.Entry<String, Hashtable<String, Object>> entry : rsrc.getConfigurations().entrySet() ) {
-            final Configuration cf = new Configuration(entry.getKey());
+            Configuration cf = result.getConfiguration(entry.getKey());
+            if ( cf == null ) {
+                cf = new Configuration(entry.getKey());
+                result.add(cf);
+            }                      
             for(final Map.Entry<String, Object> prop : entry.getValue().entrySet()) {
                 cf.getProperties().put(prop.getKey(), prop.getValue());
             }
-            result.add(cf);
         }
 
         return result;

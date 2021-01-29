@@ -1,0 +1,11 @@
+{
+    "id" : "org.apache.sling/test-feature/1.1",
+
+    "configurations" : {
+        "my.pid" : {
+           "foo" : 5,
+           ":configurator:feature-origins" : ["org.apache.sling/test-feature/1.1"],
+           ":configurator:feature-number" : 7
+        }
+    }
+}
