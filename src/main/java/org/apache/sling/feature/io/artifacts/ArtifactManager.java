@@ -107,25 +107,37 @@ public class ArtifactManager
             for(final ArtifactProvider provider : this.providers.values()) {
                 provider.init(config);
             }
-        } catch ( final IOException io) {
-            shutdown();
+        } catch (final IOException io) {
+            try { 
+                close();
+            } catch (IOException ioeDuringClose) {
+                io.addSuppressed(ioeDuringClose);
+            }
             throw io;
         }
     }
 
     /**
      * Shutdown the artifact manager.
+     * @throws IOException 
      */
-    public void shutdown() {
+    @Override
+    public void close() throws IOException {
+        IOException e = null;
         for(final ArtifactProvider provider : this.providers.values()) {
-            provider.shutdown();
+            try {
+                provider.close();
+            } catch (IOException ioe) {
+                if (e == null) {
+                    e = new IOException("Could not close one or more providers. Look at suppressed exceptions for the underlying exceptions");
+                }
+                e.addSuppressed(ioe);
+            }
         }
         this.providers.clear();
-    }
-
-    @Override
-    public void close() {
-        shutdown();
+        if (e != null) {
+            throw e;
+        }
     }
 
     @Override
@@ -359,7 +371,7 @@ public class ArtifactManager
         }
 
         @Override
-        public void shutdown() {
+        public void close() {
             this.config = null;
             this.cacheDir = null;
         }
