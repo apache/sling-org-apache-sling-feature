@@ -17,13 +17,9 @@
 package org.apache.sling.feature.io.artifacts;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.Reader;
 import java.lang.ProcessBuilder.Redirect;
 import java.net.MalformedURLException;
@@ -33,6 +29,7 @@ import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Comparator;
@@ -40,6 +37,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Feature;
@@ -215,8 +214,8 @@ public class ArtifactManager
 
         } else {
             // file (either relative or absolute)
-            final File f = new File(url);
-            if ( !f.exists()) {
+            final Path f = Paths.get(url);
+            if ( !Files.exists(f)) {
                 throw new IOException("Artifact " + url + " not found.");
             }
             return new ArtifactHandler(f);
@@ -284,7 +283,7 @@ public class ArtifactManager
         // if we have an artifact id and using mvn is enabled, we try this as a last
         // resort
         if (artifactId != null && this.config.isUseMvn()) {
-            final File file = getArtifactFromMvn(artifactId);
+            final Path file = getArtifactFromMvn(artifactId);
             if (file != null) {
                 return new ArtifactHandler(file);
             }
@@ -343,7 +342,7 @@ public class ArtifactManager
 
         private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-        private File cacheDir;
+        private Path cacheDir;
 
         private boolean isNewlyCreatedCacheDir;
         private ArtifactProviderContext config;
@@ -355,7 +354,7 @@ public class ArtifactManager
 
         @Override
         public void init(final ArtifactProviderContext config) throws IOException {
-            this.cacheDir = config.getCacheDirectory();
+            this.cacheDir = config.getCacheDirectory().toPath();
             if (cacheDir == null) {
                 this.cacheDir = Files.createTempDirectory("slingfeature").toFile();
                 isNewlyCreatedCacheDir = true;
@@ -388,10 +387,10 @@ public class ArtifactManager
             logger.debug("Checking url to be local file {}", url);
             // check if this is already a local file
             try {
-                final File f = new File(new URL(url).toURI());
-                if (f.exists()) {
+                final Path f = Paths.get(new URL(url).toURI());
+                if (Files.exists(f)) {
                     this.config.incLocalArtifacts();
-                    return f.toURI().toURL();
+                    return f.toUri().toURL();
                 }
                 return null;
             } catch ( final URISyntaxException ise) {
@@ -414,11 +413,9 @@ public class ArtifactManager
                 if(pos >= 0) {
                     adjustedRelativePath = adjustedRelativePath.substring(pos + 2);
                 }
-                final String filePath = (this.cacheDir.getAbsolutePath() + File.separatorChar + adjustedRelativePath).replace('/', File.separatorChar);
-                final File cacheFile = new File(filePath);
-
-                if ( !cacheFile.exists() ) {
-                    cacheFile.getParentFile().mkdirs();
+                Path cacheFile = cacheDir.resolve(adjustedRelativePath.replace("/", java.nio.file.FileSystems.getDefault().getSeparator()));
+                if (!Files.exists(cacheFile) ) {
+                    Files.createDirectories(cacheFile.getParent());
                     final URL u = new URL(url);
                     final URLConnection con = u.openConnection();
                     final String userInfo = u.getUserInfo();
@@ -427,9 +424,8 @@ public class ArtifactManager
                     }
                     con.connect();
 
-                    final InputStream readIS = con.getInputStream();
-                    try {
-                        copyFileContent(readIS, cacheFile, 32768);
+                    try (InputStream input = con.getInputStream()){
+                        Files.copy(input, cacheFile);
                     } catch(IOException e) {
                         //TODO: Remove this logging statement when it settled down
                         logger.debug("Failed to copy file", e);
@@ -439,11 +435,7 @@ public class ArtifactManager
                 } else {
                     this.config.incCachedArtifacts();
                 }
-                return cacheFile.toURI().toURL();
-            } catch ( final FileNotFoundException e) {
-                logger.trace("File not found here (keep on looking): '{}'", url);
-                // Do not report if the file does not exist as we cycle through the various sources
-                return null;
+                return cacheFile.toUri().toURL();
             } catch ( final Exception e) {
                 logger.info("Artifact not found in one repository", e);
                 // ignore for now
@@ -455,52 +447,25 @@ public class ArtifactManager
         public String toString() {
             return "DefaultArtifactHandler";
         }
-
-        private void copyFileContent(InputStream readIS, File cacheFile, int bufferSize) throws IOException {
-            final byte[] buffer = new byte[bufferSize];
-            int l;
-            OutputStream os = null;
-            try {
-                os = new FileOutputStream(cacheFile);
-                while ( (l = readIS.read(buffer)) >= 0 ) {
-                    os.write(buffer, 0, l);
-                }
-            } finally {
-                try {
-                    readIS.close();
-                } catch ( final IOException ignore) {
-                    // ignore
-                }
-                if ( os != null ) {
-                    try {
-                        os.close();
-                    } catch ( final IOException ignore ) {
-                        // ignore
-                    }
-                }
-            }
-        }
     }
 
-    private File getArtifactFromMvn(final ArtifactId artifactId) {
-        final String filePath = this.config.getMvnHome()
-                .concat(artifactId.toMvnPath().replace('/', File.separatorChar));
+    private Path getArtifactFromMvn(final ArtifactId artifactId) {
+        final Path filePath = Paths.get(config.getMvnHome(), artifactId.toMvnPath().replace("/", java.nio.file.FileSystems.getDefault().getSeparator()));
         logger.debug("Trying to fetch artifact {} from local mvn repository {}", artifactId.toMvnId(), filePath);
-        final File f = new File(filePath);
-        if (!f.exists() || !f.isFile() || !f.canRead()) {
+        if (!Files.exists(filePath) || !Files.isRegularFile(filePath) || Files.isReadable(filePath)) {
             logger.debug("Trying to download {}", artifactId.toMvnId());
             try {
                 this.downloadArtifact(artifactId);
             } catch (final IOException ioe) {
                 logger.debug("Error downloading file.", ioe);
             }
-            if (!f.exists() || !f.isFile() || !f.canRead()) {
+            if (!Files.exists(filePath) || !Files.isRegularFile(filePath) || !Files.isReadable(filePath)) {
                 logger.info("Artifact not found {}", artifactId.toMvnId());
 
                 return null;
             }
         }
-        return f;
+        return filePath;
     }
 
     /**
@@ -537,15 +502,15 @@ public class ArtifactManager
             logger.debug("Writing pom to {}", dir);
             Files.write(dir.resolve("pom.xml"), lines, Charset.forName("UTF-8"));
 
-            final File output = dir.resolve("output.txt").toFile();
-            final File error = dir.resolve("error.txt").toFile();
+            final Path output = dir.resolve("output.txt");
+            final Path error = dir.resolve("error.txt");
 
             // invoke maven
             logger.debug("Invoking mvn...");
             final ProcessBuilder pb = new ProcessBuilder("mvn", "verify");
             pb.directory(dir.toFile());
-            pb.redirectOutput(Redirect.to(output));
-            pb.redirectError(Redirect.to(error));
+            pb.redirectOutput(Redirect.to(output.toFile()));
+            pb.redirectError(Redirect.to(error.toFile()));
 
             final Process p = pb.start();
             try {
@@ -555,7 +520,16 @@ public class ArtifactManager
             }
 
         } finally {
-            Files.walk(dir).sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
+            deleteDirectoryRecursively(dir);
+        }
+    }
+
+    private static void deleteDirectoryRecursively(Path directory) throws IOException {
+        try (Stream<Path> filesStream = Files.walk(directory)) {
+            final List<Path> pathsToDelete = filesStream.sorted(Comparator.reverseOrder()).collect(Collectors.toList());
+            for(Path path : pathsToDelete) {
+                Files.deleteIfExists(path);
+            }
         }
     }
 }
