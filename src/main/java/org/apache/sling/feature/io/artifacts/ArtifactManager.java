@@ -361,7 +361,19 @@ public class ArtifactManager
         @Override
         public void shutdown() {
             this.config = null;
+            deleteDir(cacheDir);
             this.cacheDir = null;
+        }
+
+        /** recursively delete directory */
+        private static void deleteDir(File dir) {
+            File[] files = dir.listFiles();
+            if(files != null) {
+                for (final File file : files) {
+                    deleteDir(file);
+                }
+            }
+            dir.delete();
         }
 
         @Override

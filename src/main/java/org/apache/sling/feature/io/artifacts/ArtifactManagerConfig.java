@@ -62,11 +62,6 @@ public class ArtifactManagerConfig implements ArtifactProviderContext {
                 "https://repo.maven.apache.org/maven2",
                 "https://repository.apache.org/content/groups/snapshots"
                 };
-        try {
-            this.cacheDirectory = Files.createTempDirectory("slingfeature").toFile();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
         this.repoHome = System.getProperty("user.home") + "/.m2/repository/";
     }
 
@@ -103,7 +98,20 @@ public class ArtifactManagerConfig implements ArtifactProviderContext {
      */
     @Override
     public File getCacheDirectory() {
+        if (cacheDirectory == null) {
+            initCacheDirectory();
+        }
         return cacheDirectory;
+    }
+
+    private synchronized void initCacheDirectory() {
+        if (cacheDirectory == null) {
+            try {
+                this.cacheDirectory = Files.createTempDirectory("slingfeature").toFile();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     /**
