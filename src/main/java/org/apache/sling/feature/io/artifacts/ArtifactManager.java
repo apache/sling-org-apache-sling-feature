@@ -119,6 +119,19 @@ public class ArtifactManager
 
     /**
      * Shutdown the artifact manager.
+     * @deprecated Use {@link #close()} instead.
+     */
+    @Deprecated
+    public void shutdown() {
+        try {
+            close();
+        } catch (IOException e) {
+            logger.warn("Error shutting down ArtifactManager", e);
+        }
+    }
+
+    /**
+     * Shutdown the artifact manager.
      * @throws IOException 
      */
     @Override
