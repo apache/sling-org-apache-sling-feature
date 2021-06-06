@@ -17,11 +17,11 @@
 package org.apache.sling.feature.io.artifacts;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.sling.feature.io.artifacts.spi.ArtifactProviderContext;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * This class holds the configuration of artifact manager.
@@ -50,7 +50,7 @@ public class ArtifactManagerConfig implements ArtifactProviderContext {
     /**
      * The .m2 directory.
      */
-    private final String repoHome;
+    private final @NotNull String repoHome;
 
     /**
      * Create a new configuration object. Set the default values
@@ -71,7 +71,7 @@ public class ArtifactManagerConfig implements ArtifactProviderContext {
      */
     public void setRepositoryUrls(final String[] urls) {
         if ( urls == null || urls.length == 0 ) {
-            this.repositoryUrls = null;
+            this.repositoryUrls = new String[0];
         } else {
             this.repositoryUrls = new String[urls.length];
             System.arraycopy(urls, 0, this.repositoryUrls, 0, urls.length);
@@ -88,30 +88,17 @@ public class ArtifactManagerConfig implements ArtifactProviderContext {
      * A repository url does not end with a slash.
      * @return The repository urls.
      */
-    public String[] getRepositoryUrls() {
+    public @NotNull String[] getRepositoryUrls() {
         return repositoryUrls;
     }
 
     /**
      * Get the cache directory
-     * @return The cache directory.
+     * @return The cache directory or {@code null} if none has been set
      */
     @Override
-    public File getCacheDirectory() {
-        if (cacheDirectory == null) {
-            initCacheDirectory();
-        }
+    public @Nullable File getCacheDirectory() {
         return cacheDirectory;
-    }
-
-    private synchronized void initCacheDirectory() {
-        if (cacheDirectory == null) {
-            try {
-                this.cacheDirectory = Files.createTempDirectory("slingfeature").toFile();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
     }
 
     /**
@@ -186,7 +173,7 @@ public class ArtifactManagerConfig implements ArtifactProviderContext {
      * 
      * @since 1.1.0
      */
-    String getMvnHome() {
+    @NotNull String getMvnHome() {
         return this.repoHome;
     }
 }

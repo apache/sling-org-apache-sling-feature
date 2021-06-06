@@ -345,6 +345,7 @@ public class ArtifactManager
 
         private File cacheDir;
 
+        private boolean isNewlyCreatedCacheDir;
         private ArtifactProviderContext config;
 
         @Override
@@ -355,13 +356,19 @@ public class ArtifactManager
         @Override
         public void init(final ArtifactProviderContext config) throws IOException {
             this.cacheDir = config.getCacheDirectory();
+            if (cacheDir == null) {
+                this.cacheDir = Files.createTempDirectory("slingfeature").toFile();
+                isNewlyCreatedCacheDir = true;
+            }
             this.config = config;
         }
 
         @Override
         public void shutdown() {
             this.config = null;
-            deleteDir(cacheDir);
+            if (isNewlyCreatedCacheDir) {
+                deleteDir(cacheDir);
+            }
             this.cacheDir = null;
         }
 
