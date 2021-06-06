@@ -356,7 +356,7 @@ public class ArtifactManager
         public void init(final ArtifactProviderContext config) throws IOException {
             this.cacheDir = config.getCacheDirectory().toPath();
             if (cacheDir == null) {
-                this.cacheDir = Files.createTempDirectory("slingfeature").toFile();
+                this.cacheDir = Files.createTempDirectory("slingfeature");
                 isNewlyCreatedCacheDir = true;
             }
             this.config = config;
@@ -366,20 +366,13 @@ public class ArtifactManager
         public void shutdown() {
             this.config = null;
             if (isNewlyCreatedCacheDir) {
-                deleteDir(cacheDir);
-            }
-            this.cacheDir = null;
-        }
-
-        /** recursively delete directory */
-        private static void deleteDir(File dir) {
-            File[] files = dir.listFiles();
-            if(files != null) {
-                for (final File file : files) {
-                    deleteDir(file);
+                try {
+                    deleteDirectoryRecursively(cacheDir);
+                } catch (IOException e) {
+                    logger.warn("Could not remove temp directory at " + cacheDir, e);
                 }
             }
-            dir.delete();
+            this.cacheDir = null;
         }
 
         @Override
