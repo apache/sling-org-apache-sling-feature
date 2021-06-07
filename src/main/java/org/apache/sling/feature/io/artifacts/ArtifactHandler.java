@@ -19,6 +19,7 @@ package org.apache.sling.feature.io.artifacts;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Path;
 
 /**
  * A handler provides a file object for an artifact.
@@ -49,6 +50,17 @@ public class ArtifactHandler {
      */
     public ArtifactHandler(final File file) throws MalformedURLException {
         this(file.toURI().toString(), file.toURI().toURL());
+    }
+
+    /**
+     * Create a new handler.
+     *
+     * @param file The file for the artifact
+     * @throws MalformedURLException If the file name cannot be converted to a URL.
+     * @since 1.2.0
+     */
+    public ArtifactHandler(final Path file) throws MalformedURLException {
+        this(file.toUri().toString(), file.toUri().toURL());
     }
 
     /**
