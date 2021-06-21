@@ -325,6 +325,31 @@ public class FeatureBuilderTest {
         assertArrayEquals(a.getFeatureOrigins(), b.getFeatureOrigins());
     }
 
+    @Test public void testDistinctOrigionsArtifacts() {
+        Feature a = new Feature(ArtifactId.fromMvnId("g:a:1"));
+        Feature b = new Feature(ArtifactId.fromMvnId("g:b:1"));
+
+        Extension extensionA = new Extension(ExtensionType.ARTIFACTS, Extension.EXTENSION_NAME_CONTENT_PACKAGES, ExtensionState.OPTIONAL);
+        a.getExtensions().add(extensionA);
+
+        Extension extensionB = new Extension(ExtensionType.ARTIFACTS, Extension.EXTENSION_NAME_CONTENT_PACKAGES, ExtensionState.OPTIONAL);
+        b.getExtensions().add(extensionB);
+
+        extensionA.getArtifacts().add(BuilderUtilTest.createBundle("o/a/1.0.0", 10));
+        extensionB.getArtifacts().add(BuilderUtilTest.createBundle("o/b/1.0.0", 8));
+
+        Feature ab = new Feature(ArtifactId.fromMvnId("g:ab:1"));
+        Extension extensionAB = new Extension(ExtensionType.ARTIFACTS, Extension.EXTENSION_NAME_CONTENT_PACKAGES, ExtensionState.OPTIONAL);
+
+        extensionAB.getArtifacts().add(BuilderUtilTest.createBundle("o/a/1.0.0", 10, new AbstractMap.SimpleEntry<>(Artifact.KEY_FEATURE_ORIGINS, a.getId().toMvnId())));
+        extensionAB.getArtifacts().add(BuilderUtilTest.createBundle("o/b/1.0.0", 8, new AbstractMap.SimpleEntry<>(Artifact.KEY_FEATURE_ORIGINS, b.getId().toMvnId())));
+
+        ab.getExtensions().add(extensionAB);
+        Feature assembled = FeatureBuilder.assemble(ArtifactId.fromMvnId("g:ab:1"), new BuilderContext(provider), a, b);
+        assembled.getExtensions().remove(assembled.getExtensions().getByName(Extension.EXTENSION_NAME_ASSEMBLED_FEATURES));
+        equals(ab, assembled);
+    }
+
 
     @Test public void testNoIncludesNoUpgrade() throws Exception {
         final Feature base = new Feature(ArtifactId.parse("org.apache.sling/test-feature/1.1"));
