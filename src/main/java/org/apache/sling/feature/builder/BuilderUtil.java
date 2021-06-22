@@ -592,40 +592,43 @@ class BuilderUtil {
             final String originKey) {
         switch ( target.getType() ) {
             case TEXT : // simply append
-                target.setText(target.getText() + "\n" + source.getText());
+                target.setText((target.getText() != null && !target.getText().trim().isEmpty() ? (target.getText() + "\n") : "") + source.getText());
                 break;
             case JSON : JsonStructure struct1;
-                try ( final StringReader reader = new StringReader(target.getJSON()) ) {
-                    struct1 = Json.createReader(reader).read();
-                }
-                JsonStructure struct2;
-                try ( final StringReader reader = new StringReader(source.getJSON()) ) {
-                    struct2 = Json.createReader(reader).read();
-                }
+                if (target.getJSON() != null) {
+                    try (final StringReader reader = new StringReader(target.getJSON())) {
+                        struct1 = Json.createReader(reader).read();
+                    }
+                    JsonStructure struct2;
+                    try (final StringReader reader = new StringReader(source.getJSON())) {
+                        struct2 = Json.createReader(reader).read();
+                    }
 
-                if ( struct1.getValueType() != struct2.getValueType() ) {
-                    throw new IllegalStateException("Found different JSON types for extension " + target.getName()
-                        + " : " + struct1.getValueType() + " and " + struct2.getValueType());
-                }
-                if ( struct1.getValueType() == ValueType.ARRAY ) {
-                    final JsonArrayBuilder builder = Json.createArrayBuilder();
+                    if (struct1.getValueType() != struct2.getValueType()) {
+                        throw new IllegalStateException("Found different JSON types for extension " + target.getName()
+                                + " : " + struct1.getValueType() + " and " + struct2.getValueType());
+                    }
+                    if (struct1.getValueType() == ValueType.ARRAY) {
+                        final JsonArrayBuilder builder = Json.createArrayBuilder();
 
-                    Stream.concat(
-                        ((JsonArray) struct1).stream(),
-                        ((JsonArray) struct2).stream()
-                    ).forEachOrdered(builder::add);
+                        Stream.concat(
+                                ((JsonArray) struct1).stream(),
+                                ((JsonArray) struct2).stream()
+                        ).forEachOrdered(builder::add);
 
-                    struct1 = builder.build();
+                        struct1 = builder.build();
+                    } else {
+                        // object is merge
+                        struct1 = merge((JsonObject) struct1, (JsonObject) struct2);
+                    }
+                    StringWriter buffer = new StringWriter();
+                    try (JsonWriter writer = Json.createWriter(buffer)) {
+                        writer.write(struct1);
+                    }
+                    target.setJSON(buffer.toString());
                 } else {
-                    // object is merge
-                    struct1 = merge((JsonObject)struct1, (JsonObject)struct2);
+                    target.setJSON(source.getJSON());
                 }
-                StringWriter buffer = new StringWriter();
-                try (JsonWriter writer = Json.createWriter(buffer))
-                {
-                    writer.write(struct1);
-                }
-                target.setJSON(buffer.toString());
                 break;
 
         case ARTIFACTS:
@@ -679,8 +682,10 @@ class BuilderUtil {
                     }
                 }
                 if ( !handled ) {
-                    // no merge handler, just add a copy
-                    target.getExtensions().add(ext.copy());
+                    // no merge handler, just merge with an empty target
+                    Extension current = new Extension(ext.getType(), ext.getName(), ext.getState());
+                    target.getExtensions().add(current);
+                    mergeExtensions(current, ext, source, artifactOverrides, originKey);
                 }
             }
         }
