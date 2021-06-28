@@ -17,6 +17,7 @@
 package org.apache.sling.feature.io.artifacts;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -354,8 +355,10 @@ public class ArtifactManager
 
         @Override
         public void init(final ArtifactProviderContext config) throws IOException {
-            this.cacheDir = config.getCacheDirectory().toPath();
-            if (cacheDir == null) {
+            File cd = config.getCacheDirectory();
+            if (cd != null) {
+                this.cacheDir = cd.toPath();
+            } else {
                 this.cacheDir = Files.createTempDirectory("slingfeature");
                 isNewlyCreatedCacheDir = true;
             }

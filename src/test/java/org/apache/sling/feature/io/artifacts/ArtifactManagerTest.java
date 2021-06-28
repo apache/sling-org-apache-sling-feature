@@ -18,11 +18,14 @@ package org.apache.sling.feature.io.artifacts;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -92,5 +95,24 @@ public class ArtifactManagerTest {
         final ArtifactHandler handler = mgr.getArtifactHandler("mvn:group/artifact/1.0.0-SNAPSHOT/txt");
         assertNotNull(handler);
         assertEquals(artifactFile, handler.getLocalURL());
+    }
+
+    @Test public void testGetArtifactManager() throws Exception {
+        ArtifactManagerConfig cfg = new ArtifactManagerConfig();
+        ArtifactManager am = ArtifactManager.getArtifactManager(cfg);
+
+        am.shutdown();
+    }
+
+    @Test public void testGetArtifactManagerWithCachedir() throws Exception {
+        ArtifactManagerConfig cfg = new ArtifactManagerConfig();
+        Path tempDir = Files.createTempDirectory("testGetArtifactManagerWithCachedir");
+        cfg.setCacheDirectory(tempDir.toFile());
+
+        ArtifactManager am = ArtifactManager.getArtifactManager(cfg);
+
+        am.shutdown();
+        assertTrue(tempDir.toFile().isDirectory());
+        assertTrue(tempDir.toFile().delete());
     }
 }
