@@ -17,7 +17,7 @@
  * under the License.
  */
 
-@org.osgi.annotation.versioning.Version("1.7.1")
+@org.osgi.annotation.versioning.Version("1.8.0")
 package org.apache.sling.feature;
 
 

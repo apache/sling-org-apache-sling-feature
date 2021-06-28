@@ -122,4 +122,52 @@ public class ConfigurationTest {
         assertEquals("As keys are case insensitive, there should just be 1 key",
                 1, c1.getProperties().size());
     }
+
+    @Test
+    public void testPropertyFeatureOrigins() {
+        final ArtifactId self = ArtifactId.parse("self:self:1");
+
+        final Configuration cfg = new Configuration("foo");
+        cfg.getProperties().put("a", true);
+        assertTrue(cfg.getFeatureOrigins("a").isEmpty());
+        assertNull(cfg.getConfigurationProperties().get(Configuration.PROP_FEATURE_ORIGINS.concat("-").concat("a")));
+        assertNull(cfg.getProperties().get(Configuration.PROP_FEATURE_ORIGINS.concat("-").concat("a")));
+        assertEquals(1, cfg.getFeatureOrigins("a", self).size());
+        assertEquals(self, cfg.getFeatureOrigins("a", self).get(0));
+
+        // single id
+        final ArtifactId id = ArtifactId.parse("g:a:1");
+        cfg.setFeatureOrigins("a", Collections.singletonList(id));
+        assertEquals(1, cfg.getFeatureOrigins("a").size());
+        assertEquals(id, cfg.getFeatureOrigins("a").get(0));
+        assertEquals(1, cfg.getFeatureOrigins("a", self).size());
+        assertEquals(id, cfg.getFeatureOrigins("a", self).get(0));
+
+        assertNull(cfg.getConfigurationProperties().get(Configuration.PROP_FEATURE_ORIGINS.concat("-").concat("a")));
+        assertNotNull(cfg.getProperties().get(Configuration.PROP_FEATURE_ORIGINS.concat("-").concat("a")));
+        final String[] array = (String[]) cfg.getProperties().get(Configuration.PROP_FEATURE_ORIGINS.concat("-").concat("a"));
+        assertArrayEquals(new String[] {id.toMvnId()}, array);
+
+        // add another id
+        final ArtifactId id2 = ArtifactId.parse("g:b:2");
+        cfg.setFeatureOrigins("a", Arrays.asList(id, id2));
+        assertEquals(2, cfg.getFeatureOrigins("a").size());
+        assertEquals(id, cfg.getFeatureOrigins("a").get(0));
+        assertEquals(id2, cfg.getFeatureOrigins("a").get(1));
+        assertEquals(2, cfg.getFeatureOrigins("a", self).size());
+        assertEquals(id, cfg.getFeatureOrigins("a", self).get(0));
+        assertEquals(id2, cfg.getFeatureOrigins("a", self).get(1));
+
+        assertNull(cfg.getConfigurationProperties().get(Configuration.PROP_FEATURE_ORIGINS.concat("-").concat("a")));
+        assertNotNull(cfg.getProperties().get(Configuration.PROP_FEATURE_ORIGINS.concat("-").concat("a")));
+        final String[] array2 = (String[]) cfg.getProperties().get(Configuration.PROP_FEATURE_ORIGINS.concat("-").concat("a"));
+        assertArrayEquals(new String[] {id.toMvnId(), id2.toMvnId()}, array2);
+
+        // remove
+        cfg.getProperties().remove("a");
+        cfg.setFeatureOrigins("a", null);
+        assertTrue(cfg.getFeatureOrigins("a").isEmpty());
+        assertNull(cfg.getConfigurationProperties().get(Configuration.PROP_FEATURE_ORIGINS.concat("-").concat("a")));
+        assertNull(cfg.getProperties().get(Configuration.PROP_FEATURE_ORIGINS.concat("-").concat("a")));
+    }
 }

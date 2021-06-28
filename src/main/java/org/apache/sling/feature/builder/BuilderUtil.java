@@ -450,6 +450,7 @@ class BuilderUtil {
                             target.remove(found);
                             found = cfg.copy(cfg.getPid());
                             target.add(idx, found);
+                            setPropertyFeatureOrigins(found, sourceFeatureId);
                             handled = true;
                         } else if (BuilderContext.CONFIG_FAIL_ON_PROPERTY_CLASH.equals(override.getValue())){
                             final List<ArtifactId> origins = found.getFeatureOrigins();
@@ -459,6 +460,7 @@ class BuilderUtil {
                                     break outer;
                                 } else {
                                     found.getProperties().put(key, cfg.getProperties().get(key));
+                                    cfg.setFeatureOrigins(key, cfg.getFeatureOrigins(key, sourceFeatureId));
                                 }
                             }
                             // restore origin
@@ -469,11 +471,15 @@ class BuilderUtil {
                             for (Enumeration<String> i = cfg.getProperties().keys(); i.hasMoreElements(); ) {
                                 final String key = i.nextElement();
                                 found.getProperties().put(key, cfg.getProperties().get(key));
+                                final List<ArtifactId> propOrigins = new ArrayList<>(found.getFeatureOrigins(key));
+                                propOrigins.addAll(cfg.getFeatureOrigins(key, sourceFeatureId));
+                                found.setFeatureOrigins(key, propOrigins);
                             }
                             // restore origin
                             found.setFeatureOrigins(origins);
                             handled = true;
                         } else if (BuilderContext.CONFIG_USE_FIRST.equals(override.getValue())) {
+                            // no need to update property origins
                             handled = true;
                             found = null;
                         } else if (BuilderContext.CONFIG_MERGE_FIRST.equals(override.getValue())) {
@@ -482,6 +488,7 @@ class BuilderUtil {
                                 final String key = i.nextElement();
                                 if (found.getProperties().get(key) == null) {
                                     found.getProperties().put(key, cfg.getProperties().get(key));
+                                    cfg.setFeatureOrigins(key, cfg.getFeatureOrigins(key, sourceFeatureId));
                                 }
                             }
                             // restore origin
@@ -499,6 +506,7 @@ class BuilderUtil {
                 // create new configuration
                 found = cfg.copy(cfg.getPid());
                 target.add(found);
+                setPropertyFeatureOrigins(found, sourceFeatureId);
                 if ( !found.getFeatureOrigins().isEmpty() ) {
                     found = null;
                 }
@@ -509,6 +517,12 @@ class BuilderUtil {
                 origins.addAll(sourceOrigins);
                 found.setFeatureOrigins(origins);    
             }
+        }
+    }
+
+    private static void setPropertyFeatureOrigins(final Configuration cfg, final ArtifactId sourceFeatureId) {
+        for(final String propName : Collections.list(cfg.getConfigurationProperties().keys())) {
+            cfg.setFeatureOrigins(propName, cfg.getFeatureOrigins(propName, sourceFeatureId));
         }
     }
 

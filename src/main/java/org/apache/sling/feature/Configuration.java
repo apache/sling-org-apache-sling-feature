@@ -236,7 +236,68 @@ public class Configuration
             this.properties.put(PROP_FEATURE_ORIGINS, values);
         }
     }
-    
+
+    /**
+     * Get the feature origins for a property - if recorded
+     * 
+     * @param propertyName The name of the property
+     * @return A immutable list of feature artifact ids - list might be empty
+     * @since 1.8
+     * @throws IllegalArgumentException If the stored values are not valid artifact ids
+     */
+    public List<ArtifactId> getFeatureOrigins(final String propertyName) {
+        final List<ArtifactId> list = new ArrayList<>();
+        final Object origins = this.properties.get(PROP_FEATURE_ORIGINS.concat("-").concat(propertyName));
+        if ( origins != null ) {
+            final String[] values = Converters.standardConverter().convert(origins).to(String[].class);
+            for(final String v : values) {
+                list.add(ArtifactId.parse(v));
+            }
+        }
+        return Collections.unmodifiableList(list);
+    }
+
+    /**
+     * Get the feature origins for a property.
+     * If no origins are recorded, the provided id is returned.
+     * 
+     * @param propertyName The name of the property
+     * @param self The id of the current feature
+     * @return A immutable list of feature artifact ids
+     * @since 1.8
+     * @throws IllegalArgumentException If the stored values are not valid artifact ids
+     */
+    public List<ArtifactId> getFeatureOrigins(final String propertyName, final ArtifactId self) {
+        final List<ArtifactId> list = new ArrayList<>();
+        final Object origins = this.properties.get(PROP_FEATURE_ORIGINS.concat("-").concat(propertyName));
+        if ( origins != null ) {
+            final String[] values = Converters.standardConverter().convert(origins).to(String[].class);
+            for(final String v : values) {
+                list.add(ArtifactId.parse(v));
+            }
+        }
+        if ( list.isEmpty() ) {
+            list.add(self);
+        }
+        return Collections.unmodifiableList(list);
+    }
+
+    /**
+     * Set the feature origins for a property
+     * @param propertyName The name of the property
+     * @param featureOrigins the list of artifact ids or null to remove the info from this object
+     * @since 1.8
+     */
+    public void setFeatureOrigins(final String propertyName, final List<ArtifactId> featureOrigins) {
+        if ( featureOrigins == null || featureOrigins.isEmpty() ) {
+            this.properties.remove(PROP_FEATURE_ORIGINS.concat("-").concat(propertyName));
+        } else {
+            final List<String> list = featureOrigins.stream().map(ArtifactId::toMvnId).collect(Collectors.toList());
+            final String[] values = Converters.standardConverter().convert(list).to(String[].class);
+            this.properties.put(PROP_FEATURE_ORIGINS.concat("-").concat(propertyName), values);
+        }
+    }
+
     /**
      * Get the configuration properties of the configuration. This configuration
      * properties are all properties minus properties used to manage the
