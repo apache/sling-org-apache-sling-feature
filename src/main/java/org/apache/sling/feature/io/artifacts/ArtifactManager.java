@@ -24,10 +24,12 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.ProcessBuilder.Redirect;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -383,15 +385,16 @@ public class ArtifactManager
             logger.debug("Checking url to be local file {}", url);
             // check if this is already a local file
             try {
-                final Path f = Paths.get(new URL(url).toURI());
-                if (Files.exists(f)) {
-                    this.config.incLocalArtifacts();
-                    return f.toUri().toURL();
+                URI uri = new URI(url);
+                if (FileSystems.getDefault().provider().getScheme().equals(uri.getScheme())) {
+                    final Path f = Paths.get(uri);
+                    if (Files.exists(f)) {
+                        this.config.incLocalArtifacts();
+                        return f.toUri().toURL();
+                    }
+                    return null;
                 }
-                return null;
             } catch ( final URISyntaxException ise) {
-                // ignore
-            } catch ( final IllegalArgumentException iae) {
                 // ignore
             } catch ( final MalformedURLException mue) {
                 // ignore
