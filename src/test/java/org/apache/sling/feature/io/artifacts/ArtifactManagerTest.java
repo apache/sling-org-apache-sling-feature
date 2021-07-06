@@ -22,12 +22,17 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLStreamHandler;
+import java.net.URLStreamHandlerFactory;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 import org.apache.sling.feature.io.artifacts.spi.ArtifactProvider;
 import org.junit.Test;
@@ -114,5 +119,37 @@ public class ArtifactManagerTest {
         am.shutdown();
         assertTrue(tempDir.toFile().isDirectory());
         assertTrue(tempDir.toFile().delete());
+    }
+
+    @Test public void testGetArtifactHandler() throws Exception {
+        ArtifactManagerConfig cfg = new ArtifactManagerConfig();
+        cfg.setRepositoryUrls(new String[]{"https://repo.maven.apache.org/maven2"});
+
+        ArtifactManager am = ArtifactManager.getArtifactManager(cfg);
+
+        assertNotNull(am.getArtifactHandler(":org/apache/felix/org.apache.felix.framework/7.0.1/org.apache.felix.framework-7.0.1.jar"));
+        assertNotNull(am.getArtifactHandler("mvn:org.apache.felix/org.apache.felix.framework/7.0.1"));
+        assertNotNull(am.getArtifactHandler("src/test/resources/m2/org/apache/felix/org.apache.felix.framework/7.0.1/org.apache.felix.framework-7.0.1.jar"));
+
+        String fooProtocol = "foo" + new Random().nextLong();
+        URL.setURLStreamHandlerFactory(new URLStreamHandlerFactory() {
+            @Override
+            public URLStreamHandler createURLStreamHandler(String protocol) {
+                if (fooProtocol.equals(protocol)) {
+                    return new URLStreamHandler() {
+                        @Override
+                        protected URLConnection openConnection(URL u) throws IOException {
+                            return new File("src/test/resources/m2/org/apache/felix/org.apache.felix.framework/7.0.1/org.apache.felix.framework-7.0.1.jar").toURL().openConnection();
+                        }
+                    };
+                }
+                else {
+                    return null;
+                }
+            }
+        });
+        assertNotNull(am.getArtifactHandler(fooProtocol + ":/felix.jar"));
+
+        am.shutdown();
     }
 }
