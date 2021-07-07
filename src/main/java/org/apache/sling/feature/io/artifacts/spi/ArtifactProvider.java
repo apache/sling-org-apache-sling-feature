@@ -16,6 +16,7 @@
  */
 package org.apache.sling.feature.io.artifacts.spi;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.net.URL;
 
@@ -26,7 +27,7 @@ import org.osgi.annotation.versioning.ConsumerType;
  * from different sources, like for example s3.
  */
 @ConsumerType
-public interface ArtifactProvider {
+public interface ArtifactProvider extends Closeable {
 
     /**
      * The protocol name of the provider, e.g. "s3"
@@ -43,8 +44,20 @@ public interface ArtifactProvider {
 
     /**
      * Shutdown the provider.
+     * @deprecated Use {@link #close()} instead.
      */
-    void shutdown();
+    @Deprecated
+    default void shutdown() {
+        
+    }
+
+    /**
+     * Shutdown the provider.
+     */ 
+    @Override
+    default void close() throws IOException {
+        shutdown();
+    }
 
     /**
      * Get a local file for the artifact URL.
