@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://sling.apache.org/Feature/1.0.0",
+  "$id": "http://sling.apache.org/Feature/1.0.1",
   "type": "object",
   "properties": {
     "model-version": {
@@ -106,7 +106,7 @@
           "type": "string",
           "pattern": "^(([^: ]+):([^: ]+)(:([^: ]*)(:([^: ]+))?)?:([^: ]+)|(mvn:)?([^/ ]+)/([^/ ]+)(/([^/ ]+))?(/([^/ ]*)(/([^/ ]+))?)?)$"
         },
-        "start-level": {
+        "start-order": {
           "type": [ "string", "number" ],
           "pattern": "^\\d+$"
         },
