@@ -73,6 +73,8 @@ Multiple versions of a bundle with the same group ID, artifact ID (,classifier a
 
 Bundles usually have requirements, for example they contain package imports - such requirements can be satisfied either by other bundles from the same or other features. Or in other words, a feature must not be complete and fulfill all requirements mentioned within the parts of the feature.
 
+Sometimes there is the need to define an order for the startup of bundles. A bundle's metadata can be defined to contain the optional start-order for each bundle. The start-order metadata specifies the start order of the bundle in relation to other bundles in the same feature. Bundles with the same start-order value may be started and stopped in any order in relation to each other. There is no default value for start-order.
+
 ## OSGi Configurations
 
 OSGi configurations are specified in the `configurations` section of the feature model as a JSON object. The format for configurations is using the standard OSGi configuration resource format as defined by the [OSGi Configurator

@@ -21,6 +21,7 @@ The model is a general purpose feature model and in no way tied to Apache Sling.
 ## Features
 
 In a nutshell, a feature is the central entity for the Feature Model. A feature is described through a JSON object and can contain:
+
 * Metadata like a unique identifier, description etc.
 * OSGi bundles
 * OSGi configurations
@@ -61,7 +62,7 @@ Overrides for variables defined in the feature models can be provided on the lau
 
 Tooling exists to analyze and validate features, and to aggregate and merge multiple features into a single
 feature, which can be used to create higher level features from a combination of lower-level ones. Most of
-the tooling is accessible through the slingfeature-maven-plugin: https://github.com/apache/sling-slingfeature-maven-plugin  
+the tooling is accessible through the [slingfeature-maven-plugin](https://github.com/apache/sling-slingfeature-maven-plugin).
 
 The following diagrams show a typical workflow when working with feature files:
 
@@ -78,14 +79,12 @@ they are validated for completeness and optionally additional features are pulle
 along with optional additional features the provide functionality on top of what is defined in the system feature.
 The Feature Launcher creates a running process containing an OSGi Framework provisioned with the feature's contents.
 
-
 # Launching
 
-A launcher for feature models is available in this project: https://github.com/apache/sling-org-apache-sling-feature-launcher
-
+A launcher for feature models is available in the [Apache Sling Feature Launcher](https://github.com/apache/sling-org-apache-sling-feature-launcher) project.
 
 # Tooling
 
-The primary tooling around the feature model is provided through Maven by the Sling Feature Maven Plugin: https://github.com/apache/sling-slingfeature-maven-plugin
+The primary tooling around the feature model is provided through Maven by the [Sling Feature Maven Plugin](https://github.com/apache/sling-slingfeature-maven-plugin)
 
 See the readme of the plugin for more information.  
