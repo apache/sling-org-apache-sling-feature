@@ -1,1 +1,2 @@
+-noimportjava: true
 -conditionalpackage: org.apache.felix.utils.*
