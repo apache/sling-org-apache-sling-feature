@@ -87,6 +87,24 @@ public class Feature implements Comparable<Feature> {
     /** The optional prototype. */
     private Prototype prototype;
 
+    /** 
+     * The optional categories 
+     * @since 1.9
+     */
+    private final List<String> categories = new ArrayList<>();
+
+    /**
+     * Optional document URL
+     * @since 1.9
+     */
+    private String docURL;
+
+    /**
+     * Optional scm info
+     * @since 1.9
+     */
+    private String scmInfo;
+
     /**
      * Construct a new feature.
      * @param id The id of the feature.
@@ -384,6 +402,53 @@ public class Feature implements Comparable<Feature> {
     }
 
     /**
+     * Get the list of categories
+     * @return The modifiable list, might be empty
+     * @since 1.9
+     */
+    public List<String> getCategories() {
+        return this.categories;
+    }
+
+    /**
+     * Get the optional document URL
+     * @return The document URL or {@code null}
+     * @since 1.9
+     */
+    public String getDocURL() {
+        return this.docURL;
+    }
+
+    /**
+     * Set the document URL
+     * @param url The url
+     * @since 1.9
+     */
+    public void setDocURL(final String url) {
+        this.docURL = url;
+    }
+
+    /**
+     * Get the SCM information relating to the feature. The syntax of the value follows the Bundle-SCM
+     * format. See the 'Bundle Manifest Headers' section in the OSGi Core specification.
+     * @return The SCM information or {@code null}
+     * @since 1.9
+     */
+    public String getSCMInfo() {
+        return this.scmInfo;
+    }
+
+    /**
+     * Set the SCM information
+     * @param info The SCM information
+     * @see #getSCMInfo()
+     * @since 1.9
+     */
+    public void setSCMInfo(final String info) {
+        this.scmInfo = info;
+    }
+
+    /**
      * Create a copy of the feature
      * @return A copy of the feature
      */
@@ -410,6 +475,9 @@ public class Feature implements Comparable<Feature> {
         result.setAssembled(this.isAssembled());
         result.setFinal(this.isFinal());
         result.setComplete(this.isComplete());
+        result.getCategories().addAll(this.getCategories());
+        result.setDocURL(this.getDocURL());
+        result.setSCMInfo(this.getSCMInfo());
 
         // variables
         result.getVariables().putAll(this.getVariables());

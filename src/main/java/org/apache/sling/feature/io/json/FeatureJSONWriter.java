@@ -376,11 +376,16 @@ public class FeatureJSONWriter {
             generator.write(JSONConstants.FEATURE_COMPLETE, true);
         }
 
-        // title, description, vendor, license
+        // title, description, vendor, license, docURL, scmInfo
         writeProperty(generator, JSONConstants.FEATURE_TITLE, feature.getTitle());
         writeProperty(generator, JSONConstants.FEATURE_DESCRIPTION, feature.getDescription());
         writeProperty(generator, JSONConstants.FEATURE_VENDOR, feature.getVendor());
         writeProperty(generator, JSONConstants.FEATURE_LICENSE, feature.getLicense());
+        writeProperty(generator, JSONConstants.FEATURE_DOC_URL, feature.getDocURL());
+        writeProperty(generator, JSONConstants.FEATURE_SCM_INFO, feature.getSCMInfo());
+
+        // categories
+        writeList(generator, JSONConstants.FEATURE_CATEGORIES, feature.getCategories());
 
         // variables
         writeVariables(generator, feature.getVariables());

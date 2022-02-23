@@ -691,11 +691,20 @@ public class FeatureJSONReader {
             this.feature.setComplete(checkTypeBoolean(JSONConstants.FEATURE_COMPLETE, json.get(JSONConstants.FEATURE_COMPLETE)));
         }
 
-        // title, description, vendor and license
+        // title, description, vendor and license, docURL, scmInfo
         this.feature.setTitle(getProperty(json, JSONConstants.FEATURE_TITLE));
         this.feature.setDescription(getProperty(json, JSONConstants.FEATURE_DESCRIPTION));
         this.feature.setVendor(getProperty(json, JSONConstants.FEATURE_VENDOR));
         this.feature.setLicense(getProperty(json, JSONConstants.FEATURE_LICENSE));
+        this.feature.setDocURL(getProperty(json, JSONConstants.FEATURE_DOC_URL));
+        this.feature.setSCMInfo(getProperty(json, JSONConstants.FEATURE_SCM_INFO));
+
+        // categories
+        if ( json.containsKey(JSONConstants.FEATURE_CATEGORIES) ) {
+            for(final JsonValue val : checkTypeArray(JSONConstants.FEATURE_CATEGORIES, json.get(JSONConstants.FEATURE_CATEGORIES))) {
+                this.feature.getCategories().add(checkTypeString("Categories", val));
+            }
+        }
 
         this.readVariables(json, feature.getVariables());
         this.readBundles(json, feature.getBundles(), feature.getConfigurations());
