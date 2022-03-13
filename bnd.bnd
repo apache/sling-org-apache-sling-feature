@@ -1,2 +1,3 @@
+Import-Package: org.osgi.service.feature;resolution:=dynamic,*
 -noimportjava: true
 -conditionalpackage: org.apache.felix.utils.*

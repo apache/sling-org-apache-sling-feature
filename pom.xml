@@ -22,7 +22,7 @@
     </parent>
 
     <artifactId>org.apache.sling.feature</artifactId>
-    <version>1.2.31-SNAPSHOT</version>
+    <version>1.3.0-SNAPSHOT</version>
 
     <name>Apache Sling Feature Model</name>
     <description>
@@ -105,6 +105,12 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.feature</artifactId>
+            <version>1.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.utils</artifactId>
             <version>1.11.8</version>
@@ -138,6 +144,12 @@
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.util.function</artifactId>
             <version>1.0.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.feature</artifactId>
+            <version>0.9.4-RC3</version>
             <scope>test</scope>
         </dependency>
         <dependency>
