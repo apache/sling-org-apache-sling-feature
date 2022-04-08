@@ -70,8 +70,8 @@ public abstract class FeatureBuilder {
      * @param context The builder context
      * @param featureIds The feature ids
      * @return An array of features, the array has the same order as the provided ids
-     * throws IllegalArgumentException If context or featureIds is {@code null}
-     * throws IllegalStateException If the provided ids are invalid, or the feature can't be provided
+     * @throws IllegalArgumentException If context or featureIds is {@code null}
+     * @throws IllegalStateException If the provided ids are invalid, or the feature can't be provided
      */
     public static Feature[] resolve(final BuilderContext context,
             final String... featureIds) {
@@ -176,8 +176,8 @@ public abstract class FeatureBuilder {
      * @param context The builder context
      * @param features The features
      * @return The application
-     * throws IllegalArgumentException If featureId, context or featureIds is {@code null}
-     * throws IllegalStateException If a feature can't be provided
+     * @throws IllegalArgumentException If featureId, context or featureIds is {@code null}
+     * @throws IllegalStateException If a feature can't be provided or the feature can't be assembled
      */
     public static Feature assemble(
             final ArtifactId featureId,
