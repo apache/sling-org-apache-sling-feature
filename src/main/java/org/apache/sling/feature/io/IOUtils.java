@@ -236,7 +236,9 @@ public class IOUtils {
             else if (!url.getPath().endsWith("!/")) {
                 targetURL = new URL(toURLString(url) + "!/");
             }
-            return ((JarURLConnection) targetURL.openConnection()).getJarFile();
+            JarURLConnection connection = (JarURLConnection) targetURL.openConnection();
+            connection.setUseCaches(false);
+            return connection.getJarFile();
         } catch (IOException ex) {
             File file = getFileFromURL(url, cache, tmpDir);
             if (file != null) {
