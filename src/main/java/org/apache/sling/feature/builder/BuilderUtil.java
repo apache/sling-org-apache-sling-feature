@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.json.Json;
@@ -445,32 +446,28 @@ class BuilderUtil {
                 for (Map.Entry<String, String> override : overrides.entrySet()) {
                     if (match(cfg, override.getKey())) {
                         if (BuilderContext.CONFIG_USE_LATEST.equals(override.getValue())) {
-                            int idx = target.indexOf(found);
+                            final int idx = target.indexOf(found);
                             target.remove(found);
                             found = cfg.copy(cfg.getPid());
                             target.add(idx, found);
                             setPropertyFeatureOrigins(found, sourceFeatureId);
                             handled = true;
                         } else if (BuilderContext.CONFIG_FAIL_ON_PROPERTY_CLASH.equals(override.getValue())){
-                            for (final String key : Collections.list(cfg.getProperties().keys())) {
-                                if (!key.startsWith(Configuration.PROP_FEATURE_ORIGINS)) {
-                                    if (found.getProperties().get(key) != null) {
-                                        break outer;
-                                    } else {
-                                        found.getProperties().put(key, cfg.getProperties().get(key));
-                                        found.setFeatureOrigins(key, cfg.getFeatureOrigins(key, sourceFeatureId));
-                                    }
+                            for (final String key : listProperties(cfg)) {
+                                if (found.getProperties().get(key) != null) {
+                                    break outer;
+                                } else {
+                                    found.getProperties().put(key, cfg.getProperties().get(key));
+                                    found.setFeatureOrigins(key, cfg.getFeatureOrigins(key, sourceFeatureId));
                                 }
                             }
                             handled = true;
                         } else if (BuilderContext.CONFIG_MERGE_LATEST.equals(override.getValue())) {
-                            for (final String key : Collections.list(cfg.getProperties().keys())) {
-                                if (!key.startsWith(Configuration.PROP_FEATURE_ORIGINS)) {
-                                    found.getProperties().put(key, cfg.getProperties().get(key));
-                                    final List<ArtifactId> propOrigins = new ArrayList<>(found.getFeatureOrigins(key));
-                                    propOrigins.addAll(cfg.getFeatureOrigins(key, sourceFeatureId));
-                                    found.setFeatureOrigins(key, propOrigins);
-                                }
+                            for (final String key : listProperties(cfg)) {
+                                found.getProperties().put(key, cfg.getProperties().get(key));
+                                final List<ArtifactId> propOrigins = new ArrayList<>(found.getFeatureOrigins(key));
+                                propOrigins.addAll(cfg.getFeatureOrigins(key, sourceFeatureId));
+                                found.setFeatureOrigins(key, propOrigins);
                             }
                             handled = true;
                         } else if (BuilderContext.CONFIG_USE_FIRST.equals(override.getValue())) {
@@ -478,12 +475,10 @@ class BuilderUtil {
                             handled = true;
                             found = null;
                         } else if (BuilderContext.CONFIG_MERGE_FIRST.equals(override.getValue())) {
-                            for (final String key : Collections.list(cfg.getProperties().keys())) {
-                                if (!key.startsWith(Configuration.PROP_FEATURE_ORIGINS)) {
-                                    if (found.getProperties().get(key) == null) {
-                                        found.getProperties().put(key, cfg.getProperties().get(key));
-                                        found.setFeatureOrigins(key, cfg.getFeatureOrigins(key, sourceFeatureId));
-                                    }
+                            for (final String key : listProperties(cfg)) {
+                                if (found.getProperties().get(key) == null) {
+                                    found.getProperties().put(key, cfg.getProperties().get(key));
+                                    found.setFeatureOrigins(key, cfg.getFeatureOrigins(key, sourceFeatureId));
                                 }
                             }
                             handled = true;
@@ -511,6 +506,18 @@ class BuilderUtil {
                 found.setFeatureOrigins(origins);    
             }
         }
+    }
+
+    /**
+     * List all properties but filter all properties for the origin handling
+     *
+     * @param cfg The configuration
+     * @return The filtered list
+     */
+    private static Iterable<String> listProperties(final Configuration cfg) {
+        return Collections.list(cfg.getProperties().keys())
+                .stream()
+                .filter(name -> !name.startsWith(Configuration.PROP_FEATURE_ORIGINS)).collect(Collectors.toList());
     }
 
     private static void setPropertyFeatureOrigins(final Configuration cfg, final ArtifactId sourceFeatureId) {
