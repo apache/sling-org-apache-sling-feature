@@ -21,7 +21,6 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -453,46 +452,40 @@ class BuilderUtil {
                             setPropertyFeatureOrigins(found, sourceFeatureId);
                             handled = true;
                         } else if (BuilderContext.CONFIG_FAIL_ON_PROPERTY_CLASH.equals(override.getValue())){
-                            final List<ArtifactId> origins = found.getFeatureOrigins();
-                            for (Enumeration<String> i = cfg.getProperties().keys(); i.hasMoreElements(); ) {
-                                final String key = i.nextElement();
-                                if (found.getProperties().get(key) != null) {
-                                    break outer;
-                                } else {
-                                    found.getProperties().put(key, cfg.getProperties().get(key));
-                                    cfg.setFeatureOrigins(key, cfg.getFeatureOrigins(key, sourceFeatureId));
+                            for (final String key : Collections.list(cfg.getProperties().keys())) {
+                                if (!key.startsWith(Configuration.PROP_FEATURE_ORIGINS)) {
+                                    if (found.getProperties().get(key) != null) {
+                                        break outer;
+                                    } else {
+                                        found.getProperties().put(key, cfg.getProperties().get(key));
+                                        found.setFeatureOrigins(key, cfg.getFeatureOrigins(key, sourceFeatureId));
+                                    }
                                 }
                             }
-                            // restore origin
-                            found.setFeatureOrigins(origins);
                             handled = true;
                         } else if (BuilderContext.CONFIG_MERGE_LATEST.equals(override.getValue())) {
-                            final List<ArtifactId> origins = found.getFeatureOrigins();
-                            for (Enumeration<String> i = cfg.getProperties().keys(); i.hasMoreElements(); ) {
-                                final String key = i.nextElement();
-                                found.getProperties().put(key, cfg.getProperties().get(key));
-                                final List<ArtifactId> propOrigins = new ArrayList<>(found.getFeatureOrigins(key));
-                                propOrigins.addAll(cfg.getFeatureOrigins(key, sourceFeatureId));
-                                found.setFeatureOrigins(key, propOrigins);
+                            for (final String key : Collections.list(cfg.getProperties().keys())) {
+                                if (!key.startsWith(Configuration.PROP_FEATURE_ORIGINS)) {
+                                    found.getProperties().put(key, cfg.getProperties().get(key));
+                                    final List<ArtifactId> propOrigins = new ArrayList<>(found.getFeatureOrigins(key));
+                                    propOrigins.addAll(cfg.getFeatureOrigins(key, sourceFeatureId));
+                                    found.setFeatureOrigins(key, propOrigins);
+                                }
                             }
-                            // restore origin
-                            found.setFeatureOrigins(origins);
                             handled = true;
                         } else if (BuilderContext.CONFIG_USE_FIRST.equals(override.getValue())) {
                             // no need to update property origins
                             handled = true;
                             found = null;
                         } else if (BuilderContext.CONFIG_MERGE_FIRST.equals(override.getValue())) {
-                            final List<ArtifactId> origins = found.getFeatureOrigins();
-                            for (Enumeration<String> i = cfg.getProperties().keys(); i.hasMoreElements(); ) {
-                                final String key = i.nextElement();
-                                if (found.getProperties().get(key) == null) {
-                                    found.getProperties().put(key, cfg.getProperties().get(key));
-                                    cfg.setFeatureOrigins(key, cfg.getFeatureOrigins(key, sourceFeatureId));
+                            for (final String key : Collections.list(cfg.getProperties().keys())) {
+                                if (!key.startsWith(Configuration.PROP_FEATURE_ORIGINS)) {
+                                    if (found.getProperties().get(key) == null) {
+                                        found.getProperties().put(key, cfg.getProperties().get(key));
+                                        found.setFeatureOrigins(key, cfg.getFeatureOrigins(key, sourceFeatureId));
+                                    }
                                 }
                             }
-                            // restore origin
-                            found.setFeatureOrigins(origins);
                             handled = true;
                         }
                         break outer;
