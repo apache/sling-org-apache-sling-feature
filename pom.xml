@@ -154,7 +154,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.feature</artifactId>
-            <version>0.9.4-RC3</version>
+            <version>1.0.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
