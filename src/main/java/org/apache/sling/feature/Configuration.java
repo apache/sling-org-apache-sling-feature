@@ -24,7 +24,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.felix.cm.json.Configurations;
+import org.apache.felix.cm.json.io.Configurations;
 import org.osgi.util.converter.Converters;
 
 

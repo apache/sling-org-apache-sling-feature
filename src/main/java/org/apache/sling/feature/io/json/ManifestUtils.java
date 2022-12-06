@@ -26,9 +26,9 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import javax.json.JsonValue;
+import jakarta.json.JsonValue;
 
-import org.apache.felix.cm.json.Configurations;
+import org.apache.felix.cm.json.io.Configurations;
 import org.apache.felix.utils.resource.CapabilityImpl;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Version;

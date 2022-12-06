@@ -27,18 +27,18 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonException;
-import javax.json.JsonObject;
-import javax.json.JsonString;
-import javax.json.JsonStructure;
-import javax.json.JsonValue;
-import javax.json.JsonValue.ValueType;
+import jakarta.json.Json;
+import jakarta.json.JsonArray;
+import jakarta.json.JsonException;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonString;
+import jakarta.json.JsonStructure;
+import jakarta.json.JsonValue;
+import jakarta.json.JsonValue.ValueType;
 
-import org.apache.felix.cm.json.ConfigurationReader;
-import org.apache.felix.cm.json.ConfigurationReader.ConfiguratorPropertyHandler;
-import org.apache.felix.cm.json.ConfigurationResource;
+import org.apache.felix.cm.json.io.ConfigurationReader;
+import org.apache.felix.cm.json.io.ConfigurationReader.ConfiguratorPropertyHandler;
+import org.apache.felix.cm.json.io.ConfigurationResource;
 import org.apache.felix.utils.resource.CapabilityImpl;
 import org.apache.felix.utils.resource.RequirementImpl;
 import org.apache.sling.feature.Artifact;
@@ -225,7 +225,7 @@ public class FeatureJSONReader {
     private void addConfigurations(final JsonObject json,
             final Artifact artifact,
             final Configurations container) throws IOException {
-        final ConfigurationReader reader = org.apache.felix.cm.json.Configurations.buildReader()
+        final ConfigurationReader reader = org.apache.felix.cm.json.io.Configurations.buildReader()
                 .verifyAsBundleResource(true)
                 .withIdentifier(this.location)
                 .withConfiguratorPropertyHandler(new ConfiguratorPropertyHandler(){
@@ -410,7 +410,7 @@ public class FeatureJSONReader {
             return null;
         }
         if ( value.getValueType() == ValueType.STRING || value.getValueType() == ValueType.NUMBER || value.getValueType() == ValueType.FALSE || value.getValueType() == ValueType.TRUE ) {
-            return org.apache.felix.cm.json.Configurations.convertToObject(value).toString();
+            return org.apache.felix.cm.json.io.Configurations.convertToObject(value).toString();
         }
         throw new IOException(this.exceptionPrefix.concat("Key ").concat(key).concat(" is not one of the allowed types string, number or boolean : ").concat(value.getValueType().name()));
     }
@@ -436,7 +436,7 @@ public class FeatureJSONReader {
      */
     private boolean checkTypeBoolean(final String key, final JsonValue value) throws IOException {
         if ( value.getValueType() == ValueType.TRUE || value.getValueType() == ValueType.FALSE ) {
-            return (Boolean)org.apache.felix.cm.json.Configurations.convertToObject(value);
+            return (Boolean)org.apache.felix.cm.json.io.Configurations.convertToObject(value);
         }
         throw new IOException(this.exceptionPrefix.concat("Key ").concat(key).concat(" is not of type boolean : ").concat(value.getValueType().name()));
     }
@@ -546,7 +546,7 @@ public class FeatureJSONReader {
                         for(final JsonValue val : checkTypeArray("Prototype removal extensions", removalObj.get(JSONConstants.PROTOTYPE_EXTENSION_REMOVALS))) {
                             checkTypeObjectOrString("Prototype removal extension", val);
                             if ( val.getValueType() == ValueType.STRING ) {
-                                final String propVal = org.apache.felix.cm.json.Configurations.convertToObject(val).toString();
+                                final String propVal = org.apache.felix.cm.json.io.Configurations.convertToObject(val).toString();
                                 if ( propVal.startsWith("#")) {
                                     continue;
                                 }
@@ -673,7 +673,7 @@ public class FeatureJSONReader {
      */
     private Feature readFeature(final Reader reader)
     throws IOException {
-        final JsonObject json = Json.createReader(org.apache.felix.cm.json.Configurations.jsonCommentAwareReader(reader)).readObject();
+        final JsonObject json = Json.createReader(org.apache.felix.cm.json.io.Configurations.jsonCommentAwareReader(reader)).readObject();
 
         checkModelVersion(json);
 
@@ -752,7 +752,7 @@ public class FeatureJSONReader {
                         throw new IOException("Framework property " + propEntry.getKey() + " does not exists (metadata)");
                     }
                     for(final Map.Entry<String, JsonValue> ve : checkTypeObject(JSONConstants.FRAMEWORK_PROPERTIES_METADATA.concat(".").concat(propEntry.getKey()), propEntry.getValue()).entrySet()) {
-                        metadata.put(ve.getKey(), org.apache.felix.cm.json.Configurations.convertToObject(ve.getValue()));
+                        metadata.put(ve.getKey(), org.apache.felix.cm.json.io.Configurations.convertToObject(ve.getValue()));
                     }
                 }
             } else if ( JSONConstants.VARIABLES_METADATA.equals(key) ) {
@@ -762,7 +762,7 @@ public class FeatureJSONReader {
                         throw new IOException("Variable " + varEntry.getKey() + " does not exists (metadata)");
                     }
                     for(final Map.Entry<String, JsonValue> ve : checkTypeObject(JSONConstants.VARIABLES_METADATA.concat(".").concat(varEntry.getKey()), varEntry.getValue()).entrySet()) {
-                        metadata.put(ve.getKey(), org.apache.felix.cm.json.Configurations.convertToObject(ve.getValue()));
+                        metadata.put(ve.getKey(), org.apache.felix.cm.json.io.Configurations.convertToObject(ve.getValue()));
                     }
                 }
 

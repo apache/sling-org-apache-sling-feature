@@ -26,9 +26,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.json.JsonString;
-import javax.json.JsonValue;
-import javax.json.JsonValue.ValueType;
+import jakarta.json.JsonString;
+import jakarta.json.JsonValue;
+import jakarta.json.JsonValue.ValueType;
 
 /**
  * An artifact consists of
@@ -96,7 +96,7 @@ public class Artifact implements Comparable<Artifact> {
                 }
                 final JsonValue value = metadataEntry.getValue();
                 if ( value.getValueType() == ValueType.STRING || value.getValueType() == ValueType.NUMBER || value.getValueType() == ValueType.FALSE || value.getValueType() == ValueType.TRUE ) {
-                    this.getMetadata().put(key, org.apache.felix.cm.json.Configurations.convertToObject(value).toString());
+                    this.getMetadata().put(key, org.apache.felix.cm.json.io.Configurations.convertToObject(value).toString());
                 } else {
                     throw new IllegalArgumentException("Key ".concat(key).concat(" is not one of the allowed types string, number or boolean : ").concat(value.getValueType().name()));
                 }

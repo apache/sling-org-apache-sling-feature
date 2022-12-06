@@ -21,9 +21,9 @@ import java.io.Reader;
 import java.util.Hashtable;
 import java.util.Map;
 
-import org.apache.felix.cm.json.ConfigurationReader;
-import org.apache.felix.cm.json.ConfigurationReader.ConfiguratorPropertyHandler;
-import org.apache.felix.cm.json.ConfigurationResource;
+import org.apache.felix.cm.json.io.ConfigurationReader;
+import org.apache.felix.cm.json.io.ConfigurationReader.ConfiguratorPropertyHandler;
+import org.apache.felix.cm.json.io.ConfigurationResource;
 import org.apache.sling.feature.Configuration;
 import org.apache.sling.feature.Configurations;
 
@@ -54,7 +54,7 @@ public class ConfigurationJSONReader {
     Configurations readConfigurations(final String location, final Reader reader) throws IOException {
         final Configurations result = new Configurations();
 
-        final ConfigurationReader cfgReader = org.apache.felix.cm.json.Configurations
+        final ConfigurationReader cfgReader = org.apache.felix.cm.json.io.Configurations
             .buildReader()
             .withIdentifier(location)
             .verifyAsBundleResource(true)

@@ -26,12 +26,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.json.Json;
-import javax.json.stream.JsonGenerator;
-import javax.json.stream.JsonGeneratorFactory;
+import jakarta.json.Json;
+import jakarta.json.stream.JsonGenerator;
+import jakarta.json.stream.JsonGeneratorFactory;
 
-import org.apache.felix.cm.json.ConfigurationResource;
-import org.apache.felix.cm.json.ConfigurationWriter;
+import org.apache.felix.cm.json.io.ConfigurationResource;
+import org.apache.felix.cm.json.io.ConfigurationWriter;
 import org.apache.sling.feature.Artifact;
 import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Bundles;
@@ -129,7 +129,7 @@ public class FeatureJSONWriter {
 
         generator.writeKey(JSONConstants.FEATURE_CONFIGURATIONS);
 
-        final ConfigurationWriter cfgWriter = org.apache.felix.cm.json.Configurations
+        final ConfigurationWriter cfgWriter = org.apache.felix.cm.json.io.Configurations
                 .buildWriter()
                 .build(generator);
 
@@ -139,7 +139,7 @@ public class FeatureJSONWriter {
             if ( cfg.getProperties() instanceof Hashtable && cfg.getProperties().get(Configuration.PROP_ARTIFACT_ID) == null ) {
                 properties = (Hashtable<String, Object>)cfg.getProperties();
             } else {
-                properties = org.apache.felix.cm.json.Configurations.newConfiguration();
+                properties = org.apache.felix.cm.json.io.Configurations.newConfiguration();
                 for(final String name : Collections.list(cfg.getProperties().keys()) ) {
                     if ( !Configuration.PROP_ARTIFACT_ID.equals(name) ) {
                         properties.put(name, cfg.getProperties().get(name));
@@ -465,7 +465,7 @@ public class FeatureJSONWriter {
         }
         if ( !output.isEmpty() ) {
             final Extension ext = new Extension(ExtensionType.JSON, Extension.EXTENSION_NAME_INTERNAL_DATA, ExtensionState.OPTIONAL);
-            ext.setJSONStructure(org.apache.felix.cm.json.Configurations.convertToJsonValue(output).asJsonObject());
+            ext.setJSONStructure(org.apache.felix.cm.json.io.Configurations.convertToJsonValue(output).asJsonObject());
             this.writeExtension(generator, ext, null);
         }
     }

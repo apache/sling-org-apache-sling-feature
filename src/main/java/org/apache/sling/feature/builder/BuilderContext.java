@@ -22,7 +22,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.apache.sling.feature.ArtifactId;
 
@@ -165,21 +164,6 @@ public class BuilderContext {
      */
     public BuilderContext addFrameworkPropertiesOverrides(final Map<String,String> props) {
         this.frameworkProperties.putAll(props);
-        return this;
-    }
-
-    /**
-     * Add overrides for artifact clashes.
-     *
-     * @param overrides The overrides
-     * @return The builder context
-     * @throws IllegalArgumentException If the provided overrides are not following
-     *                                  the artifact id syntax
-     * @deprecated Use {@link #addArtifactsOverride(ArtifactId)} instead.
-     */
-    @Deprecated
-    public BuilderContext addArtifactsOverrides(final List<String> overrides) {
-        this.artifactsOverrides.addAll(overrides.stream().map(f -> ArtifactId.parse(f)).collect(Collectors.toList()));
         return this;
     }
 

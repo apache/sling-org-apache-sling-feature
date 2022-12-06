@@ -21,8 +21,8 @@ import java.io.Writer;
 import java.util.Collections;
 import java.util.Hashtable;
 
-import org.apache.felix.cm.json.ConfigurationResource;
-import org.apache.felix.cm.json.ConfigurationWriter;
+import org.apache.felix.cm.json.io.ConfigurationResource;
+import org.apache.felix.cm.json.io.ConfigurationWriter;
 import org.apache.sling.feature.Configuration;
 import org.apache.sling.feature.Configurations;
 
@@ -43,7 +43,7 @@ public class ConfigurationJSONWriter {
     private void writeConfigurations(final Writer writer, final Configurations configs)
             throws IOException {
 
-        final ConfigurationWriter cfgWriter = org.apache.felix.cm.json.Configurations
+        final ConfigurationWriter cfgWriter = org.apache.felix.cm.json.io.Configurations
             .buildWriter()
             .build(writer);
 
@@ -53,7 +53,7 @@ public class ConfigurationJSONWriter {
             if ( cfg.getProperties() instanceof Hashtable && cfg.getProperties().get(Configuration.PROP_ARTIFACT_ID) == null ) {
                 properties = (Hashtable<String, Object>)cfg.getProperties();
             } else {
-                properties = org.apache.felix.cm.json.Configurations.newConfiguration();
+                properties = org.apache.felix.cm.json.io.Configurations.newConfiguration();
                 for(final String name : Collections.list(cfg.getProperties().keys()) ) {
                     if ( !Configuration.PROP_ARTIFACT_ID.equals(name) ) {
                         properties.put(name, cfg.getProperties().get(name));

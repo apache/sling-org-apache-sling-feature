@@ -20,9 +20,9 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 
-import javax.json.Json;
-import javax.json.JsonStructure;
-import javax.json.JsonWriter;
+import jakarta.json.Json;
+import jakarta.json.JsonStructure;
+import jakarta.json.JsonWriter;
 
 import org.apache.sling.feature.builder.BuilderContext;
 
@@ -99,22 +99,6 @@ public class Extension {
     /**
      * Create a new extension
      *
-     * @param t        The type of the extension
-     * @param name     The name of the extension
-     * @param required Whether the extension is required or optional
-     * @throws IllegalArgumentException If name or t are {@code null}
-     * @deprecated Use {@link #Extension(ExtensionType, String, ExtensionState)}
-     */
-    @Deprecated
-    public Extension(final ExtensionType t,
-            final String name,
-            final boolean required) {
-        this(t, name, required ? ExtensionState.REQUIRED : ExtensionState.OPTIONAL);
-    }
-
-    /**
-     * Create a new extension
-     *
      * @param type  The type of the extension
      * @param name  The name of the extension
      * @param state The state of the extension
@@ -160,28 +144,6 @@ public class Extension {
      */
     public String getName() {
         return name;
-    }
-
-    /**
-     * Return whether the extension is required or optional
-     *
-     * @return Return {@code true} if the extension is required.
-     * @deprecated Use {@link #getState()}
-     */
-    @Deprecated
-    public boolean isRequired() {
-        return this.state == ExtensionState.REQUIRED;
-    }
-
-    /**
-     * Return whether the extension is required or optional
-     *
-     * @return Return {@code true} if the extension is optional.
-     * @deprecated Use {@link #getState()}
-     */
-    @Deprecated
-    public boolean isOptional() {
-        return !this.isRequired();
     }
 
     /**

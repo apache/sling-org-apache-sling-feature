@@ -28,7 +28,7 @@ import java.io.StringReader;
 import java.util.Arrays;
 import java.util.Hashtable;
 
-import org.apache.felix.cm.json.Configurations;
+import org.apache.felix.cm.json.io.Configurations;
 import org.apache.sling.feature.Artifact;
 import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Configuration;

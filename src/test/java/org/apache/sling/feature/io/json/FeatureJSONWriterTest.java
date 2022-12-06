@@ -26,11 +26,11 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Arrays;
 
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.json.JsonValue;
-import javax.json.JsonValue.ValueType;
+import jakarta.json.Json;
+import jakarta.json.JsonArray;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonValue;
+import jakarta.json.JsonValue.ValueType;
 
 import org.apache.sling.feature.Feature;
 import org.junit.Assert;
