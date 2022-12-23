@@ -16,6 +16,7 @@
  */
 package org.apache.sling.feature;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -40,7 +41,10 @@ import jakarta.json.JsonValue.ValueType;
  *
  * This class is not thread-safe.
  */
-public class Artifact implements Comparable<Artifact> {
+public class Artifact implements Comparable<Artifact>, Serializable {
+
+    private static final long serialVersionUID = 2L;
+
     /** Can be used in artifact metadata to specify an alias. Multiple aliases can be comma-separated. */
     public static final String KEY_ALIAS = "alias";
 

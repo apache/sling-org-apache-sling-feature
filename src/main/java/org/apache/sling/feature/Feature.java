@@ -16,6 +16,7 @@
  */
 package org.apache.sling.feature;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -42,7 +43,9 @@ import org.osgi.util.converter.Converters;
  *
  * This class is not thread-safe.
  */
-public class Feature implements Comparable<Feature> {
+public class Feature implements Comparable<Feature>, Serializable {
+
+    private static final long serialVersionUID = 2L;
 
     private final ArtifactId id;
 

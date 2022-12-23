@@ -17,6 +17,8 @@
 package org.apache.sling.feature;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
 import java.io.StringReader;
 import java.io.StringWriter;
 
@@ -49,7 +51,9 @@ import org.apache.sling.feature.builder.BuilderContext;
  *
  * @see ExtensionType
  */
-public class Extension {
+public class Extension implements Serializable {
+
+    private static final long serialVersionUID = 2L;
 
     /**
      * Common extension name to specify the repoinit part for Apache Sling. This
@@ -91,7 +95,7 @@ public class Extension {
     private String text;
 
     /** The json structure (if corresponding type) */
-    private JsonStructure json;
+    private transient JsonStructure json;
 
     /** Extension state. */
     private final ExtensionState state;
@@ -116,6 +120,15 @@ public class Extension {
             this.artifacts = new Artifacts();
         } else {
             this.artifacts = null;
+        }
+    }
+
+    private void readObject(final ObjectInputStream in)
+    throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        // initialize json object
+        if ( this.type == ExtensionType.JSON ) {
+            this.setJSON(this.text);
         }
     }
 

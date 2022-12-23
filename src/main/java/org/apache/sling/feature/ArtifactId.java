@@ -16,6 +16,7 @@
  */
 package org.apache.sling.feature;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -31,7 +32,9 @@ import org.osgi.framework.Version;
  *
  * This class is thread-safe.
  */
-public class ArtifactId implements Comparable<ArtifactId> {
+public class ArtifactId implements Comparable<ArtifactId>, Serializable {
+
+    private static final long serialVersionUID = 2L;
 
     /** The default type if {@code null} is provided as a type. @since 1.3 */
     public static final String DEFAULT_TYPE = "jar";

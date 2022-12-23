@@ -16,6 +16,7 @@
  */
 package org.apache.sling.feature;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -27,7 +28,9 @@ import java.util.Set;
  * This class is not thread-safe.
  * @since 1.7.0
  */
-class MapWithMetadata implements Map<String, String> {
+class MapWithMetadata implements Map<String, String>, Serializable {
+
+	private static final long serialVersionUID = 2L;
 
     private final Map<String, String> values = new LinkedHashMap<>();
 

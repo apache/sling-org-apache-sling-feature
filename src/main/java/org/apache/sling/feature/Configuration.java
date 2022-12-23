@@ -16,6 +16,7 @@
  */
 package org.apache.sling.feature;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Dictionary;
@@ -39,7 +40,9 @@ import org.osgi.util.converter.Converters;
  * This class is not thread-safe.
  */
 public class Configuration
-    implements Comparable<Configuration> {
+    implements Comparable<Configuration>, Serializable {
+
+    private static final long serialVersionUID = 2L;
 
     /**
      * Prefix for instructions for the configurator.

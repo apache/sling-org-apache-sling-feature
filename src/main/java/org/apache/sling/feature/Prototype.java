@@ -16,6 +16,7 @@
  */
 package org.apache.sling.feature;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,7 +37,9 @@ import org.osgi.resource.Capability;
  *
  * This class is not thread-safe.
  */
-public class Prototype implements Comparable<Prototype> {
+public class Prototype implements Comparable<Prototype>, Serializable {
+
+    private static final long serialVersionUID = 2L;
 
     private final ArtifactId id;
 
