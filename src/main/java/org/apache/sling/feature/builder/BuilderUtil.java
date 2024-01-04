@@ -149,7 +149,7 @@ class BuilderUtil {
             int insertPos = target.size();
             int count = 0;
             for (final Artifact existing : allExistingInTarget) {
-                if (sourceFeature.getId().toMvnId().equals(existing.getMetadata().get(originKey))) {
+                if (originKey != null && sourceFeature.getId().toMvnId().equals(existing.getMetadata().get(originKey))) {
                     // If the source artifact came from the same feature, keep them side-by-side
                     // but make sure we add the target ones first - hence, the count
                     selectedArtifacts.add(count++, existing);

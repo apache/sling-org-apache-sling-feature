@@ -18,12 +18,12 @@ package org.apache.sling.feature;
 
 import java.io.Serializable;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -60,7 +60,7 @@ public class Artifact implements Comparable<Artifact>, Serializable {
     private final ArtifactId id;
 
     /** Artifact metadata. */
-    private final Map<String,String> metadata = new HashMap<>();
+    private final Map<String,String> metadata = new TreeMap<>();
 
     /**
      * Construct a new artifact
