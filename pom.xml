@@ -160,7 +160,7 @@
         <dependency>
             <groupId>org.eclipse.parsson</groupId>
             <artifactId>parsson</artifactId>
-            <version>1.0.2</version>
+            <version>1.0.4</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
