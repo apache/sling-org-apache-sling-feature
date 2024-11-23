@@ -1,20 +1,27 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.feature;
+
+import java.util.Arrays;
+import java.util.Collections;
+
+import org.junit.Test;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -23,11 +30,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-
-import java.util.Arrays;
-import java.util.Collections;
-
-import org.junit.Test;
 
 public class ConfigurationTest {
 
@@ -119,8 +121,10 @@ public class ConfigurationTest {
         c1.getProperties().put("aaa", "123");
         c1.getProperties().put("AaA", "456");
 
-        assertEquals("As keys are case insensitive, there should just be 1 key",
-                1, c1.getProperties().size());
+        assertEquals(
+                "As keys are case insensitive, there should just be 1 key",
+                1,
+                c1.getProperties().size());
     }
 
     @Test
@@ -130,8 +134,10 @@ public class ConfigurationTest {
         final Configuration cfg = new Configuration("foo");
         cfg.getProperties().put("a", true);
         assertTrue(cfg.getFeatureOrigins("a").isEmpty());
-        assertNull(cfg.getConfigurationProperties().get(Configuration.PROP_FEATURE_ORIGINS.concat("-").concat("a")));
-        assertNull(cfg.getProperties().get(Configuration.PROP_FEATURE_ORIGINS.concat("-").concat("a")));
+        assertNull(cfg.getConfigurationProperties()
+                .get(Configuration.PROP_FEATURE_ORIGINS.concat("-").concat("a")));
+        assertNull(cfg.getProperties()
+                .get(Configuration.PROP_FEATURE_ORIGINS.concat("-").concat("a")));
         assertEquals(1, cfg.getFeatureOrigins("a", self).size());
         assertEquals(self, cfg.getFeatureOrigins("a", self).get(0));
 
@@ -143,9 +149,12 @@ public class ConfigurationTest {
         assertEquals(1, cfg.getFeatureOrigins("a", self).size());
         assertEquals(id, cfg.getFeatureOrigins("a", self).get(0));
 
-        assertNull(cfg.getConfigurationProperties().get(Configuration.PROP_FEATURE_ORIGINS.concat("-").concat("a")));
-        assertNotNull(cfg.getProperties().get(Configuration.PROP_FEATURE_ORIGINS.concat("-").concat("a")));
-        final String[] array = (String[]) cfg.getProperties().get(Configuration.PROP_FEATURE_ORIGINS.concat("-").concat("a"));
+        assertNull(cfg.getConfigurationProperties()
+                .get(Configuration.PROP_FEATURE_ORIGINS.concat("-").concat("a")));
+        assertNotNull(cfg.getProperties()
+                .get(Configuration.PROP_FEATURE_ORIGINS.concat("-").concat("a")));
+        final String[] array = (String[]) cfg.getProperties()
+                .get(Configuration.PROP_FEATURE_ORIGINS.concat("-").concat("a"));
         assertArrayEquals(new String[] {id.toMvnId()}, array);
 
         // add another id
@@ -158,16 +167,21 @@ public class ConfigurationTest {
         assertEquals(id, cfg.getFeatureOrigins("a", self).get(0));
         assertEquals(id2, cfg.getFeatureOrigins("a", self).get(1));
 
-        assertNull(cfg.getConfigurationProperties().get(Configuration.PROP_FEATURE_ORIGINS.concat("-").concat("a")));
-        assertNotNull(cfg.getProperties().get(Configuration.PROP_FEATURE_ORIGINS.concat("-").concat("a")));
-        final String[] array2 = (String[]) cfg.getProperties().get(Configuration.PROP_FEATURE_ORIGINS.concat("-").concat("a"));
+        assertNull(cfg.getConfigurationProperties()
+                .get(Configuration.PROP_FEATURE_ORIGINS.concat("-").concat("a")));
+        assertNotNull(cfg.getProperties()
+                .get(Configuration.PROP_FEATURE_ORIGINS.concat("-").concat("a")));
+        final String[] array2 = (String[]) cfg.getProperties()
+                .get(Configuration.PROP_FEATURE_ORIGINS.concat("-").concat("a"));
         assertArrayEquals(new String[] {id.toMvnId(), id2.toMvnId()}, array2);
 
         // remove
         cfg.getProperties().remove("a");
         cfg.setFeatureOrigins("a", null);
         assertTrue(cfg.getFeatureOrigins("a").isEmpty());
-        assertNull(cfg.getConfigurationProperties().get(Configuration.PROP_FEATURE_ORIGINS.concat("-").concat("a")));
-        assertNull(cfg.getProperties().get(Configuration.PROP_FEATURE_ORIGINS.concat("-").concat("a")));
+        assertNull(cfg.getConfigurationProperties()
+                .get(Configuration.PROP_FEATURE_ORIGINS.concat("-").concat("a")));
+        assertNull(cfg.getProperties()
+                .get(Configuration.PROP_FEATURE_ORIGINS.concat("-").concat("a")));
     }
 }

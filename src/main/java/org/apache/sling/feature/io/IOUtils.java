@@ -1,18 +1,20 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements. See the NOTICE file distributed with this
- * work for additional information regarding copyright ownership. The ASF
- * licenses this file to You under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.feature.io;
 
@@ -55,14 +57,13 @@ public class IOUtils {
      * @return The referenced features
      * @throws IOException If reading fails
      */
-    public static List<String> parseFeatureRefFile(final File file)
-    throws IOException {
+    public static List<String> parseFeatureRefFile(final File file) throws IOException {
         final List<String> result = new ArrayList<>();
         final List<String> lines = Files.readAllLines(file.toPath());
-        for(String line : lines) {
+        for (String line : lines) {
             line = line.trim();
-            if ( !line.isEmpty() && !line.startsWith("#") ) {
-                if ( line.indexOf(':') == -1 ) {
+            if (!line.isEmpty() && !line.startsWith("#")) {
+                if (line.indexOf(':') == -1) {
                     result.add(new File(line).getAbsolutePath());
                 } else {
                     result.add(line);
@@ -97,26 +98,25 @@ public class IOUtils {
      * @return The list of files.
      * @throws IOException If an error occurs.
      */
-    public static List<String> getFeatureFiles(final File homeDirectory, final String... files)
-    throws IOException {
+    public static List<String> getFeatureFiles(final File homeDirectory, final String... files) throws IOException {
         String[] featureFiles = files;
-        if ( featureFiles == null || featureFiles.length == 0 ) {
+        if (featureFiles == null || featureFiles.length == 0) {
             // Default value - check feature directory otherwise features file
             final File[] candidates = new File[] {
-                    new File(homeDirectory, DEFAULT_DIRECTORY),
-                    new File(homeDirectory, DEFAULT_FEATURE_FILE),
-                    new File(DEFAULT_DIRECTORY),
-                    new File(DEFAULT_FEATURE_FILE)
+                new File(homeDirectory, DEFAULT_DIRECTORY),
+                new File(homeDirectory, DEFAULT_FEATURE_FILE),
+                new File(DEFAULT_DIRECTORY),
+                new File(DEFAULT_FEATURE_FILE)
             };
             File f = null;
-            for(final File c : candidates) {
-                if ( c.exists() ) {
+            for (final File c : candidates) {
+                if (c.exists()) {
                     f = c;
                     break;
                 }
             }
             // nothing found, we default to the first candidate and fail later
-            if ( f == null ) {
+            if (f == null) {
                 f = candidates[0];
             }
 
@@ -124,33 +124,33 @@ public class IOUtils {
         }
 
         final List<String> paths = new ArrayList<>();
-        for(final String name : featureFiles) {
+        for (final String name : featureFiles) {
             // check for absolute
-            if ( name.indexOf(':') > 1 ) {
+            if (name.indexOf(':') > 1) {
                 paths.add(name);
             } else {
                 // file or relative
                 File f = null;
                 final File test = new File(name);
-                if ( test.isAbsolute() ) {
+                if (test.isAbsolute()) {
                     f = test;
                 } else {
                     final File[] candidates = {
-                            new File(homeDirectory, name),
-                            new File(homeDirectory, DEFAULT_DIRECTORY + File.separatorChar + name),
-                            new File(name),
-                            new File(DEFAULT_DIRECTORY + File.separatorChar + name),
+                        new File(homeDirectory, name),
+                        new File(homeDirectory, DEFAULT_DIRECTORY + File.separatorChar + name),
+                        new File(name),
+                        new File(DEFAULT_DIRECTORY + File.separatorChar + name),
                     };
-                    for(final File c : candidates) {
-                        if ( c.exists() && c.isFile() ) {
+                    for (final File c : candidates) {
+                        if (c.exists() && c.isFile()) {
                             f = c;
                             break;
                         }
                     }
                 }
 
-                if ( f != null && f.exists() ) {
-                    if ( f.isFile() ) {
+                if (f != null && f.exists()) {
+                    if (f.isFile()) {
                         processFile(paths, f);
                     } else {
                         processDir(paths, f);
@@ -193,21 +193,20 @@ public class IOUtils {
                 } catch (IOException ex) {
                     result = null;
                 }
-            }
-            else {
+            } else {
                 result = null;
             }
-        }
-        else {
+        } else {
             result = null;
         }
 
         if ((result == null || !result.exists()) && cache) {
             File tmp = File.createTempFile("jar", ".jar", tmpDir);
             tmp.deleteOnExit();
-            try (InputStream input = url.openStream(); OutputStream output = new FileOutputStream(tmp)) {
-                byte[] buffer =new byte[64 * 1024];
-                for (int i = input.read(buffer); i != -1;i = input.read(buffer)) {
+            try (InputStream input = url.openStream();
+                    OutputStream output = new FileOutputStream(tmp)) {
+                byte[] buffer = new byte[64 * 1024];
+                for (int i = input.read(buffer); i != -1; i = input.read(buffer)) {
                     output.write(buffer, 0, i);
                 }
             }
@@ -232,8 +231,7 @@ public class IOUtils {
             URL targetURL = url;
             if (!url.getProtocol().equals("jar")) {
                 targetURL = new URL("jar:" + toURLString(url) + "!/");
-            }
-            else if (!url.getPath().endsWith("!/")) {
+            } else if (!url.getPath().endsWith("!/")) {
                 targetURL = new URL(toURLString(url) + "!/");
             }
             JarURLConnection connection = (JarURLConnection) targetURL.openConnection();
@@ -243,8 +241,7 @@ public class IOUtils {
             File file = getFileFromURL(url, cache, tmpDir);
             if (file != null) {
                 return new JarFile(file);
-            }
-            else {
+            } else {
                 throw ex;
             }
         }
@@ -257,6 +254,7 @@ public class IOUtils {
             return url.toString();
         }
     }
+
     static final Comparator<String> FEATURE_PATH_COMP = new Comparator<String>() {
         @Override
         public int compare(final String o1, final String o2) {
@@ -266,40 +264,38 @@ public class IOUtils {
 
             final int lastSlash1 = key1.lastIndexOf('/');
             final int lastSlash2 = key2.lastIndexOf('/');
-            if ( lastSlash1 == -1 || lastSlash2 == -1 ) {
+            if (lastSlash1 == -1 || lastSlash2 == -1) {
                 return o1.compareTo(o2);
             }
             final String path1 = key1.substring(0, lastSlash1 + 1);
             final String path2 = key2.substring(0, lastSlash2 + 1);
-            if ( path1.equals(path2) ) {
+            if (path1.equals(path2)) {
                 return o1.compareTo(o2);
             }
-            if ( path1.startsWith(path2) ) {
+            if (path1.startsWith(path2)) {
                 return 1;
-            } else if ( path2.startsWith(path1) ) {
+            } else if (path2.startsWith(path1)) {
                 return -1;
             }
             return o1.compareTo(o2);
         }
     };
 
-    private static void processDir(final List<String> paths, final File dir)
-    throws IOException {
-        for(final File f : dir.listFiles()) {
-            if ( f.isFile() && !f.getName().startsWith(".")) {
+    private static void processDir(final List<String> paths, final File dir) throws IOException {
+        for (final File f : dir.listFiles()) {
+            if (f.isFile() && !f.getName().startsWith(".")) {
                 // check if file is a reference
-                if ( f.getName().endsWith(EXTENSION_REF_FILE)
-                     || f.getName().endsWith(EXTENSION_FEATURE_FILE)
-                     || f.getName().endsWith(EXTENSION_FEATURE_ARCHIVE) ) {
+                if (f.getName().endsWith(EXTENSION_REF_FILE)
+                        || f.getName().endsWith(EXTENSION_FEATURE_FILE)
+                        || f.getName().endsWith(EXTENSION_FEATURE_ARCHIVE)) {
                     processFile(paths, f);
                 }
             }
         }
     }
 
-    private static void processFile(final List<String> paths, final File f)
-    throws IOException {
-        if ( f.getName().endsWith(EXTENSION_REF_FILE) ) {
+    private static void processFile(final List<String> paths, final File f) throws IOException {
+        if (f.getName().endsWith(EXTENSION_REF_FILE)) {
             paths.addAll(parseFeatureRefFile(f));
         } else {
             paths.add(f.getAbsolutePath());

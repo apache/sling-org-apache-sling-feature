@@ -1,18 +1,20 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements. See the NOTICE file distributed with this
- * work for additional information regarding copyright ownership. The ASF
- * licenses this file to You under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.feature.io.archive;
 
@@ -81,19 +83,27 @@ public class ArchiveWriter {
      * @return The jar output stream.
      * @throws IOException If anything goes wrong
      */
-    public static JarOutputStream write(final OutputStream out,
+    public static JarOutputStream write(
+            final OutputStream out,
             final Manifest baseManifest,
-            final ArtifactProvider provider, final Feature... features)
-    throws IOException {
+            final ArtifactProvider provider,
+            final Feature... features)
+            throws IOException {
         // create manifest
         final Manifest manifest = (baseManifest == null ? new Manifest() : new Manifest(baseManifest));
         manifest.getMainAttributes().putValue("Manifest-Version", "1.0");
         manifest.getMainAttributes().putValue(VERSION_HEADER, String.valueOf(ARCHIVE_VERSION));
-        manifest.getMainAttributes().putValue(CONTENTS_HEADER, String.join(",", Arrays.asList(features).stream()
-                .map(feature -> feature.getId().toMvnId()).collect(Collectors.toList())));
+        manifest.getMainAttributes()
+                .putValue(
+                        CONTENTS_HEADER,
+                        String.join(
+                                ",",
+                                Arrays.asList(features).stream()
+                                        .map(feature -> feature.getId().toMvnId())
+                                        .collect(Collectors.toList())));
 
         final Set<ArtifactId> artifacts = new HashSet<>();
-        final byte[] buffer = new byte[1024*1024*256];
+        final byte[] buffer = new byte[1024 * 1024 * 256];
 
         // create archive
         final JarOutputStream jos = new JarOutputStream(out, manifest);
@@ -104,8 +114,6 @@ public class ArchiveWriter {
             writeFeature(artifacts, feature, provider, jos, buffer);
         }
 
-
-
         for (final Feature feature : features) {
             for (final Artifact a : feature.getBundles()) {
                 writeArtifact(artifacts, provider, a, jos, buffer);
@@ -115,7 +123,7 @@ public class ArchiveWriter {
                 if (e.getType() == ExtensionType.ARTIFACTS) {
                     final boolean isFeature = Extension.EXTENSION_NAME_ASSEMBLED_FEATURES.equals(e.getName());
                     for (final Artifact a : e.getArtifacts()) {
-                        if ( isFeature ) {
+                        if (isFeature) {
                             writeFeature(artifacts, provider, a.getId(), jos, buffer);
                         } else {
                             writeArtifact(artifacts, provider, a, jos, buffer);
@@ -127,11 +135,14 @@ public class ArchiveWriter {
         return jos;
     }
 
-    private static void writeFeature(final Set<ArtifactId> artifacts,
+    private static void writeFeature(
+            final Set<ArtifactId> artifacts,
             final Feature feature,
             final ArtifactProvider provider,
-            final JarOutputStream jos, final byte[] buffer) throws IOException {
-        if ( artifacts.add(feature.getId())) {
+            final JarOutputStream jos,
+            final byte[] buffer)
+            throws IOException {
+        if (artifacts.add(feature.getId())) {
             final JarEntry entry = new JarEntry(feature.getId().toMvnPath());
             jos.putNextEntry(entry);
             final Writer writer = new OutputStreamWriter(jos, StandardCharsets.UTF_8);
@@ -139,26 +150,29 @@ public class ArchiveWriter {
             writer.flush();
             jos.closeEntry();
 
-            if ( feature.getPrototype() != null ) {
+            if (feature.getPrototype() != null) {
                 writeFeature(artifacts, provider, feature.getPrototype().getId(), jos, buffer);
             }
         }
     }
 
-    private static void writeFeature(final Set<ArtifactId> artifacts,
+    private static void writeFeature(
+            final Set<ArtifactId> artifacts,
             final ArtifactProvider provider,
             final ArtifactId featureId,
-            final JarOutputStream jos, final byte[] buffer) throws IOException {
-        if ( !artifacts.contains(featureId)) {
+            final JarOutputStream jos,
+            final byte[] buffer)
+            throws IOException {
+        if (!artifacts.contains(featureId)) {
             final URL url = provider.provide(featureId);
-            try ( final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                  final InputStream is = url.openStream()) {
+            try (final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    final InputStream is = url.openStream()) {
                 int l = 0;
-                while ( (l = is.read(buffer)) > 0 ) {
+                while ((l = is.read(buffer)) > 0) {
                     baos.write(buffer, 0, l);
                 }
                 final String contents = new String(baos.toByteArray(), StandardCharsets.UTF_8);
-                try ( final Reader reader = new StringReader(contents)) {
+                try (final Reader reader = new StringReader(contents)) {
                     final Feature feature = FeatureJSONReader.read(reader, featureId.toMvnId());
                     writeFeature(artifacts, feature, provider, jos, buffer);
                 }
@@ -166,22 +180,25 @@ public class ArchiveWriter {
         }
     }
 
-    private static void writeArtifact(final Set<ArtifactId> artifacts,
+    private static void writeArtifact(
+            final Set<ArtifactId> artifacts,
             final ArtifactProvider provider,
             final Artifact artifact,
             final JarOutputStream jos,
-            final byte[] buffer) throws IOException {
-        if ( artifacts.add(artifact.getId())) {
+            final byte[] buffer)
+            throws IOException {
+        if (artifacts.add(artifact.getId())) {
             final JarEntry artifactEntry = new JarEntry(artifact.getId().toMvnPath());
             jos.putNextEntry(artifactEntry);
 
             final URL url = provider.provide(artifact.getId());
             if (url == null) {
-                throw new IOException("Unable to find artifact " + artifact.getId().toMvnId());
+                throw new IOException(
+                        "Unable to find artifact " + artifact.getId().toMvnId());
             }
             try (final InputStream is = url.openStream()) {
                 int l = 0;
-                while ( (l = is.read(buffer)) > 0 ) {
+                while ((l = is.read(buffer)) > 0) {
                     jos.write(buffer, 0, l);
                 }
             }

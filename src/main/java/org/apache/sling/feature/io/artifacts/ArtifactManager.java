@@ -1,18 +1,20 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements. See the NOTICE file distributed with this
- * work for additional information regarding copyright ownership. The ASF
- * licenses this file to You under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.feature.io.artifacts;
 
@@ -57,8 +59,7 @@ import org.slf4j.LoggerFactory;
  * It uses {@link ArtifactProvider}s to get artifacts. The
  * providers are loaded using the service loader.
  */
-public class ArtifactManager
-        implements AutoCloseable, org.apache.sling.feature.builder.ArtifactProvider {
+public class ArtifactManager implements AutoCloseable, org.apache.sling.feature.builder.ArtifactProvider {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -77,18 +78,18 @@ public class ArtifactManager
     public static ArtifactManager getArtifactManager(final ArtifactManagerConfig config) throws IOException {
         final ServiceLoader<ArtifactProvider> loader = ServiceLoader.load(ArtifactProvider.class);
         final Map<String, ArtifactProvider> providers = new HashMap<>();
-        for(final ArtifactProvider provider : loader) {
+        for (final ArtifactProvider provider : loader) {
             providers.put(provider.getProtocol(), provider);
         }
 
         final String[] repositoryURLs = new String[config.getRepositoryUrls().length];
         int index = 0;
-        for(final String urlString : config.getRepositoryUrls()) {
+        for (final String urlString : config.getRepositoryUrls()) {
             repositoryURLs[index] = urlString;
             index++;
         }
         // default
-        if ( !providers.containsKey("*") ) {
+        if (!providers.containsKey("*")) {
             providers.put("*", new DefaultArtifactHandler());
         }
 
@@ -102,14 +103,14 @@ public class ArtifactManager
      * @throws IOException If the manager can't be initialized
      */
     ArtifactManager(final ArtifactManagerConfig config, final Map<String, ArtifactProvider> providers)
-    throws IOException {
+            throws IOException {
         this.config = config;
         this.providers = providers;
         try {
-            for(final ArtifactProvider provider : this.providers.values()) {
+            for (final ArtifactProvider provider : this.providers.values()) {
                 provider.init(config);
             }
-        } catch ( final IOException io) {
+        } catch (final IOException io) {
             shutdown();
             throw io;
         }
@@ -119,7 +120,7 @@ public class ArtifactManager
      * Shutdown the artifact manager.
      */
     public void shutdown() {
-        for(final ArtifactProvider provider : this.providers.values()) {
+        for (final ArtifactProvider provider : this.providers.values()) {
             provider.shutdown();
         }
         this.providers.clear();
@@ -151,7 +152,8 @@ public class ArtifactManager
         return (id -> {
             try {
                 final ArtifactHandler handler = this.getArtifactHandler(id.toMvnUrl());
-                try (final Reader r = new InputStreamReader(handler.getLocalURL().openStream(), "UTF-8")) {
+                try (final Reader r =
+                        new InputStreamReader(handler.getLocalURL().openStream(), "UTF-8")) {
                     final Feature f = FeatureJSONReader.read(r, handler.getUrl());
                     return f;
                 }
@@ -167,10 +169,10 @@ public class ArtifactManager
         final String scheme = url.substring(0, pos);
 
         ArtifactProvider provider = this.providers.get(scheme);
-        if ( provider == null ) {
+        if (provider == null) {
             provider = this.providers.get("*");
         }
-        if ( provider == null ) {
+        if (provider == null) {
             throw new IOException("No URL provider found for " + url);
         }
         return provider.getArtifact(url, relativeCachePath);
@@ -190,7 +192,7 @@ public class ArtifactManager
 
         ArtifactId artifactId = null;
 
-        if ( url.startsWith("mvn:") ) {
+        if (url.startsWith("mvn:")) {
             // mvn url
             try {
                 artifactId = ArtifactId.fromMvnUrl(url);
@@ -198,19 +200,19 @@ public class ArtifactManager
             } catch (final IllegalArgumentException iae) {
                 throw new IOException(iae.getMessage(), iae);
             }
-        } else if ( url.startsWith(":") ) {
+        } else if (url.startsWith(":")) {
             // repository path
             path = url.substring(1);
 
-        } else if ( url.indexOf(":/") > 0 ) {
+        } else if (url.indexOf(":/") > 0) {
 
             // absolute URL
             int pos = url.indexOf(":/") + 2;
-            while ( url.charAt(pos) == '/') {
+            while (url.charAt(pos) == '/') {
                 pos++;
             }
             final URL file = this.getArtifactFromProviders(url, url.substring(pos));
-            if ( file == null ) {
+            if (file == null) {
                 throw new IOException("Artifact " + url + " not found.");
             }
             return new ArtifactHandler(url, file);
@@ -218,14 +220,14 @@ public class ArtifactManager
         } else {
             // file (either relative or absolute)
             final Path f = Paths.get(url);
-            if ( !Files.exists(f)) {
+            if (!Files.exists(f)) {
                 throw new IOException("Artifact " + url + " not found.");
             }
             return new ArtifactHandler(f);
         }
         logger.debug("Querying repositories for {}", path);
 
-        for(final String repoUrl : this.config.getRepositoryUrls()) {
+        for (final String repoUrl : this.config.getRepositoryUrls()) {
             final StringBuilder builder = new StringBuilder();
             builder.append(repoUrl);
             builder.append('/');
@@ -236,17 +238,17 @@ public class ArtifactManager
             final String scheme = artifactUrl.substring(0, pos);
 
             ArtifactProvider handler = this.providers.get(scheme);
-            if ( handler == null ) {
+            if (handler == null) {
                 handler = this.providers.get("*");
             }
-            if ( handler == null ) {
+            if (handler == null) {
                 throw new IOException("No URL handler found for " + artifactUrl);
             }
 
             logger.debug("Checking {} to get artifact from {}", handler, artifactUrl);
 
             final URL file = handler.getArtifact(artifactUrl, path);
-            if ( file != null ) {
+            if (file != null) {
                 logger.debug("Found artifact {}", artifactUrl);
                 return new ArtifactHandler(artifactUrl, file);
             }
@@ -255,7 +257,7 @@ public class ArtifactManager
             final int lastSlash = artifactUrl.lastIndexOf('/');
             final int startSnapshot = artifactUrl.indexOf("-SNAPSHOT", lastSlash + 1);
 
-            if ( startSnapshot > -1 ) {
+            if (startSnapshot > -1) {
                 // special snapshot handling
                 final String metadataUrl = artifactUrl.substring(0, lastSlash) + "/maven-metadata.xml";
                 try {
@@ -264,20 +266,21 @@ public class ArtifactManager
                     final String contents = getFileContents(metadataHandler);
 
                     final String latestVersion = getLatestSnapshot(contents);
-                    if ( latestVersion != null ) {
+                    if (latestVersion != null) {
                         final String name = artifactUrl.substring(lastSlash); // includes slash
-                        final String fullURL = artifactUrl.substring(0, lastSlash) + name.replace("SNAPSHOT", latestVersion);
+                        final String fullURL =
+                                artifactUrl.substring(0, lastSlash) + name.replace("SNAPSHOT", latestVersion);
                         int pos2 = fullURL.indexOf(":/") + 2;
-                        while ( fullURL.charAt(pos2) == '/') {
+                        while (fullURL.charAt(pos2) == '/') {
                             pos2++;
                         }
                         final URL file2 = this.getArtifactFromProviders(fullURL, path);
-                        if ( file2 == null ) {
+                        if (file2 == null) {
                             throw new IOException("Artifact " + fullURL + " not found.");
                         }
                         return new ArtifactHandler(artifactUrl, file2);
                     }
-                } catch ( final IOException ignore ) {
+                } catch (final IOException ignore) {
                     // we ignore this but report the original 404
                 }
             }
@@ -296,8 +299,9 @@ public class ArtifactManager
 
     protected String getFileContents(final ArtifactHandler handler) throws IOException {
         final StringBuilder sb = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(handler.getLocalURL().openStream(), "UTF-8"))) {
-            for(String line = reader.readLine(); line != null; line = reader.readLine()) {
+        try (BufferedReader reader =
+                new BufferedReader(new InputStreamReader(handler.getLocalURL().openStream(), "UTF-8"))) {
+            for (String line = reader.readLine(); line != null; line = reader.readLine()) {
                 sb.append(line).append('\n');
             }
         }
@@ -308,22 +312,22 @@ public class ArtifactManager
     public static String getValue(final String xml, final String[] xpath) {
         String value = null;
         int pos = 0;
-        for(final String name : xpath) {
+        for (final String name : xpath) {
             final String element = '<' + name + '>';
 
             pos = xml.indexOf(element, pos);
-            if ( pos == -1 ) {
+            if (pos == -1) {
                 final String elementWithAttributes = '<' + name + ' ';
                 pos = xml.indexOf(elementWithAttributes, pos);
-                if ( pos == -1 ) {
+                if (pos == -1) {
                     break;
                 }
             }
             pos = xml.indexOf('>', pos) + 1;
         }
-        if ( pos != -1 ) {
+        if (pos != -1) {
             final int endPos = xml.indexOf("</", pos);
-            if ( endPos != -1 ) {
+            if (endPos != -1) {
                 value = xml.substring(pos, endPos).trim();
             }
         }
@@ -331,10 +335,12 @@ public class ArtifactManager
     }
 
     public static String getLatestSnapshot(final String mavenMetadata) {
-        final String timestamp = getValue(mavenMetadata, new String[] {"metadata", "versioning", "snapshot", "timestamp"});
-        final String buildNumber = getValue(mavenMetadata, new String[] {"metadata", "versioning", "snapshot", "buildNumber"});
+        final String timestamp =
+                getValue(mavenMetadata, new String[] {"metadata", "versioning", "snapshot", "timestamp"});
+        final String buildNumber =
+                getValue(mavenMetadata, new String[] {"metadata", "versioning", "snapshot", "buildNumber"});
 
-        if ( timestamp != null && buildNumber != null ) {
+        if (timestamp != null && buildNumber != null) {
             return timestamp + '-' + buildNumber;
         }
 
@@ -394,39 +400,45 @@ public class ArtifactManager
                     }
                     return null;
                 }
-            } catch ( final URISyntaxException ise) {
+            } catch (final URISyntaxException ise) {
                 // ignore
-            } catch ( final MalformedURLException mue) {
+            } catch (final MalformedURLException mue) {
                 // ignore
             }
             logger.debug("Checking remote url {}", url);
             try {
                 // check for url
-                if ( url.indexOf(":") == -1 ) {
+                if (url.indexOf(":") == -1) {
                     return null;
                 }
 
                 String adjustedRelativePath = relativeCachePath;
                 // For Windows we need to remove the drive name from the path
                 int pos = adjustedRelativePath.indexOf(":/");
-                if(pos >= 0) {
+                if (pos >= 0) {
                     adjustedRelativePath = adjustedRelativePath.substring(pos + 2);
                 }
-                Path cacheFile = cacheDir.resolve(adjustedRelativePath.replace("/", java.nio.file.FileSystems.getDefault().getSeparator()));
-                if (!Files.exists(cacheFile) ) {
+                Path cacheFile = cacheDir.resolve(adjustedRelativePath.replace(
+                        "/", java.nio.file.FileSystems.getDefault().getSeparator()));
+                if (!Files.exists(cacheFile)) {
                     Files.createDirectories(cacheFile.getParent());
                     final URL u = new URL(url);
                     final URLConnection con = u.openConnection();
                     final String userInfo = u.getUserInfo();
                     if (userInfo != null) {
-                        con.addRequestProperty("Authorization", "Basic " + Base64.getEncoder().encodeToString(u.toURI().getUserInfo().getBytes("UTF-8")));
+                        con.addRequestProperty(
+                                "Authorization",
+                                "Basic "
+                                        + Base64.getEncoder()
+                                                .encodeToString(
+                                                        u.toURI().getUserInfo().getBytes("UTF-8")));
                     }
                     con.connect();
 
-                    try (InputStream input = con.getInputStream()){
+                    try (InputStream input = con.getInputStream()) {
                         Files.copy(input, cacheFile);
-                    } catch(IOException e) {
-                        //TODO: Remove this logging statement when it settled down
+                    } catch (IOException e) {
+                        // TODO: Remove this logging statement when it settled down
                         logger.debug("Failed to copy file", e);
                         throw e;
                     }
@@ -435,7 +447,7 @@ public class ArtifactManager
                     this.config.incCachedArtifacts();
                 }
                 return cacheFile.toUri().toURL();
-            } catch ( final Exception e) {
+            } catch (final Exception e) {
                 logger.info("Artifact not found in one repository", e);
                 // ignore for now
                 return null;
@@ -449,7 +461,11 @@ public class ArtifactManager
     }
 
     private Path getArtifactFromMvn(final ArtifactId artifactId) {
-        final Path filePath = Paths.get(config.getMvnHome(), artifactId.toMvnPath().replace("/", java.nio.file.FileSystems.getDefault().getSeparator()));
+        final Path filePath = Paths.get(
+                config.getMvnHome(),
+                artifactId
+                        .toMvnPath()
+                        .replace("/", java.nio.file.FileSystems.getDefault().getSeparator()));
         logger.debug("Trying to fetch artifact {} from local mvn repository {}", artifactId.toMvnId(), filePath);
         if (!Files.exists(filePath) || !Files.isRegularFile(filePath) || Files.isReadable(filePath)) {
             logger.debug("Trying to download {}", artifactId.toMvnId());
@@ -486,10 +502,14 @@ public class ArtifactManager
             lines.add("    <dependencies>");
             lines.add("        <dependency>");
             lines.add("            <groupId>".concat(artifactId.getGroupId()).concat("</groupId>"));
-            lines.add("            <artifactId>".concat(artifactId.getArtifactId()).concat("</artifactId>"));
+            lines.add("            <artifactId>"
+                    .concat(artifactId.getArtifactId())
+                    .concat("</artifactId>"));
             lines.add("            <version>".concat(artifactId.getVersion()).concat("</version>"));
             if (artifactId.getClassifier() != null) {
-                lines.add("            <classifier>".concat(artifactId.getClassifier()).concat("</classifier>"));
+                lines.add("            <classifier>"
+                        .concat(artifactId.getClassifier())
+                        .concat("</classifier>"));
             }
             if (!"bundle".equals(artifactId.getType()) && !"jar".equals(artifactId.getType())) {
                 lines.add("            <type>".concat(artifactId.getType()).concat("</type>"));
@@ -525,8 +545,9 @@ public class ArtifactManager
 
     private static void deleteDirectoryRecursively(Path directory) throws IOException {
         try (Stream<Path> filesStream = Files.walk(directory)) {
-            final List<Path> pathsToDelete = filesStream.sorted(Comparator.reverseOrder()).collect(Collectors.toList());
-            for(Path path : pathsToDelete) {
+            final List<Path> pathsToDelete =
+                    filesStream.sorted(Comparator.reverseOrder()).collect(Collectors.toList());
+            for (Path path : pathsToDelete) {
                 Files.deleteIfExists(path);
             }
         }

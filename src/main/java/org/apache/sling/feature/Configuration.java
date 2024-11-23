@@ -1,18 +1,20 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements. See the NOTICE file distributed with this
- * work for additional information regarding copyright ownership. The ASF
- * licenses this file to You under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.feature;
 
@@ -28,7 +30,6 @@ import java.util.stream.Collectors;
 import org.apache.felix.cm.json.io.Configurations;
 import org.osgi.util.converter.Converters;
 
-
 /**
  * A configuration has either
  * <ul>
@@ -39,8 +40,7 @@ import org.osgi.util.converter.Converters;
  *
  * This class is not thread-safe.
  */
-public class Configuration
-    implements Comparable<Configuration>, Serializable {
+public class Configuration implements Comparable<Configuration>, Serializable {
 
     private static final long serialVersionUID = 2L;
 
@@ -79,7 +79,7 @@ public class Configuration
      * @throws IllegalArgumentException If pid is {@code null}
      */
     public Configuration(final String pid) {
-        if ( pid == null ) {
+        if (pid == null) {
             throw new IllegalArgumentException("pid must not be null");
         }
         this.pid = pid;
@@ -184,7 +184,7 @@ public class Configuration
 
     /**
      * Get the feature origins - if recorded
-     * 
+     *
      * @return A immutable list of feature artifact ids - list might be empty
      * @since 1.6
      * @throws IllegalArgumentException If the stored values are not valid artifact ids
@@ -192,19 +192,20 @@ public class Configuration
     public List<ArtifactId> getFeatureOrigins() {
         final List<ArtifactId> list = new ArrayList<>();
         final Object origins = this.properties.get(PROP_FEATURE_ORIGINS);
-        if ( origins != null ) {
-            final String[] values = Converters.standardConverter().convert(origins).to(String[].class);
-            for(final String v : values) {
+        if (origins != null) {
+            final String[] values =
+                    Converters.standardConverter().convert(origins).to(String[].class);
+            for (final String v : values) {
                 list.add(ArtifactId.parse(v));
             }
         }
         return Collections.unmodifiableList(list);
     }
 
-   /**
+    /**
      * Get the feature origins.
      * If no origins are recorded, the provided id is returned.
-     * 
+     *
      * @param self The id of the current feature
      * @return A immutable list of feature artifact ids
      * @since 1.7
@@ -213,13 +214,14 @@ public class Configuration
     public List<ArtifactId> getFeatureOrigins(final ArtifactId self) {
         final List<ArtifactId> list = new ArrayList<>();
         final Object origins = this.properties.get(PROP_FEATURE_ORIGINS);
-        if ( origins != null ) {
-            final String[] values = Converters.standardConverter().convert(origins).to(String[].class);
-            for(final String v : values) {
+        if (origins != null) {
+            final String[] values =
+                    Converters.standardConverter().convert(origins).to(String[].class);
+            for (final String v : values) {
                 list.add(ArtifactId.parse(v));
             }
         }
-        if ( list.isEmpty() ) {
+        if (list.isEmpty()) {
             list.add(self);
         }
         return Collections.unmodifiableList(list);
@@ -231,10 +233,11 @@ public class Configuration
      * @since 1.6
      */
     public void setFeatureOrigins(final List<ArtifactId> featureOrigins) {
-        if ( featureOrigins == null || featureOrigins.isEmpty() ) {
+        if (featureOrigins == null || featureOrigins.isEmpty()) {
             this.properties.remove(PROP_FEATURE_ORIGINS);
         } else {
-            final List<String> list = featureOrigins.stream().map(ArtifactId::toMvnId).collect(Collectors.toList());
+            final List<String> list =
+                    featureOrigins.stream().map(ArtifactId::toMvnId).collect(Collectors.toList());
             final String[] values = Converters.standardConverter().convert(list).to(String[].class);
             this.properties.put(PROP_FEATURE_ORIGINS, values);
         }
@@ -242,7 +245,7 @@ public class Configuration
 
     /**
      * Get the feature origins for a property - if recorded
-     * 
+     *
      * @param propertyName The name of the property
      * @return A immutable list of feature artifact ids - list might be empty
      * @since 1.8
@@ -250,10 +253,12 @@ public class Configuration
      */
     public List<ArtifactId> getFeatureOrigins(final String propertyName) {
         final List<ArtifactId> list = new ArrayList<>();
-        final Object origins = this.properties.get(PROP_FEATURE_ORIGINS.concat("-").concat(propertyName));
-        if ( origins != null ) {
-            final String[] values = Converters.standardConverter().convert(origins).to(String[].class);
-            for(final String v : values) {
+        final Object origins =
+                this.properties.get(PROP_FEATURE_ORIGINS.concat("-").concat(propertyName));
+        if (origins != null) {
+            final String[] values =
+                    Converters.standardConverter().convert(origins).to(String[].class);
+            for (final String v : values) {
                 list.add(ArtifactId.parse(v));
             }
         }
@@ -263,7 +268,7 @@ public class Configuration
     /**
      * Get the feature origins for a property.
      * If no origins are recorded, the provided id is returned.
-     * 
+     *
      * @param propertyName The name of the property
      * @param self The id of the current feature
      * @return A immutable list of feature artifact ids
@@ -272,14 +277,16 @@ public class Configuration
      */
     public List<ArtifactId> getFeatureOrigins(final String propertyName, final ArtifactId self) {
         final List<ArtifactId> list = new ArrayList<>();
-        final Object origins = this.properties.get(PROP_FEATURE_ORIGINS.concat("-").concat(propertyName));
-        if ( origins != null ) {
-            final String[] values = Converters.standardConverter().convert(origins).to(String[].class);
-            for(final String v : values) {
+        final Object origins =
+                this.properties.get(PROP_FEATURE_ORIGINS.concat("-").concat(propertyName));
+        if (origins != null) {
+            final String[] values =
+                    Converters.standardConverter().convert(origins).to(String[].class);
+            for (final String v : values) {
                 list.add(ArtifactId.parse(v));
             }
         }
-        if ( list.isEmpty() ) {
+        if (list.isEmpty()) {
             list.add(self);
         }
         return Collections.unmodifiableList(list);
@@ -292,10 +299,11 @@ public class Configuration
      * @since 1.8
      */
     public void setFeatureOrigins(final String propertyName, final List<ArtifactId> featureOrigins) {
-        if ( featureOrigins == null || featureOrigins.isEmpty() ) {
+        if (featureOrigins == null || featureOrigins.isEmpty()) {
             this.properties.remove(PROP_FEATURE_ORIGINS.concat("-").concat(propertyName));
         } else {
-            final List<String> list = featureOrigins.stream().map(ArtifactId::toMvnId).collect(Collectors.toList());
+            final List<String> list =
+                    featureOrigins.stream().map(ArtifactId::toMvnId).collect(Collectors.toList());
             final String[] values = Converters.standardConverter().convert(list).to(String[].class);
             this.properties.put(PROP_FEATURE_ORIGINS.concat("-").concat(propertyName), values);
         }
@@ -340,8 +348,6 @@ public class Configuration
 
     @Override
     public String toString() {
-        return "Configuration [pid=" + pid
-                + ", properties=" + properties
-                + "]";
+        return "Configuration [pid=" + pid + ", properties=" + properties + "]";
     }
 }

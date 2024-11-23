@@ -1,18 +1,20 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.feature.io.json;
 
@@ -35,7 +37,6 @@ import jakarta.json.JsonString;
 import jakarta.json.JsonStructure;
 import jakarta.json.JsonValue;
 import jakarta.json.JsonValue.ValueType;
-
 import org.apache.felix.cm.json.io.ConfigurationReader;
 import org.apache.felix.cm.json.io.ConfigurationReader.ConfiguratorPropertyHandler;
 import org.apache.felix.cm.json.io.ConfigurationResource;
@@ -70,8 +71,7 @@ public class FeatureJSONReader {
      * @return The read feature
      * @throws IOException If an IO errors occurs or the JSON is invalid.
      */
-    public static Feature read(final Reader reader, final String location)
-    throws IOException {
+    public static Feature read(final Reader reader, final String location) throws IOException {
         try {
             final FeatureJSONReader mr = new FeatureJSONReader(location);
             return mr.readFeature(reader);
@@ -95,7 +95,7 @@ public class FeatureJSONReader {
      */
     private FeatureJSONReader(final String location) {
         this.location = location;
-        if ( location == null ) {
+        if (location == null) {
             exceptionPrefix = "";
         } else {
             exceptionPrefix = location.concat(" : ");
@@ -109,7 +109,7 @@ public class FeatureJSONReader {
      * @throws IOException If the id is missing
      */
     private ArtifactId getFeatureId(final JsonObject json) throws IOException {
-        if ( !json.containsKey(JSONConstants.FEATURE_ID) ) {
+        if (!json.containsKey(JSONConstants.FEATURE_ID)) {
             throw new IOException(this.exceptionPrefix.concat("Feature id is missing"));
         }
         return checkTypeArtifactId(JSONConstants.FEATURE_ID, json.get(JSONConstants.FEATURE_ID));
@@ -117,7 +117,7 @@ public class FeatureJSONReader {
 
     private String getProperty(final JsonObject json, final String key) throws IOException {
         final JsonValue val = json.get(key);
-        if ( val != null ) {
+        if (val != null) {
             return checkTypeString(key, val);
         }
         return null;
@@ -129,16 +129,20 @@ public class FeatureJSONReader {
      * @param kvMap The variables will be written to this Key Value Map
      * @throws IOException If the json is invalid.
      */
-    private void readVariables(JsonObject json, Map<String,String> kvMap) throws IOException {
+    private void readVariables(JsonObject json, Map<String, String> kvMap) throws IOException {
         if (json.containsKey(JSONConstants.FEATURE_VARIABLES)) {
             final JsonValue variablesObj = json.get(JSONConstants.FEATURE_VARIABLES);
 
-            for (final Map.Entry<String, JsonValue> entry : checkTypeObject(JSONConstants.FEATURE_VARIABLES, variablesObj).entrySet()) {
+            for (final Map.Entry<String, JsonValue> entry : checkTypeObject(
+                            JSONConstants.FEATURE_VARIABLES, variablesObj)
+                    .entrySet()) {
                 final String key = entry.getKey();
                 // skip comments
-                if ( !key.startsWith("#") ) {
+                if (!key.startsWith("#")) {
                     if (kvMap.get(key) != null) {
-                        throw new IOException(this.exceptionPrefix.concat("Duplicate variable ").concat(key));
+                        throw new IOException(this.exceptionPrefix
+                                .concat("Duplicate variable ")
+                                .concat(key));
                     }
                     final String value = checkScalarType("variable value", entry.getValue(), true);
                     kvMap.put(key, value);
@@ -147,7 +151,6 @@ public class FeatureJSONReader {
         }
     }
 
-
     /**
      * Read the bundles / start levels section
      * @param json The json object describing the feature
@@ -155,66 +158,80 @@ public class FeatureJSONReader {
      * @param configContainer The configurations container
      * @throws IOException If the json is invalid.
      */
-    private void readBundles(
-            final JsonObject json,
-            final Bundles container,
-            final Configurations configContainer) throws IOException {
-        if ( json.containsKey(JSONConstants.FEATURE_BUNDLES)) {
+    private void readBundles(final JsonObject json, final Bundles container, final Configurations configContainer)
+            throws IOException {
+        if (json.containsKey(JSONConstants.FEATURE_BUNDLES)) {
             final List<Artifact> list = new ArrayList<>();
-            readArtifacts(JSONConstants.FEATURE_BUNDLES, "bundle", list, json.get(JSONConstants.FEATURE_BUNDLES), configContainer);
+            readArtifacts(
+                    JSONConstants.FEATURE_BUNDLES,
+                    "bundle",
+                    list,
+                    json.get(JSONConstants.FEATURE_BUNDLES),
+                    configContainer);
 
-            for(final Artifact a : list) {
-                if ( container.containsExact(a.getId())) {
-                    throw new IOException(exceptionPrefix + "Duplicate identical bundle " + a.getId().toMvnId());
+            for (final Artifact a : list) {
+                if (container.containsExact(a.getId())) {
+                    throw new IOException(exceptionPrefix + "Duplicate identical bundle "
+                            + a.getId().toMvnId());
                 }
                 try {
                     // check start order
                     a.getStartOrder();
-                } catch ( final IllegalArgumentException nfe) {
-                    throw new IOException(exceptionPrefix + "Illegal start order '" + a.getMetadata().get(Artifact.KEY_START_ORDER) + "'");
+                } catch (final IllegalArgumentException nfe) {
+                    throw new IOException(exceptionPrefix + "Illegal start order '"
+                            + a.getMetadata().get(Artifact.KEY_START_ORDER) + "'");
                 }
                 container.add(a);
             }
         }
     }
 
-    private void readArtifacts(final String section,
+    private void readArtifacts(
+            final String section,
             final String artifactType,
             final List<Artifact> artifacts,
             final JsonValue listObj,
             final Configurations container)
-    throws IOException {
-        for(final JsonValue entry : checkTypeArray(section, listObj)) {
+            throws IOException {
+        for (final JsonValue entry : checkTypeArray(section, listObj)) {
             final Artifact artifact;
             checkTypeObjectOrString(artifactType, entry);
-            if ( entry.getValueType() == ValueType.STRING ) {
+            if (entry.getValueType() == ValueType.STRING) {
                 // skip comments
-                if ( ((JsonString)entry).getString().startsWith("#") ) {
+                if (((JsonString) entry).getString().startsWith("#")) {
                     continue;
                 }
                 artifact = new Artifact(checkTypeArtifactId(artifactType, entry));
             } else {
                 final JsonObject bundleObj = (JsonObject) entry;
-                if ( !bundleObj.containsKey(JSONConstants.ARTIFACT_ID) ) {
-                    throw new IOException(exceptionPrefix.concat(" ").concat(artifactType).concat(" is missing required artifact id"));
+                if (!bundleObj.containsKey(JSONConstants.ARTIFACT_ID)) {
+                    throw new IOException(exceptionPrefix
+                            .concat(" ")
+                            .concat(artifactType)
+                            .concat(" is missing required artifact id"));
                 }
-                final ArtifactId id = checkTypeArtifactId(artifactType.concat(" ").concat(JSONConstants.ARTIFACT_ID), bundleObj.get(JSONConstants.ARTIFACT_ID));
+                final ArtifactId id = checkTypeArtifactId(
+                        artifactType.concat(" ").concat(JSONConstants.ARTIFACT_ID),
+                        bundleObj.get(JSONConstants.ARTIFACT_ID));
 
                 artifact = new Artifact(id);
-                for(final Map.Entry<String, JsonValue> metadataEntry : bundleObj.entrySet()) {
+                for (final Map.Entry<String, JsonValue> metadataEntry : bundleObj.entrySet()) {
                     final String key = metadataEntry.getKey();
                     // skip comments
-                    if ( key.startsWith("#") ) {
+                    if (key.startsWith("#")) {
                         continue;
                     }
-                    if ( JSONConstants.ARTIFACT_KNOWN_PROPERTIES.contains(key) ) {
+                    if (JSONConstants.ARTIFACT_KNOWN_PROPERTIES.contains(key)) {
                         continue;
                     }
-                    final String mval = checkScalarType(artifactType.concat(" metadata ").concat(key), metadataEntry.getValue(), false);
+                    final String mval = checkScalarType(
+                            artifactType.concat(" metadata ").concat(key), metadataEntry.getValue(), false);
                     artifact.getMetadata().put(key, mval);
                 }
-                if ( bundleObj.containsKey(JSONConstants.FEATURE_CONFIGURATIONS) ) {
-                    final JsonObject cfgs = checkTypeObject(artifactType.concat(" configurations"), bundleObj.get(JSONConstants.FEATURE_CONFIGURATIONS));
+                if (bundleObj.containsKey(JSONConstants.FEATURE_CONFIGURATIONS)) {
+                    final JsonObject cfgs = checkTypeObject(
+                            artifactType.concat(" configurations"),
+                            bundleObj.get(JSONConstants.FEATURE_CONFIGURATIONS));
                     addConfigurations(cfgs, artifact, container);
                 }
             }
@@ -222,93 +239,101 @@ public class FeatureJSONReader {
         }
     }
 
-    private void addConfigurations(final JsonObject json,
-            final Artifact artifact,
-            final Configurations container) throws IOException {
+    private void addConfigurations(final JsonObject json, final Artifact artifact, final Configurations container)
+            throws IOException {
         final ConfigurationReader reader = org.apache.felix.cm.json.io.Configurations.buildReader()
                 .verifyAsBundleResource(true)
                 .withIdentifier(this.location)
-                .withConfiguratorPropertyHandler(new ConfiguratorPropertyHandler(){
+                .withConfiguratorPropertyHandler(new ConfiguratorPropertyHandler() {
 
-					@Override
-					public void handleConfiguratorProperty(final String pid, final String property, final Object value) {
+                    @Override
+                    public void handleConfiguratorProperty(
+                            final String pid, final String property, final Object value) {
                         Configuration cfg = container.getConfiguration(pid);
-                        if ( cfg == null ) {
+                        if (cfg == null) {
                             cfg = new Configuration(pid);
                             container.add(cfg);
-                        }                      
-                        cfg.getProperties().put(Configuration.CONFIGURATOR_PREFIX.concat(property), value);						
-					}                                    
+                        }
+                        cfg.getProperties().put(Configuration.CONFIGURATOR_PREFIX.concat(property), value);
+                    }
                 })
                 .build(json);
         final ConfigurationResource rsrc = reader.readConfigurationResource();
-        if ( !reader.getIgnoredErrors().isEmpty() ) {
+        if (!reader.getIgnoredErrors().isEmpty()) {
             final StringBuilder builder = new StringBuilder(exceptionPrefix);
             builder.append("Errors in configurations:");
-            for(final String w : reader.getIgnoredErrors()) {
+            for (final String w : reader.getIgnoredErrors()) {
                 builder.append("\n");
                 builder.append(w);
             }
             throw new IOException(builder.toString());
         }
 
-        for(final Map.Entry<String, Hashtable<String, Object>> c : rsrc.getConfigurations().entrySet()) {
+        for (final Map.Entry<String, Hashtable<String, Object>> c :
+                rsrc.getConfigurations().entrySet()) {
             Configuration config = container.getConfiguration(c.getKey());
-            if ( config == null ) {
+            if (config == null) {
                 config = new Configuration(c.getKey());
                 container.add(config);
-            }                      
+            }
 
-            for(final Map.Entry<String, Object> prop : c.getValue().entrySet()) {
+            for (final Map.Entry<String, Object> prop : c.getValue().entrySet()) {
                 config.getProperties().put(prop.getKey(), prop.getValue());
             }
-            if ( config.getProperties().get(Configuration.PROP_ARTIFACT_ID) != null ) {
-                throw new IOException(exceptionPrefix.concat("Configuration must not define property ").concat(Configuration.PROP_ARTIFACT_ID));
+            if (config.getProperties().get(Configuration.PROP_ARTIFACT_ID) != null) {
+                throw new IOException(exceptionPrefix
+                        .concat("Configuration must not define property ")
+                        .concat(Configuration.PROP_ARTIFACT_ID));
             }
-            if ( artifact != null ) {
-                config.getProperties().put(Configuration.PROP_ARTIFACT_ID, artifact.getId().toMvnId());
+            if (artifact != null) {
+                config.getProperties()
+                        .put(Configuration.PROP_ARTIFACT_ID, artifact.getId().toMvnId());
             }
         }
     }
 
-
-    private void readConfigurations(final JsonObject json,
-            final Configurations container) throws IOException {
-        if ( json.containsKey(JSONConstants.FEATURE_CONFIGURATIONS) ) {
-            final JsonObject cfgs = checkTypeObject(JSONConstants.FEATURE_CONFIGURATIONS, json.get(JSONConstants.FEATURE_CONFIGURATIONS));
+    private void readConfigurations(final JsonObject json, final Configurations container) throws IOException {
+        if (json.containsKey(JSONConstants.FEATURE_CONFIGURATIONS)) {
+            final JsonObject cfgs = checkTypeObject(
+                    JSONConstants.FEATURE_CONFIGURATIONS, json.get(JSONConstants.FEATURE_CONFIGURATIONS));
             addConfigurations(cfgs, null, container);
         }
     }
 
-    private void readFrameworkProperties(final JsonObject json,
-            final Map<String,String> container) throws IOException {
-        if ( json.containsKey(JSONConstants.FEATURE_FRAMEWORK_PROPERTIES) ) {
-            final JsonValue propsObj= json.get(JSONConstants.FEATURE_FRAMEWORK_PROPERTIES);
+    private void readFrameworkProperties(final JsonObject json, final Map<String, String> container)
+            throws IOException {
+        if (json.containsKey(JSONConstants.FEATURE_FRAMEWORK_PROPERTIES)) {
+            final JsonValue propsObj = json.get(JSONConstants.FEATURE_FRAMEWORK_PROPERTIES);
 
-            for(final Map.Entry<String, JsonValue> entry : checkTypeObject(JSONConstants.FEATURE_FRAMEWORK_PROPERTIES, propsObj).entrySet()) {
+            for (final Map.Entry<String, JsonValue> entry : checkTypeObject(
+                            JSONConstants.FEATURE_FRAMEWORK_PROPERTIES, propsObj)
+                    .entrySet()) {
                 // skip comments
-                if ( entry.getKey().startsWith("#") ) {
+                if (entry.getKey().startsWith("#")) {
                     continue;
                 }
-                if ( container.get(entry.getKey()) != null ) {
-                    throw new IOException(this.exceptionPrefix.concat("Duplicate framework property ").concat(entry.getKey()));
+                if (container.get(entry.getKey()) != null) {
+                    throw new IOException(this.exceptionPrefix
+                            .concat("Duplicate framework property ")
+                            .concat(entry.getKey()));
                 }
                 final String value = checkScalarType("framework property value", entry.getValue(), false);
                 container.put(entry.getKey(), value);
             }
-
         }
     }
 
-    private void readExtensions(final JsonObject json,
+    private void readExtensions(
+            final JsonObject json,
             final List<String> keywords,
             final Extensions container,
-            final Configurations configContainer) throws IOException {
+            final Configurations configContainer)
+            throws IOException {
         final Set<String> keySet = new HashSet<>(json.keySet());
         keySet.removeAll(keywords);
         // the remaining keys are considered extensions!
-        for(final String key : keySet) {
-            if ( key.startsWith("#") ) {
+        for (final String key : keySet) {
+            if (key.startsWith("#")) {
                 // skip comments
                 continue;
             }
@@ -318,9 +343,9 @@ public class FeatureJSONReader {
             final String name;
             final String type;
             final String state;
-            if ( pos == -1 ) {
+            if (pos == -1) {
                 type = ExtensionType.ARTIFACTS.name();
-                if ( sep == -1 ) {
+                if (sep == -1) {
                     name = key;
                     state = ExtensionState.OPTIONAL.name();
                 } else {
@@ -329,7 +354,7 @@ public class FeatureJSONReader {
                 }
             } else {
                 name = key.substring(0, pos);
-                if ( sep == -1 ) {
+                if (sep == -1) {
                     type = postfix;
                     state = ExtensionState.OPTIONAL.name();
                 } else {
@@ -337,11 +362,14 @@ public class FeatureJSONReader {
                     state = postfix.substring(sep + 1);
                 }
             }
-            if ( JSONConstants.FEATURE_KNOWN_PROPERTIES.contains(name) ) {
-                throw new IOException(this.exceptionPrefix.concat("Extension is using reserved name : ").concat(name));
+            if (JSONConstants.FEATURE_KNOWN_PROPERTIES.contains(name)) {
+                throw new IOException(this.exceptionPrefix
+                        .concat("Extension is using reserved name : ")
+                        .concat(name));
             }
-            if ( container.getByName(name) != null ) {
-                throw new IOException(exceptionPrefix.concat("Duplicate extension with name ").concat(name));
+            if (container.getByName(name) != null) {
+                throw new IOException(
+                        exceptionPrefix.concat("Duplicate extension with name ").concat(name));
             }
 
             final ExtensionType extType = ExtensionType.valueOf(type);
@@ -359,38 +387,58 @@ public class FeatureJSONReader {
 
             final Extension ext = new Extension(extType, name, extState);
             final JsonValue value = json.get(key);
-            switch ( extType ) {
-                case ARTIFACTS : final List<Artifact> list = new ArrayList<>();
-                                 readArtifacts("Extension ".concat(name), "artifact", list, value, configContainer);
-                                 for(final Artifact a : list) {
-                                     if ( ext.getArtifacts().contains(a) ) {
-                                         throw new IOException(exceptionPrefix.concat("Duplicate artifact in extension ").concat(name).concat(" : ").concat(a.getId().toMvnId()));
-                                     }
-                                     ext.getArtifacts().add(a);
-                                 }
-                                 break;
-                case JSON : if ( value.getValueType() != ValueType.ARRAY && value.getValueType() != ValueType.OBJECT ) {
-                                throw new IOException(this.exceptionPrefix.concat("JSON Extension ").concat(name).concat(" is neither an object nor an array : ").concat(value.getValueType().name()));
-                            }
-                            ext.setJSONStructure((JsonStructure)value);
-                            break;
-                case TEXT : if ( value.getValueType() != ValueType.ARRAY && value.getValueType() != ValueType.STRING ) {
-                                throw new IOException(this.exceptionPrefix.concat("Text Extension ").concat(name).concat(" is neither a string nor an array : ").concat(value.getValueType().name()));
-                            }
-                            if ( value.getValueType() == ValueType.STRING ) {
-                                // string
-                                ext.setText(((JsonString)value).getString());
-                            } else {
-                                // list (array of strings)
-                                final StringBuilder sb = new StringBuilder();
-                                for(final JsonValue o : value.asJsonArray()) {
-                                    final String textValue = checkTypeString("Text Extension ".concat(name).concat(", value ").concat(o.toString()), o);
-                                    sb.append(textValue);
-                                    sb.append('\n');
-                                }
-                                ext.setText(sb.toString());
-                            }
-                            break;
+            switch (extType) {
+                case ARTIFACTS:
+                    final List<Artifact> list = new ArrayList<>();
+                    readArtifacts("Extension ".concat(name), "artifact", list, value, configContainer);
+                    for (final Artifact a : list) {
+                        if (ext.getArtifacts().contains(a)) {
+                            throw new IOException(exceptionPrefix
+                                    .concat("Duplicate artifact in extension ")
+                                    .concat(name)
+                                    .concat(" : ")
+                                    .concat(a.getId().toMvnId()));
+                        }
+                        ext.getArtifacts().add(a);
+                    }
+                    break;
+                case JSON:
+                    if (value.getValueType() != ValueType.ARRAY && value.getValueType() != ValueType.OBJECT) {
+                        throw new IOException(this.exceptionPrefix
+                                .concat("JSON Extension ")
+                                .concat(name)
+                                .concat(" is neither an object nor an array : ")
+                                .concat(value.getValueType().name()));
+                    }
+                    ext.setJSONStructure((JsonStructure) value);
+                    break;
+                case TEXT:
+                    if (value.getValueType() != ValueType.ARRAY && value.getValueType() != ValueType.STRING) {
+                        throw new IOException(this.exceptionPrefix
+                                .concat("Text Extension ")
+                                .concat(name)
+                                .concat(" is neither a string nor an array : ")
+                                .concat(value.getValueType().name()));
+                    }
+                    if (value.getValueType() == ValueType.STRING) {
+                        // string
+                        ext.setText(((JsonString) value).getString());
+                    } else {
+                        // list (array of strings)
+                        final StringBuilder sb = new StringBuilder();
+                        for (final JsonValue o : value.asJsonArray()) {
+                            final String textValue = checkTypeString(
+                                    "Text Extension "
+                                            .concat(name)
+                                            .concat(", value ")
+                                            .concat(o.toString()),
+                                    o);
+                            sb.append(textValue);
+                            sb.append('\n');
+                        }
+                        ext.setText(sb.toString());
+                    }
+                    break;
             }
 
             container.add(ext);
@@ -406,13 +454,21 @@ public class FeatureJSONReader {
      * @throws IOException If the value is not of the specified types
      */
     private String checkScalarType(final String key, final JsonValue value, boolean allowNull) throws IOException {
-        if ( allowNull && value.getValueType() == ValueType.NULL ) {
+        if (allowNull && value.getValueType() == ValueType.NULL) {
             return null;
         }
-        if ( value.getValueType() == ValueType.STRING || value.getValueType() == ValueType.NUMBER || value.getValueType() == ValueType.FALSE || value.getValueType() == ValueType.TRUE ) {
-            return org.apache.felix.cm.json.io.Configurations.convertToObject(value).toString();
+        if (value.getValueType() == ValueType.STRING
+                || value.getValueType() == ValueType.NUMBER
+                || value.getValueType() == ValueType.FALSE
+                || value.getValueType() == ValueType.TRUE) {
+            return org.apache.felix.cm.json.io.Configurations.convertToObject(value)
+                    .toString();
         }
-        throw new IOException(this.exceptionPrefix.concat("Key ").concat(key).concat(" is not one of the allowed types string, number or boolean : ").concat(value.getValueType().name()));
+        throw new IOException(this.exceptionPrefix
+                .concat("Key ")
+                .concat(key)
+                .concat(" is not one of the allowed types string, number or boolean : ")
+                .concat(value.getValueType().name()));
     }
 
     /**
@@ -422,8 +478,12 @@ public class FeatureJSONReader {
      * @throws IOException If the value is not of the specified types
      */
     private void checkTypeObjectOrString(final String key, final JsonValue value) throws IOException {
-        if ( value.getValueType() != ValueType.STRING && value.getValueType() != ValueType.OBJECT ) {
-            throw new IOException(this.exceptionPrefix.concat("Key ").concat(key).concat(" is neither a string nor an object : ").concat(value.getValueType().name()));
+        if (value.getValueType() != ValueType.STRING && value.getValueType() != ValueType.OBJECT) {
+            throw new IOException(this.exceptionPrefix
+                    .concat("Key ")
+                    .concat(key)
+                    .concat(" is neither a string nor an object : ")
+                    .concat(value.getValueType().name()));
         }
     }
 
@@ -435,10 +495,14 @@ public class FeatureJSONReader {
      * @throws IOException If the value is not of the specified types
      */
     private boolean checkTypeBoolean(final String key, final JsonValue value) throws IOException {
-        if ( value.getValueType() == ValueType.TRUE || value.getValueType() == ValueType.FALSE ) {
-            return (Boolean)org.apache.felix.cm.json.io.Configurations.convertToObject(value);
+        if (value.getValueType() == ValueType.TRUE || value.getValueType() == ValueType.FALSE) {
+            return (Boolean) org.apache.felix.cm.json.io.Configurations.convertToObject(value);
         }
-        throw new IOException(this.exceptionPrefix.concat("Key ").concat(key).concat(" is not of type boolean : ").concat(value.getValueType().name()));
+        throw new IOException(this.exceptionPrefix
+                .concat("Key ")
+                .concat(key)
+                .concat(" is not of type boolean : ")
+                .concat(value.getValueType().name()));
     }
 
     /**
@@ -452,8 +516,12 @@ public class FeatureJSONReader {
         final String textValue = checkTypeString(key, value);
         try {
             return ArtifactId.parse(textValue);
-        } catch ( final IllegalArgumentException iae) {
-            throw new IOException(this.exceptionPrefix.concat("Key ").concat(key).concat(" is not a valid artifact id : ").concat(textValue));
+        } catch (final IllegalArgumentException iae) {
+            throw new IOException(this.exceptionPrefix
+                    .concat("Key ")
+                    .concat(key)
+                    .concat(" is not a valid artifact id : ")
+                    .concat(textValue));
         }
     }
 
@@ -465,10 +533,14 @@ public class FeatureJSONReader {
      * @throws IOException If the value is not a string
      */
     private String checkTypeString(final String key, final JsonValue value) throws IOException {
-        if ( value.getValueType() == ValueType.STRING) {
-            return ((JsonString)value).getString();
+        if (value.getValueType() == ValueType.STRING) {
+            return ((JsonString) value).getString();
         }
-        throw new IOException(this.exceptionPrefix.concat("Key ").concat(key).concat(" is not of type string : ").concat(value.getValueType().name()));
+        throw new IOException(this.exceptionPrefix
+                .concat("Key ")
+                .concat(key)
+                .concat(" is not of type string : ")
+                .concat(value.getValueType().name()));
     }
 
     /**
@@ -479,10 +551,14 @@ public class FeatureJSONReader {
      * @throws IOException If the value is not an object
      */
     private JsonObject checkTypeObject(final String key, final JsonValue value) throws IOException {
-        if ( value.getValueType() == ValueType.OBJECT) {
+        if (value.getValueType() == ValueType.OBJECT) {
             return value.asJsonObject();
         }
-        throw new IOException(this.exceptionPrefix.concat("Key ").concat(key).concat(" is not of type object : ").concat(value.getValueType().name()));
+        throw new IOException(this.exceptionPrefix
+                .concat("Key ")
+                .concat(key)
+                .concat(" is not of type object : ")
+                .concat(value.getValueType().name()));
     }
 
     /**
@@ -493,72 +569,89 @@ public class FeatureJSONReader {
      * @throws IOException If the value is not of the specified types
      */
     private JsonArray checkTypeArray(final String key, final JsonValue value) throws IOException {
-        if ( value.getValueType() == ValueType.ARRAY) {
+        if (value.getValueType() == ValueType.ARRAY) {
             return value.asJsonArray();
         }
-        throw new IOException(this.exceptionPrefix.concat("Key ").concat(key).concat(" is not of type array : ").concat(value.getValueType().name()));
+        throw new IOException(this.exceptionPrefix
+                .concat("Key ")
+                .concat(key)
+                .concat(" is not of type array : ")
+                .concat(value.getValueType().name()));
     }
 
     private Prototype readPrototype(final JsonObject json) throws IOException {
-        if ( json.containsKey(JSONConstants.FEATURE_PROTOTYPE)) {
+        if (json.containsKey(JSONConstants.FEATURE_PROTOTYPE)) {
             final JsonValue prototypeObj = json.get(JSONConstants.FEATURE_PROTOTYPE);
             checkTypeObjectOrString(JSONConstants.FEATURE_PROTOTYPE, prototypeObj);
 
             final Prototype prototype;
-            if ( prototypeObj.getValueType() == ValueType.STRING ) {
+            if (prototypeObj.getValueType() == ValueType.STRING) {
                 prototype = new Prototype(checkTypeArtifactId(JSONConstants.FEATURE_PROTOTYPE, prototypeObj));
             } else {
                 final JsonObject obj = (JsonObject) prototypeObj;
-                if ( !obj.containsKey(JSONConstants.ARTIFACT_ID) ) {
+                if (!obj.containsKey(JSONConstants.ARTIFACT_ID)) {
                     throw new IOException(exceptionPrefix.concat(" prototype is missing required artifact id"));
                 }
-                prototype = new Prototype(checkTypeArtifactId("Prototype ".concat(JSONConstants.ARTIFACT_ID), obj.get(JSONConstants.ARTIFACT_ID)));
+                prototype = new Prototype(checkTypeArtifactId(
+                        "Prototype ".concat(JSONConstants.ARTIFACT_ID), obj.get(JSONConstants.ARTIFACT_ID)));
 
-                if ( obj.containsKey(JSONConstants.PROTOTYPE_REMOVALS) ) {
-                    final JsonObject removalObj = checkTypeObject("Prototype removals", obj.get(JSONConstants.PROTOTYPE_REMOVALS));
-                    if ( removalObj.containsKey(JSONConstants.FEATURE_BUNDLES) ) {
-                        for(final JsonValue val : checkTypeArray("Prototype removal bundles", removalObj.get(JSONConstants.FEATURE_BUNDLES))) {
-                            if ( checkTypeString("Prototype removal bundles", val).startsWith("#")) {
+                if (obj.containsKey(JSONConstants.PROTOTYPE_REMOVALS)) {
+                    final JsonObject removalObj =
+                            checkTypeObject("Prototype removals", obj.get(JSONConstants.PROTOTYPE_REMOVALS));
+                    if (removalObj.containsKey(JSONConstants.FEATURE_BUNDLES)) {
+                        for (final JsonValue val : checkTypeArray(
+                                "Prototype removal bundles", removalObj.get(JSONConstants.FEATURE_BUNDLES))) {
+                            if (checkTypeString("Prototype removal bundles", val)
+                                    .startsWith("#")) {
                                 continue;
                             }
                             prototype.getBundleRemovals().add(checkTypeArtifactId("Prototype removal bundles", val));
                         }
                     }
-                    if ( removalObj.containsKey(JSONConstants.FEATURE_CONFIGURATIONS) ) {
-                        for(final JsonValue val : checkTypeArray("Prototype removal configuration", removalObj.get(JSONConstants.FEATURE_CONFIGURATIONS))) {
+                    if (removalObj.containsKey(JSONConstants.FEATURE_CONFIGURATIONS)) {
+                        for (final JsonValue val : checkTypeArray(
+                                "Prototype removal configuration",
+                                removalObj.get(JSONConstants.FEATURE_CONFIGURATIONS))) {
                             final String propVal = checkTypeString("Prototype removal configuration", val);
-                            if ( propVal.startsWith("#") ) {
+                            if (propVal.startsWith("#")) {
                                 continue;
                             }
                             prototype.getConfigurationRemovals().add(propVal);
                         }
                     }
-                    if ( removalObj.containsKey(JSONConstants.FEATURE_FRAMEWORK_PROPERTIES) ) {
-                        for(final JsonValue val : checkTypeArray("Prototype removal framework properties", removalObj.get(JSONConstants.FEATURE_FRAMEWORK_PROPERTIES))) {
+                    if (removalObj.containsKey(JSONConstants.FEATURE_FRAMEWORK_PROPERTIES)) {
+                        for (final JsonValue val : checkTypeArray(
+                                "Prototype removal framework properties",
+                                removalObj.get(JSONConstants.FEATURE_FRAMEWORK_PROPERTIES))) {
                             final String propVal = checkTypeString("Prototype removal framework properties", val);
-                            if ( propVal.startsWith("#") ) {
+                            if (propVal.startsWith("#")) {
                                 continue;
                             }
                             prototype.getFrameworkPropertiesRemovals().add(propVal);
                         }
                     }
-                    if ( removalObj.containsKey(JSONConstants.PROTOTYPE_EXTENSION_REMOVALS) ) {
-                        for(final JsonValue val : checkTypeArray("Prototype removal extensions", removalObj.get(JSONConstants.PROTOTYPE_EXTENSION_REMOVALS))) {
+                    if (removalObj.containsKey(JSONConstants.PROTOTYPE_EXTENSION_REMOVALS)) {
+                        for (final JsonValue val : checkTypeArray(
+                                "Prototype removal extensions",
+                                removalObj.get(JSONConstants.PROTOTYPE_EXTENSION_REMOVALS))) {
                             checkTypeObjectOrString("Prototype removal extension", val);
-                            if ( val.getValueType() == ValueType.STRING ) {
-                                final String propVal = org.apache.felix.cm.json.io.Configurations.convertToObject(val).toString();
-                                if ( propVal.startsWith("#")) {
+                            if (val.getValueType() == ValueType.STRING) {
+                                final String propVal = org.apache.felix.cm.json.io.Configurations.convertToObject(val)
+                                        .toString();
+                                if (propVal.startsWith("#")) {
                                     continue;
                                 }
                                 prototype.getExtensionRemovals().add(propVal);
                             } else {
-                                final JsonObject removalMap = (JsonObject)val;
+                                final JsonObject removalMap = (JsonObject) val;
                                 final JsonValue nameObj = removalMap.get("name");
                                 final String name = checkTypeString("Prototype removal extension", nameObj);
-                                if ( removalMap.containsKey("artifacts") ) {
+                                if (removalMap.containsKey("artifacts")) {
                                     final List<ArtifactId> ids = new ArrayList<>();
-                                    for(final JsonValue aid : checkTypeArray("Prototype removal extension artifacts", removalMap.get("artifacts"))) {
-                                        if ( checkTypeString("Prototype removal extension artifact", aid).startsWith("#")) {
+                                    for (final JsonValue aid : checkTypeArray(
+                                            "Prototype removal extension artifacts", removalMap.get("artifacts"))) {
+                                        if (checkTypeString("Prototype removal extension artifact", aid)
+                                                .startsWith("#")) {
                                             continue;
                                         }
                                         ids.add(checkTypeArtifactId("Prototype removal extension artifact", aid));
@@ -572,7 +665,6 @@ public class FeatureJSONReader {
                     }
                     readRequirements(removalObj, prototype.getRequirementRemovals());
                     readCapabilities(removalObj, prototype.getCapabilityRemovals());
-
                 }
             }
             return prototype;
@@ -580,56 +672,66 @@ public class FeatureJSONReader {
         return null;
     }
 
-    private void readRequirements(final JsonObject json, final List<MatchingRequirement> container)
-            throws IOException {
-        if ( json.containsKey(JSONConstants.FEATURE_REQUIREMENTS)) {
-            for(final JsonValue req : checkTypeArray(JSONConstants.FEATURE_REQUIREMENTS, json.get(JSONConstants.FEATURE_REQUIREMENTS))) {
+    private void readRequirements(final JsonObject json, final List<MatchingRequirement> container) throws IOException {
+        if (json.containsKey(JSONConstants.FEATURE_REQUIREMENTS)) {
+            for (final JsonValue req :
+                    checkTypeArray(JSONConstants.FEATURE_REQUIREMENTS, json.get(JSONConstants.FEATURE_REQUIREMENTS))) {
                 final JsonObject obj = checkTypeObject("Requirement", req);
 
-                if ( !obj.containsKey(JSONConstants.REQCAP_NAMESPACE) ) {
+                if (!obj.containsKey(JSONConstants.REQCAP_NAMESPACE)) {
                     throw new IOException(this.exceptionPrefix.concat("Namespace is missing for requirement"));
                 }
-                final String namespace = checkTypeString("Requirement namespace", obj.get(JSONConstants.REQCAP_NAMESPACE));
+                final String namespace =
+                        checkTypeString("Requirement namespace", obj.get(JSONConstants.REQCAP_NAMESPACE));
 
                 Map<String, Object> attrMap = new HashMap<>();
-                if ( obj.containsKey(JSONConstants.REQCAP_ATTRIBUTES) ) {
-                    final JsonObject attrs = checkTypeObject("Requirement attributes", obj.get(JSONConstants.REQCAP_ATTRIBUTES));
-                    attrs.forEach(rethrowBiConsumer((key, value) -> ManifestUtils.unmarshalAttribute(key, value, attrMap::put)));
+                if (obj.containsKey(JSONConstants.REQCAP_ATTRIBUTES)) {
+                    final JsonObject attrs =
+                            checkTypeObject("Requirement attributes", obj.get(JSONConstants.REQCAP_ATTRIBUTES));
+                    attrs.forEach(rethrowBiConsumer(
+                            (key, value) -> ManifestUtils.unmarshalAttribute(key, value, attrMap::put)));
                 }
 
                 Map<String, String> dirMap = new HashMap<>();
-                if ( obj.containsKey(JSONConstants.REQCAP_DIRECTIVES) ) {
-                    final JsonObject dirs = checkTypeObject("Requirement directives", obj.get(JSONConstants.REQCAP_DIRECTIVES));
-                    dirs.forEach(rethrowBiConsumer((key, value) -> ManifestUtils.unmarshalDirective(key, value, dirMap::put)));
+                if (obj.containsKey(JSONConstants.REQCAP_DIRECTIVES)) {
+                    final JsonObject dirs =
+                            checkTypeObject("Requirement directives", obj.get(JSONConstants.REQCAP_DIRECTIVES));
+                    dirs.forEach(rethrowBiConsumer(
+                            (key, value) -> ManifestUtils.unmarshalDirective(key, value, dirMap::put)));
                 }
 
-                final MatchingRequirement r = new MatchingRequirementImpl(null,
-                        namespace, dirMap, attrMap);
+                final MatchingRequirement r = new MatchingRequirementImpl(null, namespace, dirMap, attrMap);
                 container.add(r);
             }
         }
     }
 
     private void readCapabilities(final JsonObject json, final List<Capability> container) throws IOException {
-        if ( json.containsKey(JSONConstants.FEATURE_CAPABILITIES)) {
-            for(final JsonValue cap : checkTypeArray(JSONConstants.FEATURE_REQUIREMENTS, json.get(JSONConstants.FEATURE_CAPABILITIES))) {
+        if (json.containsKey(JSONConstants.FEATURE_CAPABILITIES)) {
+            for (final JsonValue cap :
+                    checkTypeArray(JSONConstants.FEATURE_REQUIREMENTS, json.get(JSONConstants.FEATURE_CAPABILITIES))) {
                 final JsonObject obj = checkTypeObject("Capability", cap);
 
-                if ( !obj.containsKey(JSONConstants.REQCAP_NAMESPACE) ) {
+                if (!obj.containsKey(JSONConstants.REQCAP_NAMESPACE)) {
                     throw new IOException(this.exceptionPrefix.concat("Namespace is missing for capability"));
                 }
-                final String namespace = checkTypeString("Capability namespace", obj.get(JSONConstants.REQCAP_NAMESPACE));
+                final String namespace =
+                        checkTypeString("Capability namespace", obj.get(JSONConstants.REQCAP_NAMESPACE));
 
                 Map<String, Object> attrMap = new HashMap<>();
-                if ( obj.containsKey(JSONConstants.REQCAP_ATTRIBUTES) ) {
-                    final JsonObject attrs = checkTypeObject("Capability attributes", obj.get(JSONConstants.REQCAP_ATTRIBUTES));
-                    attrs.forEach(rethrowBiConsumer((key, value) -> ManifestUtils.unmarshalAttribute(key, value, attrMap::put)));
+                if (obj.containsKey(JSONConstants.REQCAP_ATTRIBUTES)) {
+                    final JsonObject attrs =
+                            checkTypeObject("Capability attributes", obj.get(JSONConstants.REQCAP_ATTRIBUTES));
+                    attrs.forEach(rethrowBiConsumer(
+                            (key, value) -> ManifestUtils.unmarshalAttribute(key, value, attrMap::put)));
                 }
 
                 Map<String, String> dirMap = new HashMap<>();
-                if ( obj.containsKey(JSONConstants.REQCAP_DIRECTIVES) ) {
-                    final JsonObject dirs = checkTypeObject("Capability directives", obj.get(JSONConstants.REQCAP_DIRECTIVES));
-                    dirs.forEach(rethrowBiConsumer((key, value) -> ManifestUtils.unmarshalDirective(key, value, dirMap::put)));
+                if (obj.containsKey(JSONConstants.REQCAP_DIRECTIVES)) {
+                    final JsonObject dirs =
+                            checkTypeObject("Capability directives", obj.get(JSONConstants.REQCAP_DIRECTIVES));
+                    dirs.forEach(rethrowBiConsumer(
+                            (key, value) -> ManifestUtils.unmarshalDirective(key, value, dirMap::put)));
                 }
 
                 final Capability c = new CapabilityImpl(null, namespace, dirMap, attrMap);
@@ -643,7 +745,8 @@ public class FeatureJSONReader {
         void accept(T t, V u) throws E;
     }
 
-    private static <T, V, E extends Exception> BiConsumer<T, V> rethrowBiConsumer(BiConsumer_WithExceptions<T, V, E> biConsumer) {
+    private static <T, V, E extends Exception> BiConsumer<T, V> rethrowBiConsumer(
+            BiConsumer_WithExceptions<T, V, E> biConsumer) {
         return (t, u) -> {
             try {
                 biConsumer.accept(t, u);
@@ -653,7 +756,7 @@ public class FeatureJSONReader {
         };
     }
 
-    @SuppressWarnings ("unchecked")
+    @SuppressWarnings("unchecked")
     private static <E extends Throwable> void throwAsUnchecked(Exception exception) throws E {
         throw (E) exception;
     }
@@ -671,9 +774,10 @@ public class FeatureJSONReader {
      * @return The feature object
      * @throws IOException If an IO error occurs or the JSON is not valid.
      */
-    private Feature readFeature(final Reader reader)
-    throws IOException {
-        final JsonObject json = Json.createReader(org.apache.felix.cm.json.io.Configurations.jsonCommentAwareReader(reader)).readObject();
+    private Feature readFeature(final Reader reader) throws IOException {
+        final JsonObject json = Json.createReader(
+                        org.apache.felix.cm.json.io.Configurations.jsonCommentAwareReader(reader))
+                .readObject();
 
         checkModelVersion(json);
 
@@ -688,7 +792,8 @@ public class FeatureJSONReader {
 
         // complete flag
         if (json.containsKey(JSONConstants.FEATURE_COMPLETE)) {
-            this.feature.setComplete(checkTypeBoolean(JSONConstants.FEATURE_COMPLETE, json.get(JSONConstants.FEATURE_COMPLETE)));
+            this.feature.setComplete(
+                    checkTypeBoolean(JSONConstants.FEATURE_COMPLETE, json.get(JSONConstants.FEATURE_COMPLETE)));
         }
 
         // title, description, vendor and license, docURL, scmInfo
@@ -700,8 +805,9 @@ public class FeatureJSONReader {
         this.feature.setSCMInfo(getProperty(json, JSONConstants.FEATURE_SCM_INFO));
 
         // categories
-        if ( json.containsKey(JSONConstants.FEATURE_CATEGORIES) ) {
-            for(final JsonValue val : checkTypeArray(JSONConstants.FEATURE_CATEGORIES, json.get(JSONConstants.FEATURE_CATEGORIES))) {
+        if (json.containsKey(JSONConstants.FEATURE_CATEGORIES)) {
+            for (final JsonValue val :
+                    checkTypeArray(JSONConstants.FEATURE_CATEGORIES, json.get(JSONConstants.FEATURE_CATEGORIES))) {
                 this.feature.getCategories().add(checkTypeString("Categories", val));
             }
         }
@@ -715,15 +821,17 @@ public class FeatureJSONReader {
         this.readRequirements(json, feature.getRequirements());
         this.feature.setPrototype(this.readPrototype(json));
 
-        this.readExtensions(json,
+        this.readExtensions(
+                json,
                 JSONConstants.FEATURE_KNOWN_PROPERTIES,
-                this.feature.getExtensions(), this.feature.getConfigurations());
+                this.feature.getExtensions(),
+                this.feature.getConfigurations());
 
         // check for internal metadata extension
         final Extension internalData = this.feature.getExtensions().getByName(Extension.EXTENSION_NAME_INTERNAL_DATA);
-        if ( internalData != null ) {
+        if (internalData != null) {
             this.feature.getExtensions().remove(internalData);
-            if ( internalData.getType() != ExtensionType.JSON ) {
+            if (internalData.getType() != ExtensionType.JSON) {
                 throw new IOException("Extension " + internalData.getName() + " must be of type JSON");
             }
             this.setInternalData(internalData);
@@ -737,32 +845,48 @@ public class FeatureJSONReader {
             modelVersion = "1";
         }
         if (!"1".equals(modelVersion)) {
-            throw new IOException(this.exceptionPrefix.concat("Unsupported model version: ").concat(modelVersion));
+            throw new IOException(
+                    this.exceptionPrefix.concat("Unsupported model version: ").concat(modelVersion));
         }
     }
 
     private void setInternalData(final Extension internalData) throws IOException {
         final JsonValue val = internalData.getJSONStructure();
-        for (final Map.Entry<String, JsonValue> entry : checkTypeObject("Extension ".concat(internalData.getName()), val).entrySet()) {
+        for (final Map.Entry<String, JsonValue> entry : checkTypeObject(
+                        "Extension ".concat(internalData.getName()), val)
+                .entrySet()) {
             final String key = entry.getKey();
-            if ( JSONConstants.FRAMEWORK_PROPERTIES_METADATA.equals(key) ) {
-                for (final Map.Entry<String, JsonValue> propEntry : checkTypeObject(key, entry.getValue()).entrySet()) {
+            if (JSONConstants.FRAMEWORK_PROPERTIES_METADATA.equals(key)) {
+                for (final Map.Entry<String, JsonValue> propEntry :
+                        checkTypeObject(key, entry.getValue()).entrySet()) {
                     final Map<String, Object> metadata = this.feature.getFrameworkPropertyMetadata(propEntry.getKey());
-                    if ( metadata == null ) {
-                        throw new IOException("Framework property " + propEntry.getKey() + " does not exists (metadata)");
+                    if (metadata == null) {
+                        throw new IOException(
+                                "Framework property " + propEntry.getKey() + " does not exists (metadata)");
                     }
-                    for(final Map.Entry<String, JsonValue> ve : checkTypeObject(JSONConstants.FRAMEWORK_PROPERTIES_METADATA.concat(".").concat(propEntry.getKey()), propEntry.getValue()).entrySet()) {
-                        metadata.put(ve.getKey(), org.apache.felix.cm.json.io.Configurations.convertToObject(ve.getValue()));
+                    for (final Map.Entry<String, JsonValue> ve : checkTypeObject(
+                                    JSONConstants.FRAMEWORK_PROPERTIES_METADATA
+                                            .concat(".")
+                                            .concat(propEntry.getKey()),
+                                    propEntry.getValue())
+                            .entrySet()) {
+                        metadata.put(
+                                ve.getKey(), org.apache.felix.cm.json.io.Configurations.convertToObject(ve.getValue()));
                     }
                 }
-            } else if ( JSONConstants.VARIABLES_METADATA.equals(key) ) {
-                for (final Map.Entry<String, JsonValue> varEntry : checkTypeObject(key, entry.getValue()).entrySet()) {
+            } else if (JSONConstants.VARIABLES_METADATA.equals(key)) {
+                for (final Map.Entry<String, JsonValue> varEntry :
+                        checkTypeObject(key, entry.getValue()).entrySet()) {
                     final Map<String, Object> metadata = this.feature.getVariableMetadata(varEntry.getKey());
-                    if ( metadata == null ) {
+                    if (metadata == null) {
                         throw new IOException("Variable " + varEntry.getKey() + " does not exists (metadata)");
                     }
-                    for(final Map.Entry<String, JsonValue> ve : checkTypeObject(JSONConstants.VARIABLES_METADATA.concat(".").concat(varEntry.getKey()), varEntry.getValue()).entrySet()) {
-                        metadata.put(ve.getKey(), org.apache.felix.cm.json.io.Configurations.convertToObject(ve.getValue()));
+                    for (final Map.Entry<String, JsonValue> ve : checkTypeObject(
+                                    JSONConstants.VARIABLES_METADATA.concat(".").concat(varEntry.getKey()),
+                                    varEntry.getValue())
+                            .entrySet()) {
+                        metadata.put(
+                                ve.getKey(), org.apache.felix.cm.json.io.Configurations.convertToObject(ve.getValue()));
                     }
                 }
 
@@ -772,5 +896,3 @@ public class FeatureJSONReader {
         }
     }
 }
-
-

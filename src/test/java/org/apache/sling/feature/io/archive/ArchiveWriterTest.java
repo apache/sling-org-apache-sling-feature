@@ -18,10 +18,6 @@
  */
 package org.apache.sling.feature.io.archive;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -40,6 +36,10 @@ import org.apache.sling.feature.Feature;
 import org.apache.sling.feature.io.json.FeatureJSONReader;
 import org.junit.Test;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 public class ArchiveWriterTest {
 
     public static final String ARTIFACT = "/features/final.json";
@@ -52,10 +52,15 @@ public class ArchiveWriterTest {
         byte[] archive = null;
         final Set<ArtifactId> ids = new HashSet<>();
         try (final ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            ArchiveWriter.write(out, null, id -> {
-                ids.add(id);
-                return ArchiveWriterTest.class.getResource(ARTIFACT);
-            }, f).finish();
+            ArchiveWriter.write(
+                            out,
+                            null,
+                            id -> {
+                                ids.add(id);
+                                return ArchiveWriterTest.class.getResource(ARTIFACT);
+                            },
+                            f)
+                    .finish();
             out.flush();
             archive = out.toByteArray();
         }
@@ -79,8 +84,8 @@ public class ArchiveWriterTest {
                 byte[] read = readFromStream(is);
 
                 // is feature?
-                if ( id.equals(f.getId()) ) {
-                    try ( final Reader reader = new StringReader(new String(read, StandardCharsets.UTF_8))) {
+                if (id.equals(f.getId())) {
+                    try (final Reader reader = new StringReader(new String(read, StandardCharsets.UTF_8))) {
                         final Feature readFeature = FeatureJSONReader.read(reader, id.toString());
                         assertEquals(f.getId(), readFeature.getId());
                         readFeatureIds.add(f.getId());

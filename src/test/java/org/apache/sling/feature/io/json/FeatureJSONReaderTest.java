@@ -1,27 +1,22 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.feature.io.json;
-
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -36,9 +31,17 @@ import org.apache.sling.feature.Feature;
 import org.junit.Test;
 import org.osgi.resource.Capability;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 public class FeatureJSONReaderTest {
 
-    @Test public void testRead() throws Exception {
+    @Test
+    public void testRead() throws Exception {
         final Feature feature = U.readFeature("test");
         assertNotNull(feature);
         assertNotNull(feature.getId());
@@ -55,14 +58,16 @@ public class FeatureJSONReaderTest {
         assertEquals("yeah", cfg2.getProperties().get("a.value"));
 
         assertEquals(3, feature.getCapabilities().size());
-        Capability capability = U.findCapability(feature.getCapabilities(),"osgi.service");
+        Capability capability = U.findCapability(feature.getCapabilities(), "osgi.service");
         assertNotNull(capability.getAttributes().get("objectClass"));
 
-        assertEquals(Arrays.asList("org.osgi.service.http.runtime.HttpServiceRuntime"), capability.getAttributes().get("objectClass"));
-
+        assertEquals(
+                Arrays.asList("org.osgi.service.http.runtime.HttpServiceRuntime"),
+                capability.getAttributes().get("objectClass"));
     }
 
-    @Test public void testReadRepoInitExtension() throws Exception {
+    @Test
+    public void testReadRepoInitExtension() throws Exception {
         Feature feature = U.readFeature("repoinit");
         Extensions extensions = feature.getExtensions();
         assertEquals(1, extensions.size());
@@ -70,7 +75,8 @@ public class FeatureJSONReaderTest {
         assertEquals("some repo init\ntext", ext.getText());
     }
 
-    @Test public void testReadRepoInitExtensionArray() throws Exception {
+    @Test
+    public void testReadRepoInitExtensionArray() throws Exception {
         Feature feature = U.readFeature("repoinit2");
         Extensions extensions = feature.getExtensions();
         assertEquals(1, extensions.size());
@@ -78,7 +84,8 @@ public class FeatureJSONReaderTest {
         assertEquals("some repo init\ntext\n", ext.getText());
     }
 
-    @Test public void testReadArtifactsExtensions() throws Exception {
+    @Test
+    public void testReadArtifactsExtensions() throws Exception {
         final Feature feature = U.readFeature("artifacts-extension");
         ArtifactsExtensions.testReadArtifactsExtensions(feature);
     }
@@ -151,8 +158,8 @@ public class FeatureJSONReaderTest {
         assertEquals(3, c.getProperties().size());
         assertEquals(5L, c.getProperties().get("foo"));
         assertEquals(7L, c.getProperties().get(Configuration.PROP_PREFIX.concat("number")));
-        assertArrayEquals(new String[] {"org.apache.sling/test-feature/1.1"}, 
-              (String[])c.getProperties().get(Configuration.PROP_FEATURE_ORIGINS));
+        assertArrayEquals(new String[] {"org.apache.sling/test-feature/1.1"}, (String[])
+                c.getProperties().get(Configuration.PROP_FEATURE_ORIGINS));
 
         final List<ArtifactId> origins = c.getFeatureOrigins();
         assertEquals(1, origins.size());

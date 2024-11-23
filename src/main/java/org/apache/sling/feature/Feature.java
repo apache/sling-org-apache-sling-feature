@@ -1,18 +1,20 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements. See the NOTICE file distributed with this
- * work for additional information regarding copyright ownership. The ASF
- * licenses this file to You under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.feature;
 
@@ -90,8 +92,8 @@ public class Feature implements Comparable<Feature>, Serializable {
     /** The optional prototype. */
     private Prototype prototype;
 
-    /** 
-     * The optional categories 
+    /**
+     * The optional categories
      * @since 1.9
      */
     private final List<String> categories = new ArrayList<>();
@@ -114,7 +116,7 @@ public class Feature implements Comparable<Feature>, Serializable {
      * @throws IllegalArgumentException If id is {@code null}.
      */
     public Feature(final ArtifactId id) {
-        if ( id == null ) {
+        if (id == null) {
             throw new IllegalArgumentException("id must not be null.");
         }
         this.id = id;
@@ -251,7 +253,7 @@ public class Feature implements Comparable<Feature>, Serializable {
      * Obtain the variables of the feature
      * @return The variables
      */
-    public Map<String,String> getVariables() {
+    public Map<String, String> getVariables() {
         return this.variables;
     }
 
@@ -365,7 +367,7 @@ public class Feature implements Comparable<Feature>, Serializable {
 
     /**
      * Get the feature origins for the metadata- if recorded
-     * 
+     *
      * @param metadata The metadata (for a variable or framework property)
      * @return A immutable list of feature artifact ids - list is never empty
      * @since 1.7
@@ -374,13 +376,14 @@ public class Feature implements Comparable<Feature>, Serializable {
     public List<ArtifactId> getFeatureOrigins(final Map<String, Object> metadata) {
         final List<ArtifactId> list = new ArrayList<>();
         final Object origins = metadata.get(Artifact.KEY_FEATURE_ORIGINS);
-        if ( origins != null ) {
-            final String[] values = Converters.standardConverter().convert(origins).to(String[].class);
-            for(final String v : values) {
+        if (origins != null) {
+            final String[] values =
+                    Converters.standardConverter().convert(origins).to(String[].class);
+            for (final String v : values) {
                 list.add(ArtifactId.parse(v));
             }
         }
-        if ( list.isEmpty() ) {
+        if (list.isEmpty()) {
             list.add(this.getId());
         }
         return Collections.unmodifiableList(list);
@@ -393,12 +396,13 @@ public class Feature implements Comparable<Feature>, Serializable {
      * @since 1.7
      */
     public void setFeatureOrigins(final Map<String, Object> metadata, final List<ArtifactId> featureOrigins) {
-        if ( featureOrigins == null || featureOrigins.isEmpty() ) {
+        if (featureOrigins == null || featureOrigins.isEmpty()) {
             metadata.remove(Artifact.KEY_FEATURE_ORIGINS);
-        } else if ( featureOrigins.size() == 1 && this.getId().equals(featureOrigins.get(0)) ) {
+        } else if (featureOrigins.size() == 1 && this.getId().equals(featureOrigins.get(0))) {
             metadata.remove(Artifact.KEY_FEATURE_ORIGINS);
         } else {
-            final List<String> list = featureOrigins.stream().map(ArtifactId::toMvnId).collect(Collectors.toList());
+            final List<String> list =
+                    featureOrigins.stream().map(ArtifactId::toMvnId).collect(Collectors.toList());
             final String[] values = Converters.standardConverter().convert(list).to(String[].class);
             metadata.put(Artifact.KEY_FEATURE_ORIGINS, values);
         }
@@ -484,35 +488,35 @@ public class Feature implements Comparable<Feature>, Serializable {
 
         // variables
         result.getVariables().putAll(this.getVariables());
-        for(final String key : this.getVariables().keySet()) {
-             result.getVariableMetadata(key).putAll(this.getVariableMetadata(key));
+        for (final String key : this.getVariables().keySet()) {
+            result.getVariableMetadata(key).putAll(this.getVariableMetadata(key));
         }
 
         // bundles
-        for(final Artifact b : this.getBundles()) {
+        for (final Artifact b : this.getBundles()) {
             result.getBundles().add(b.copy(b.getId()));
         }
 
         // configurations
-        for(final Configuration cfg : this.getConfigurations()) {
+        for (final Configuration cfg : this.getConfigurations()) {
             result.getConfigurations().add(cfg.copy(cfg.getPid()));
         }
 
         // framework properties
         result.getFrameworkProperties().putAll(this.getFrameworkProperties());
-        for(final String key : this.getFrameworkProperties().keySet()) {
+        for (final String key : this.getFrameworkProperties().keySet()) {
             result.getFrameworkPropertyMetadata(key).putAll(this.getFrameworkPropertyMetadata(key));
-       }
+        }
 
         // requirements
         for (final MatchingRequirement r : this.getRequirements()) {
-            final MatchingRequirement c = new MatchingRequirementImpl(null, r.getNamespace(), r.getDirectives(),
-                    r.getAttributes());
+            final MatchingRequirement c =
+                    new MatchingRequirementImpl(null, r.getNamespace(), r.getDirectives(), r.getAttributes());
             result.getRequirements().add(c);
         }
 
         // capabilities
-        for(final Capability r : this.getCapabilities()) {
+        for (final Capability r : this.getCapabilities()) {
             final Capability c = new CapabilityImpl(null, r.getNamespace(), r.getDirectives(), r.getAttributes());
             result.getCapabilities().add(c);
         }
@@ -532,17 +536,20 @@ public class Feature implements Comparable<Feature>, Serializable {
         }
 
         // extensions
-        for(final Extension e : this.getExtensions()) {
+        for (final Extension e : this.getExtensions()) {
             final Extension c = new Extension(e.getType(), e.getName(), e.getState());
-            switch ( c.getType() ) {
-                case ARTIFACTS : for(final Artifact a : e.getArtifacts()) {
-                                    c.getArtifacts().add(a.copy(a.getId()));
-                                 }
-                                 break;
-                case JSON : c.setJSON(e.getJSON());
-                            break;
-                case TEXT : c.setText(e.getText());
-                            break;
+            switch (c.getType()) {
+                case ARTIFACTS:
+                    for (final Artifact a : e.getArtifacts()) {
+                        c.getArtifacts().add(a.copy(a.getId()));
+                    }
+                    break;
+                case JSON:
+                    c.setJSON(e.getJSON());
+                    break;
+                case TEXT:
+                    c.setText(e.getText());
+                    break;
             }
             result.getExtensions().add(c);
         }
@@ -568,14 +575,14 @@ public class Feature implements Comparable<Feature>, Serializable {
         if (obj == null || getClass() != obj.getClass()) {
             return false;
         }
-        return this.id.equals(((Feature)obj).id);
+        return this.id.equals(((Feature) obj).id);
     }
 
     @Override
     public String toString() {
-        return (this.isAssembled() ? "Assembled Feature" : "Feature") +
-                " [id=" + this.getId().toMvnId()
-                + ( this.getLocation() != null ? ", location=" + this.getLocation() : "")
+        return (this.isAssembled() ? "Assembled Feature" : "Feature") + " [id="
+                + this.getId().toMvnId()
+                + (this.getLocation() != null ? ", location=" + this.getLocation() : "")
                 + "]";
     }
 

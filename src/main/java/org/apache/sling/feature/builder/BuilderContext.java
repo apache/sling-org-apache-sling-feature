@@ -1,18 +1,20 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.feature.builder;
 
@@ -26,7 +28,7 @@ import java.util.Map;
 import org.apache.sling.feature.ArtifactId;
 
 /**
- * Builder context holds services and configuration used by {@link FeatureBuilder} 
+ * Builder context holds services and configuration used by {@link FeatureBuilder}
  * and controls how features are assembled and aggregated.
  *
  * <p>
@@ -65,8 +67,8 @@ public class BuilderContext {
     /** Used in override rule to select the last candidate applied. */
     public static final String VERSION_OVERRIDE_LATEST = "LATEST";
 
-    /** 
-     * Used in override rule to select the first candidate applied. 
+    /**
+     * Used in override rule to select the first candidate applied.
      * @since 1.3.0
      */
     public static final String VERSION_OVERRIDE_FIRST = "FIRST";
@@ -101,23 +103,23 @@ public class BuilderContext {
     /** The optional artifact provider. */
     private ArtifactProvider artifactProvider;
 
-    private final Map<String, Map<String,String>> extensionConfiguration = new HashMap<>();
+    private final Map<String, Map<String, String>> extensionConfiguration = new HashMap<>();
     private final List<MergeHandler> mergeExtensions = new ArrayList<>();
     private final List<PostProcessHandler> postProcessExtensions = new ArrayList<>();
     private final List<ArtifactId> artifactsOverrides = new ArrayList<>();
-    private final Map<String,String> variables = new HashMap<>();
-    private final Map<String,String> frameworkProperties = new HashMap<>();
-    private final Map<String,String> configOverrides = new LinkedHashMap<>();
+    private final Map<String, String> variables = new HashMap<>();
+    private final Map<String, String> frameworkProperties = new HashMap<>();
+    private final Map<String, String> configOverrides = new LinkedHashMap<>();
 
     /**
      * Create a new context.
      * The feature provider is for example used to get a prototype feature.
-     * 
+     *
      * @param provider A provider providing required features for processing
      * @throws IllegalArgumentException If feature provider is {@code null}
      */
     public BuilderContext(final FeatureProvider provider) {
-        if ( provider == null ) {
+        if (provider == null) {
             throw new IllegalArgumentException("Provider must not be null");
         }
         this.provider = provider;
@@ -143,11 +145,11 @@ public class BuilderContext {
      * are found in the features that are to be aggregated and the values for these
      * variables are different, they must be overridden, otherwise the aggregation will
      * fail.
-     * 
+     *
      * @param vars The overrides keyed by variable name
      * @return The builder context
      */
-    public BuilderContext addVariablesOverrides(final Map<String,String> vars) {
+    public BuilderContext addVariablesOverrides(final Map<String, String> vars) {
         this.variables.putAll(vars);
         return this;
     }
@@ -162,7 +164,7 @@ public class BuilderContext {
      * @param props The overrides keyed by framework property name
      * @return The builder context
      */
-    public BuilderContext addFrameworkPropertiesOverrides(final Map<String,String> props) {
+    public BuilderContext addFrameworkPropertiesOverrides(final Map<String, String> props) {
         this.frameworkProperties.putAll(props);
         return this;
     }
@@ -222,7 +224,7 @@ public class BuilderContext {
      * @param cfg  The configuration for the handler
      * @return The builder context
      */
-    public BuilderContext setHandlerConfiguration(final String name, final Map<String,String> cfg) {
+    public BuilderContext setHandlerConfiguration(final String name, final Map<String, String> cfg) {
         this.extensionConfiguration.put(name, cfg);
         return this;
     }
@@ -233,7 +235,7 @@ public class BuilderContext {
      * @return The current handler configuration object. The key is the handler name
      *         and the value is a map of configuration values.
      */
-    Map<String, Map<String,String>> getHandlerConfigurations() {
+    Map<String, Map<String, String>> getHandlerConfigurations() {
         return this.extensionConfiguration;
     }
 
@@ -249,11 +251,11 @@ public class BuilderContext {
         return this.configOverrides;
     }
 
-    Map<String,String> getVariablesOverrides() {
+    Map<String, String> getVariablesOverrides() {
         return this.variables;
     }
 
-    Map<String,String> getFrameworkPropertiesOverrides() {
+    Map<String, String> getFrameworkPropertiesOverrides() {
         return this.frameworkProperties;
     }
 

@@ -1,31 +1,33 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.feature;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
 import org.osgi.framework.Version;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class ArtifactIdTest {
 
@@ -119,7 +121,8 @@ public class ArtifactIdTest {
         assertEquals("20170712_062549-4", v.getQualifier());
     }
 
-    @Test public void testCoordinatesGAV() {
+    @Test
+    public void testCoordinatesGAV() {
         final ArtifactId id = ArtifactId.fromMvnId("group.a:artifact.b:1.0");
         assertEquals("group.a", id.getGroupId());
         assertEquals("artifact.b", id.getArtifactId());
@@ -128,7 +131,8 @@ public class ArtifactIdTest {
         assertNull(id.getClassifier());
     }
 
-    @Test public void testCoordinatesGAVP() {
+    @Test
+    public void testCoordinatesGAVP() {
         final ArtifactId id = ArtifactId.fromMvnId("group.a:artifact.b:zip:1.0");
         assertEquals("group.a", id.getGroupId());
         assertEquals("artifact.b", id.getArtifactId());
@@ -137,7 +141,8 @@ public class ArtifactIdTest {
         assertNull(id.getClassifier());
     }
 
-    @Test public void testCoordinatesGAVPC() {
+    @Test
+    public void testCoordinatesGAVPC() {
         final ArtifactId id = ArtifactId.fromMvnId("group.a:artifact.b:zip:foo:1.0");
         assertEquals("group.a", id.getGroupId());
         assertEquals("artifact.b", id.getArtifactId());
@@ -146,14 +151,16 @@ public class ArtifactIdTest {
         assertEquals("foo", id.getClassifier());
     }
 
-    @Test public void testClassifierAndTypeToMvnId() {
+    @Test
+    public void testClassifierAndTypeToMvnId() {
         final ArtifactId id = new ArtifactId("group.a", "artifact.b", "1.0", "foo", "zip");
         assertEquals("group.a:artifact.b:zip:foo:1.0", id.toMvnId());
     }
 
     // --
 
-    @Test public void testCoordinatesGAVfromUrl() {
+    @Test
+    public void testCoordinatesGAVfromUrl() {
         final ArtifactId id = ArtifactId.fromMvnUrl("mvn:group.a/artifact.b/1.0");
         assertEquals("group.a", id.getGroupId());
         assertEquals("artifact.b", id.getArtifactId());
@@ -162,7 +169,8 @@ public class ArtifactIdTest {
         assertNull(id.getClassifier());
     }
 
-    @Test public void testCoordinatesGAVPfromUrl() {
+    @Test
+    public void testCoordinatesGAVPfromUrl() {
         final ArtifactId id = ArtifactId.fromMvnUrl("mvn:group.a/artifact.b/1.0/zip");
         assertEquals("group.a", id.getGroupId());
         assertEquals("artifact.b", id.getArtifactId());
@@ -171,7 +179,8 @@ public class ArtifactIdTest {
         assertNull(id.getClassifier());
     }
 
-    @Test public void testCoordinatesGAVPCfromUrl() {
+    @Test
+    public void testCoordinatesGAVPCfromUrl() {
         final ArtifactId id = ArtifactId.fromMvnUrl("mvn:group.a/artifact.b/1.0/zip/foo");
         assertEquals("group.a", id.getGroupId());
         assertEquals("artifact.b", id.getArtifactId());
@@ -180,7 +189,8 @@ public class ArtifactIdTest {
         assertEquals("foo", id.getClassifier());
     }
 
-    @Test public void testClassifierAndTypeToMvnUlr() {
+    @Test
+    public void testClassifierAndTypeToMvnUlr() {
         final ArtifactId id = new ArtifactId("group.a", "artifact.b", "1.0", "foo", "zip");
         assertEquals("mvn:group.a/artifact.b/1.0/zip/foo", id.toMvnUrl());
     }

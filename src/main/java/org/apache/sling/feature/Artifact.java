@@ -1,18 +1,20 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements. See the NOTICE file distributed with this
- * work for additional information regarding copyright ownership. The ASF
- * licenses this file to You under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.feature;
 
@@ -48,7 +50,6 @@ public class Artifact implements Comparable<Artifact>, Serializable {
     /** Can be used in artifact metadata to specify an alias. Multiple aliases can be comma-separated. */
     public static final String KEY_ALIAS = "alias";
 
-
     /** This key might be used by bundles to define the start order. */
     public static final String KEY_START_ORDER = "start-order";
 
@@ -60,7 +61,7 @@ public class Artifact implements Comparable<Artifact>, Serializable {
     private final ArtifactId id;
 
     /** Artifact metadata. */
-    private final Map<String,String> metadata = new TreeMap<>();
+    private final Map<String, String> metadata = new TreeMap<>();
 
     /**
      * Construct a new artifact
@@ -68,7 +69,7 @@ public class Artifact implements Comparable<Artifact>, Serializable {
      * @throws IllegalArgumentException If id is {@code null}.
      */
     public Artifact(final ArtifactId id) {
-        if ( id == null ) {
+        if (id == null) {
             throw new IllegalArgumentException("id must not be null.");
         }
         this.id = id;
@@ -81,35 +82,45 @@ public class Artifact implements Comparable<Artifact>, Serializable {
      * @since 1.4
      */
     public Artifact(final JsonValue json) {
-        if ( json == null ) {
+        if (json == null) {
             throw new IllegalArgumentException("json must not be null.");
         }
-        if ( json.getValueType() == ValueType.STRING ) {
-            this.id = ArtifactId.parse(((JsonString)json).getString());
-        } else if ( json.getValueType() == ValueType.OBJECT) {
+        if (json.getValueType() == ValueType.STRING) {
+            this.id = ArtifactId.parse(((JsonString) json).getString());
+        } else if (json.getValueType() == ValueType.OBJECT) {
             String id = json.asJsonObject().getString(KEY_ID, null);
-            if ( id == null ) {
+            if (id == null) {
                 throw new IllegalArgumentException("JSON for artifact is missing id property");
             }
             this.id = ArtifactId.parse(id);
 
-            for(final Map.Entry<String, JsonValue> metadataEntry : json.asJsonObject().entrySet()) {
+            for (final Map.Entry<String, JsonValue> metadataEntry :
+                    json.asJsonObject().entrySet()) {
                 final String key = metadataEntry.getKey();
-                if ( KEY_ID.equals(key) ) {
+                if (KEY_ID.equals(key)) {
                     continue;
                 }
                 final JsonValue value = metadataEntry.getValue();
-                if ( value.getValueType() == ValueType.STRING || value.getValueType() == ValueType.NUMBER || value.getValueType() == ValueType.FALSE || value.getValueType() == ValueType.TRUE ) {
-                    this.getMetadata().put(key, org.apache.felix.cm.json.io.Configurations.convertToObject(value).toString());
+                if (value.getValueType() == ValueType.STRING
+                        || value.getValueType() == ValueType.NUMBER
+                        || value.getValueType() == ValueType.FALSE
+                        || value.getValueType() == ValueType.TRUE) {
+                    this.getMetadata()
+                            .put(
+                                    key,
+                                    org.apache.felix.cm.json.io.Configurations.convertToObject(value)
+                                            .toString());
                 } else {
-                    throw new IllegalArgumentException("Key ".concat(key).concat(" is not one of the allowed types string, number or boolean : ").concat(value.getValueType().name()));
+                    throw new IllegalArgumentException("Key "
+                            .concat(key)
+                            .concat(" is not one of the allowed types string, number or boolean : ")
+                            .concat(value.getValueType().name()));
                 }
             }
         } else {
             throw new IllegalArgumentException("JSON for artifact must be of type object or string");
         }
     }
-
 
     /**
      * Get the id of the artifact.
@@ -124,7 +135,7 @@ public class Artifact implements Comparable<Artifact>, Serializable {
      * The metadata can be modified.
      * @return The metadata.
      */
-    public Map<String,String> getMetadata() {
+    public Map<String, String> getMetadata() {
         return this.metadata;
     }
 
@@ -135,8 +146,7 @@ public class Artifact implements Comparable<Artifact>, Serializable {
      */
     public Set<ArtifactId> getAliases(boolean includeMain) {
         Set<ArtifactId> artifactIds = new HashSet<>();
-        if (includeMain)
-            artifactIds.add(getId());
+        if (includeMain) artifactIds.add(getId());
 
         String aliases = getMetadata().get(KEY_ALIAS);
         if (aliases != null) {
@@ -163,9 +173,9 @@ public class Artifact implements Comparable<Artifact>, Serializable {
     public int getStartOrder() {
         final String order = this.getMetadata().get(Artifact.KEY_START_ORDER);
         final int startOrder;
-        if ( order != null ) {
+        if (order != null) {
             startOrder = Integer.parseInt(order);
-            if ( startOrder < 0 ) {
+            if (startOrder < 0) {
                 throw new IllegalStateException("Start order must be >= 0 but is " + order);
             }
         } else {
@@ -183,19 +193,19 @@ public class Artifact implements Comparable<Artifact>, Serializable {
      * @throws IllegalArgumentException If the number is negative
      */
     public void setStartOrder(final int startOrder) {
-        if ( startOrder < 0 ) {
+        if (startOrder < 0) {
             throw new IllegalArgumentException("Start order must be >= 0 but is " + startOrder);
         }
-        if ( startOrder == 0 ) {
+        if (startOrder == 0) {
             this.getMetadata().remove(KEY_START_ORDER);
         } else {
             this.getMetadata().put(KEY_START_ORDER, String.valueOf(startOrder));
         }
     }
 
-     /**
+    /**
      * Get the feature origins - if recorded
-     * 
+     *
      * @return A array of feature artifact ids - array might be empty
      * @throws IllegalArgumentException If the stored values are not valid artifact ids
      */
@@ -215,10 +225,10 @@ public class Artifact implements Comparable<Artifact>, Serializable {
         return originFeatures.toArray(new ArtifactId[0]);
     }
 
-     /**
+    /**
      * Get the feature origins
      * If no origins are recorded, the provided artifact id is returned
-     * 
+     *
      * @param self The id of the current feature
      * @return An array of feature artifact ids
      * @throws IllegalArgumentException If the stored values are not valid artifact ids
@@ -239,7 +249,7 @@ public class Artifact implements Comparable<Artifact>, Serializable {
         }
         return originFeatures.toArray(new ArtifactId[0]);
     }
-    
+
     /**
      * Set the feature origins
      * @param featureOrigins the array of artifact ids or null to remove the info from this object
@@ -247,7 +257,11 @@ public class Artifact implements Comparable<Artifact>, Serializable {
     public void setFeatureOrigins(ArtifactId... featureOrigins) {
         String origins;
         if (featureOrigins != null && featureOrigins.length > 0) {
-            origins = Stream.of(featureOrigins).filter(Objects::nonNull).map(ArtifactId::toMvnId).distinct().collect(Collectors.joining(","));
+            origins = Stream.of(featureOrigins)
+                    .filter(Objects::nonNull)
+                    .map(ArtifactId::toMvnId)
+                    .distinct()
+                    .collect(Collectors.joining(","));
         } else {
             origins = "";
         }
@@ -276,7 +290,7 @@ public class Artifact implements Comparable<Artifact>, Serializable {
         if (obj == null || getClass() != obj.getClass()) {
             return false;
         }
-        return this.id.equals(((Artifact)obj).id);
+        return this.id.equals(((Artifact) obj).id);
     }
 
     /**
@@ -295,7 +309,6 @@ public class Artifact implements Comparable<Artifact>, Serializable {
 
     @Override
     public String toString() {
-        return "Artifact [id=" + id.toMvnId()
-                + "]";
+        return "Artifact [id=" + id.toMvnId() + "]";
     }
 }
