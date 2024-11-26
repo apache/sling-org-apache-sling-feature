@@ -1,18 +1,20 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements. See the NOTICE file distributed with this
- * work for additional information regarding copyright ownership. The ASF
- * licenses this file to You under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.feature.io.json;
 
@@ -29,7 +31,6 @@ import java.util.Map;
 import jakarta.json.Json;
 import jakarta.json.stream.JsonGenerator;
 import jakarta.json.stream.JsonGeneratorFactory;
-
 import org.apache.felix.cm.json.io.ConfigurationResource;
 import org.apache.felix.cm.json.io.ConfigurationWriter;
 import org.apache.sling.feature.Artifact;
@@ -58,13 +59,13 @@ public class FeatureJSONWriter {
      * @param feature Feature
      * @throws IOException If writing fails
      */
-    public static void write(final Writer writer, final Feature feature)
-    throws IOException {
+    public static void write(final Writer writer, final Feature feature) throws IOException {
         final FeatureJSONWriter w = new FeatureJSONWriter();
         w.writeFeature(writer, feature);
     }
 
-    private final JsonGeneratorFactory generatorFactory = Json.createGeneratorFactory(Collections.singletonMap(JsonGenerator.PRETTY_PRINTING, true));
+    private final JsonGeneratorFactory generatorFactory =
+            Json.createGeneratorFactory(Collections.singletonMap(JsonGenerator.PRETTY_PRINTING, true));
 
     private final JsonGenerator newGenerator(final Writer writer) {
         // prevent closing of the underlying writer
@@ -77,23 +78,21 @@ public class FeatureJSONWriter {
         });
     }
 
-    private void writeBundles(final JsonGenerator generator,
-            final Bundles bundles,
-            final Configurations allConfigs) {
+    private void writeBundles(final JsonGenerator generator, final Bundles bundles, final Configurations allConfigs) {
         // bundles
-        if ( !bundles.isEmpty() ) {
+        if (!bundles.isEmpty()) {
             generator.writeStartArray(JSONConstants.FEATURE_BUNDLES);
 
-            for(final Artifact artifact : bundles) {
+            for (final Artifact artifact : bundles) {
                 final Configurations cfgs = new Configurations();
-                for(final Configuration cfg : allConfigs) {
-                    final String artifactProp = (String)cfg.getProperties().get(Configuration.PROP_ARTIFACT_ID);
-                    if ( artifact.getId().toMvnId().equals(artifactProp) ) {
+                for (final Configuration cfg : allConfigs) {
+                    final String artifactProp = (String) cfg.getProperties().get(Configuration.PROP_ARTIFACT_ID);
+                    if (artifact.getId().toMvnId().equals(artifactProp)) {
                         cfgs.add(cfg);
                     }
                 }
-                Map<String,String> md = artifact.getMetadata();
-                if ( md.isEmpty() && cfgs.isEmpty() ) {
+                Map<String, String> md = artifact.getMetadata();
+                if (md.isEmpty() && cfgs.isEmpty()) {
                     generator.write(artifact.getId().toMvnId());
                 } else {
                     generator.writeStartObject();
@@ -104,7 +103,7 @@ public class FeatureJSONWriter {
                         md.put("run-modes", (String) runmodes);
                     }
 
-                    for(final Map.Entry<String, String> me : md.entrySet()) {
+                    for (final Map.Entry<String, String> me : md.entrySet()) {
                         generator.write(me.getKey(), me.getValue());
                     }
 
@@ -123,25 +122,25 @@ public class FeatureJSONWriter {
      * @throws IOException
      */
     private void writeConfigurations(final JsonGenerator generator, final Configurations cfgs) throws IOException {
-        if ( cfgs.isEmpty() ) {
+        if (cfgs.isEmpty()) {
             return;
         }
 
         generator.writeKey(JSONConstants.FEATURE_CONFIGURATIONS);
 
-        final ConfigurationWriter cfgWriter = org.apache.felix.cm.json.io.Configurations
-                .buildWriter()
-                .build(generator);
+        final ConfigurationWriter cfgWriter =
+                org.apache.felix.cm.json.io.Configurations.buildWriter().build(generator);
 
         final ConfigurationResource rsrc = new ConfigurationResource();
-        for(final Configuration cfg : cfgs) {
+        for (final Configuration cfg : cfgs) {
             final Hashtable<String, Object> properties;
-            if ( cfg.getProperties() instanceof Hashtable && cfg.getProperties().get(Configuration.PROP_ARTIFACT_ID) == null ) {
-                properties = (Hashtable<String, Object>)cfg.getProperties();
+            if (cfg.getProperties() instanceof Hashtable
+                    && cfg.getProperties().get(Configuration.PROP_ARTIFACT_ID) == null) {
+                properties = (Hashtable<String, Object>) cfg.getProperties();
             } else {
                 properties = org.apache.felix.cm.json.io.Configurations.newConfiguration();
-                for(final String name : Collections.list(cfg.getProperties().keys()) ) {
-                    if ( !Configuration.PROP_ARTIFACT_ID.equals(name) ) {
+                for (final String name : Collections.list(cfg.getProperties().keys())) {
+                    if (!Configuration.PROP_ARTIFACT_ID.equals(name)) {
                         properties.put(name, cfg.getProperties().get(name));
                     }
                 }
@@ -151,45 +150,42 @@ public class FeatureJSONWriter {
         cfgWriter.writeConfigurationResource(rsrc);
     }
 
-    private void writeVariables(final JsonGenerator generator, final Map<String,String> vars) {
-        if ( !vars.isEmpty()) {
+    private void writeVariables(final JsonGenerator generator, final Map<String, String> vars) {
+        if (!vars.isEmpty()) {
             generator.writeStartObject(JSONConstants.FEATURE_VARIABLES);
 
             for (final Map.Entry<String, String> entry : vars.entrySet()) {
                 String val = entry.getValue();
-                if (val != null)
-                    generator.write(entry.getKey(), val);
-                else
-                    generator.writeNull(entry.getKey());
+                if (val != null) generator.write(entry.getKey(), val);
+                else generator.writeNull(entry.getKey());
             }
 
             generator.writeEnd();
         }
     }
 
-    private void writeFrameworkProperties(final JsonGenerator generator, final Map<String,String> props) {
+    private void writeFrameworkProperties(final JsonGenerator generator, final Map<String, String> props) {
         // framework properties
-        if ( !props.isEmpty() ) {
+        if (!props.isEmpty()) {
             generator.writeStartObject(JSONConstants.FEATURE_FRAMEWORK_PROPERTIES);
-            for(final Map.Entry<String, String> entry : props.entrySet()) {
+            for (final Map.Entry<String, String> entry : props.entrySet()) {
                 generator.write(entry.getKey(), entry.getValue());
             }
             generator.writeEnd();
         }
     }
 
-    private void writeExtensions(final JsonGenerator generator,
-            final List<Extension> extensions,
-            final Configurations allConfigs) throws IOException {
-        for(final Extension ext : extensions) {
+    private void writeExtensions(
+            final JsonGenerator generator, final List<Extension> extensions, final Configurations allConfigs)
+            throws IOException {
+        for (final Extension ext : extensions) {
             writeExtension(generator, ext, allConfigs);
         }
     }
 
-    private void writeExtension(final JsonGenerator generator,
-        final Extension ext,
-        final Configurations allConfigs) throws IOException {
-            
+    private void writeExtension(final JsonGenerator generator, final Extension ext, final Configurations allConfigs)
+            throws IOException {
+
         final String state;
         switch (ext.getState()) {
             case OPTIONAL:
@@ -201,32 +197,37 @@ public class FeatureJSONWriter {
             default:
                 state = ext.getState().name();
         }
-        final String key = ext.getName().concat(":").concat(ext.getType().name()).concat("|").concat(state);
-        if ( ext.getType() == ExtensionType.JSON ) {
+        final String key = ext.getName()
+                .concat(":")
+                .concat(ext.getType().name())
+                .concat("|")
+                .concat(state);
+        if (ext.getType() == ExtensionType.JSON) {
             generator.write(key, ext.getJSONStructure());
-        } else if ( ext.getType() == ExtensionType.TEXT ) {
+        } else if (ext.getType() == ExtensionType.TEXT) {
             generator.writeStartArray(key);
-            for(String line : ext.getText().split("\n")) {
+            for (String line : ext.getText().split("\n")) {
                 generator.write(line);
             }
             generator.writeEnd();
         } else {
             generator.writeStartArray(key);
-            for(final Artifact artifact : ext.getArtifacts()) {
+            for (final Artifact artifact : ext.getArtifacts()) {
                 final Configurations artifactCfgs = new Configurations();
-                for(final Configuration cfg : allConfigs) {
-                    final String artifactProp = (String)cfg.getProperties().get(Configuration.PROP_ARTIFACT_ID);
-                    if (  artifact.getId().toMvnId().equals(artifactProp) ) {
+                for (final Configuration cfg : allConfigs) {
+                    final String artifactProp = (String) cfg.getProperties().get(Configuration.PROP_ARTIFACT_ID);
+                    if (artifact.getId().toMvnId().equals(artifactProp)) {
                         artifactCfgs.add(cfg);
                     }
                 }
-                if ( artifact.getMetadata().isEmpty() && artifactCfgs.isEmpty() ) {
+                if (artifact.getMetadata().isEmpty() && artifactCfgs.isEmpty()) {
                     generator.write(artifact.getId().toMvnId());
                 } else {
                     generator.writeStartObject();
                     generator.write(JSONConstants.ARTIFACT_ID, artifact.getId().toMvnId());
 
-                    for(final Map.Entry<String, String> me : artifact.getMetadata().entrySet()) {
+                    for (final Map.Entry<String, String> me :
+                            artifact.getMetadata().entrySet()) {
                         generator.write(me.getKey(), me.getValue());
                     }
 
@@ -240,7 +241,7 @@ public class FeatureJSONWriter {
     }
 
     private void writeProperty(final JsonGenerator generator, final String key, final String value) {
-        if ( value != null ) {
+        if (value != null) {
             generator.write(key, value);
         }
     }
@@ -260,12 +261,12 @@ public class FeatureJSONWriter {
             return;
         }
 
-        if ( inc.getArtifactExtensionRemovals().isEmpty()
-             && inc.getBundleRemovals().isEmpty()
-             && inc.getConfigurationRemovals().isEmpty()
-             && inc.getFrameworkPropertiesRemovals().isEmpty()
-             && inc.getRequirementRemovals().isEmpty()
-             && inc.getCapabilityRemovals().isEmpty() ) {
+        if (inc.getArtifactExtensionRemovals().isEmpty()
+                && inc.getBundleRemovals().isEmpty()
+                && inc.getConfigurationRemovals().isEmpty()
+                && inc.getFrameworkPropertiesRemovals().isEmpty()
+                && inc.getRequirementRemovals().isEmpty()
+                && inc.getCapabilityRemovals().isEmpty()) {
 
             generator.write(JSONConstants.FEATURE_PROTOTYPE, inc.getId().toMvnId());
         } else {
@@ -274,14 +275,15 @@ public class FeatureJSONWriter {
 
             generator.writeStartObject(JSONConstants.PROTOTYPE_REMOVALS);
 
-            if ( !inc.getArtifactExtensionRemovals().isEmpty()
-                 || inc.getExtensionRemovals().isEmpty() ) {
+            if (!inc.getArtifactExtensionRemovals().isEmpty()
+                    || inc.getExtensionRemovals().isEmpty()) {
                 generator.writeStartArray(JSONConstants.PROTOTYPE_EXTENSION_REMOVALS);
 
-                for(final String id : inc.getExtensionRemovals()) {
+                for (final String id : inc.getExtensionRemovals()) {
                     generator.write(id);
                 }
-                for(final Map.Entry<String, List<ArtifactId>> entry : inc.getArtifactExtensionRemovals().entrySet()) {
+                for (final Map.Entry<String, List<ArtifactId>> entry :
+                        inc.getArtifactExtensionRemovals().entrySet()) {
                     generator.writeStartObject();
 
                     writeList(generator, entry.getKey(), entry.getValue());
@@ -309,17 +311,19 @@ public class FeatureJSONWriter {
 
         generator.writeStartArray(JSONConstants.FEATURE_REQUIREMENTS);
 
-        for(final Requirement req : requirements) {
+        for (final Requirement req : requirements) {
             generator.writeStartObject();
             writeProperty(generator, JSONConstants.REQCAP_NAMESPACE, req.getNamespace());
-            if ( !req.getAttributes().isEmpty() ) {
+            if (!req.getAttributes().isEmpty()) {
                 generator.writeStartObject(JSONConstants.REQCAP_ATTRIBUTES);
-                req.getAttributes().forEach((key, value) -> ManifestUtils.marshalAttribute(key, value, generator::write));
+                req.getAttributes()
+                        .forEach((key, value) -> ManifestUtils.marshalAttribute(key, value, generator::write));
                 generator.writeEnd();
             }
-            if ( !req.getDirectives().isEmpty() ) {
+            if (!req.getDirectives().isEmpty()) {
                 generator.writeStartObject(JSONConstants.REQCAP_DIRECTIVES);
-                req.getDirectives().forEach((key, value) -> ManifestUtils.marshalDirective(key, value, generator::write));
+                req.getDirectives()
+                        .forEach((key, value) -> ManifestUtils.marshalDirective(key, value, generator::write));
                 generator.writeEnd();
             }
             generator.writeEnd();
@@ -335,17 +339,19 @@ public class FeatureJSONWriter {
 
         generator.writeStartArray(JSONConstants.FEATURE_CAPABILITIES);
 
-        for(final Capability cap : capabilities) {
+        for (final Capability cap : capabilities) {
             generator.writeStartObject();
             writeProperty(generator, JSONConstants.REQCAP_NAMESPACE, cap.getNamespace());
-            if ( !cap.getAttributes().isEmpty() ) {
+            if (!cap.getAttributes().isEmpty()) {
                 generator.writeStartObject(JSONConstants.REQCAP_ATTRIBUTES);
-                cap.getAttributes().forEach((key, value) -> ManifestUtils.marshalAttribute(key, value, generator::write));
+                cap.getAttributes()
+                        .forEach((key, value) -> ManifestUtils.marshalAttribute(key, value, generator::write));
                 generator.writeEnd();
             }
-            if ( !cap.getDirectives().isEmpty() ) {
+            if (!cap.getDirectives().isEmpty()) {
                 generator.writeStartObject(JSONConstants.REQCAP_DIRECTIVES);
-                cap.getDirectives().forEach((key, value) -> ManifestUtils.marshalDirective(key, value, generator::write));
+                cap.getDirectives()
+                        .forEach((key, value) -> ManifestUtils.marshalDirective(key, value, generator::write));
                 generator.writeEnd();
             }
             generator.writeEnd();
@@ -361,8 +367,7 @@ public class FeatureJSONWriter {
      * @param feature Feature
      * @throws IOException If writing fails
      */
-    private void writeFeature(final Writer writer, final Feature feature)
-    throws IOException {
+    private void writeFeature(final Writer writer, final Feature feature) throws IOException {
         JsonGenerator generator = newGenerator(writer);
         generator.writeStartObject();
 
@@ -404,9 +409,9 @@ public class FeatureJSONWriter {
 
         // configurations
         final Configurations cfgs = new Configurations();
-        for(final Configuration cfg : feature.getConfigurations()) {
-            final String artifactProp = (String)cfg.getProperties().get(Configuration.PROP_ARTIFACT_ID);
-            if (  artifactProp == null ) {
+        for (final Configuration cfg : feature.getConfigurations()) {
+            final String artifactProp = (String) cfg.getProperties().get(Configuration.PROP_ARTIFACT_ID);
+            if (artifactProp == null) {
                 cfgs.add(cfg);
             }
         }
@@ -416,7 +421,7 @@ public class FeatureJSONWriter {
         writeFrameworkProperties(generator, feature.getFrameworkProperties());
 
         // write metadata for variables and framework properties
-        if ( feature.getExtensions().getByName(Extension.EXTENSION_NAME_INTERNAL_DATA) != null ) {
+        if (feature.getExtensions().getByName(Extension.EXTENSION_NAME_INTERNAL_DATA) != null) {
             throw new IOException("Feature must not contain internal data extension");
         }
         writeInternalData(generator, feature);
@@ -427,45 +432,45 @@ public class FeatureJSONWriter {
         generator.writeEnd().close();
     }
 
-    private void writeFeatureId(final JsonGenerator generator,
-    		final Feature feature) {
+    private void writeFeatureId(final JsonGenerator generator, final Feature feature) {
         writeProperty(generator, JSONConstants.FEATURE_ID, feature.getId().toMvnId());
     }
 
     /**
      * Write metadata for variables and framework properties in the internal extension
      */
-    private void writeInternalData(final JsonGenerator generator,
-        final Feature feature) throws IOException {
+    private void writeInternalData(final JsonGenerator generator, final Feature feature) throws IOException {
 
         final Map<String, Object> output = new LinkedHashMap<>();
-        if ( !feature.getFrameworkProperties().isEmpty() ) {
+        if (!feature.getFrameworkProperties().isEmpty()) {
             final Map<String, Map<String, Object>> fwkMetadata = new LinkedHashMap<>();
-            for(final String fwkPropName : feature.getFrameworkProperties().keySet()) {
+            for (final String fwkPropName : feature.getFrameworkProperties().keySet()) {
                 final Map<String, Object> metadata = feature.getFrameworkPropertyMetadata(fwkPropName);
-                if ( !metadata.isEmpty() ) {
+                if (!metadata.isEmpty()) {
                     fwkMetadata.put(fwkPropName, metadata);
                 }
             }
-            if ( !fwkMetadata.isEmpty() ) {
+            if (!fwkMetadata.isEmpty()) {
                 output.put(JSONConstants.FRAMEWORK_PROPERTIES_METADATA, fwkMetadata);
             }
         }
-        if ( !feature.getVariables().isEmpty() ) {
+        if (!feature.getVariables().isEmpty()) {
             final Map<String, Map<String, Object>> varMetadata = new LinkedHashMap<>();
-            for(final String varName : feature.getVariables().keySet()) {
+            for (final String varName : feature.getVariables().keySet()) {
                 final Map<String, Object> metadata = feature.getVariableMetadata(varName);
-                if ( !metadata.isEmpty() ) {
+                if (!metadata.isEmpty()) {
                     varMetadata.put(varName, metadata);
                 }
             }
-            if ( !varMetadata.isEmpty() ) {
+            if (!varMetadata.isEmpty()) {
                 output.put(JSONConstants.VARIABLES_METADATA, varMetadata);
             }
         }
-        if ( !output.isEmpty() ) {
-            final Extension ext = new Extension(ExtensionType.JSON, Extension.EXTENSION_NAME_INTERNAL_DATA, ExtensionState.OPTIONAL);
-            ext.setJSONStructure(org.apache.felix.cm.json.io.Configurations.convertToJsonValue(output).asJsonObject());
+        if (!output.isEmpty()) {
+            final Extension ext =
+                    new Extension(ExtensionType.JSON, Extension.EXTENSION_NAME_INTERNAL_DATA, ExtensionState.OPTIONAL);
+            ext.setJSONStructure(org.apache.felix.cm.json.io.Configurations.convertToJsonValue(output)
+                    .asJsonObject());
             this.writeExtension(generator, ext, null);
         }
     }

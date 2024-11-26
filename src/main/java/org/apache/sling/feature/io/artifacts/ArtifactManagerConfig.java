@@ -1,18 +1,20 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements. See the NOTICE file distributed with this
- * work for additional information regarding copyright ownership. The ASF
- * licenses this file to You under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.feature.io.artifacts;
 
@@ -58,10 +60,10 @@ public class ArtifactManagerConfig implements ArtifactProviderContext {
     public ArtifactManagerConfig() {
         // set defaults
         this.repositoryUrls = new String[] {
-                "file://" + new File(System.getProperty("user.home")).toURI().getPath() + ".m2/repository",
-                "https://repo.maven.apache.org/maven2",
-                "https://repository.apache.org/content/groups/snapshots"
-                };
+            "file://" + new File(System.getProperty("user.home")).toURI().getPath() + ".m2/repository",
+            "https://repo.maven.apache.org/maven2",
+            "https://repository.apache.org/content/groups/snapshots"
+        };
         this.repoHome = System.getProperty("user.home") + "/.m2/repository/";
     }
 
@@ -70,13 +72,13 @@ public class ArtifactManagerConfig implements ArtifactProviderContext {
      * @param urls The repository urls
      */
     public void setRepositoryUrls(final String[] urls) {
-        if ( urls == null || urls.length == 0 ) {
+        if (urls == null || urls.length == 0) {
             this.repositoryUrls = new String[0];
         } else {
             this.repositoryUrls = new String[urls.length];
             System.arraycopy(urls, 0, this.repositoryUrls, 0, urls.length);
-            for(int i=0; i<this.repositoryUrls.length; i++) {
-                if ( this.repositoryUrls[i].endsWith("/") ) {
+            for (int i = 0; i < this.repositoryUrls.length; i++) {
+                if (this.repositoryUrls[i].endsWith("/")) {
                     this.repositoryUrls[i] = this.repositoryUrls[i].substring(0, this.repositoryUrls[i].length() - 1);
                 }
             }
@@ -170,10 +172,11 @@ public class ArtifactManagerConfig implements ArtifactProviderContext {
 
     /**
      * Return mvn home
-     * 
+     *
      * @since 1.1.0
      */
-    @NotNull String getMvnHome() {
+    @NotNull
+    String getMvnHome() {
         return this.repoHome;
     }
 }

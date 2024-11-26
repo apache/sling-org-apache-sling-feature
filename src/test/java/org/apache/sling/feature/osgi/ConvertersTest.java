@@ -18,12 +18,6 @@
  */
 package org.apache.sling.feature.osgi;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 import java.io.StringReader;
 import java.util.Arrays;
 import java.util.Hashtable;
@@ -38,9 +32,16 @@ import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.Feature;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 public class ConvertersTest {
-    
-    @Test public void testEmptyFeatureConversion() throws Exception {
+
+    @Test
+    public void testEmptyFeatureConversion() throws Exception {
         final Feature feature = new Feature(ArtifactId.parse("g:a:1"));
 
         // convert to OSGi feature
@@ -76,7 +77,8 @@ public class ConvertersTest {
         assertTrue(slingFeature.getVariables().isEmpty());
     }
 
-    @Test public void testMetadataConversion() throws Exception {
+    @Test
+    public void testMetadataConversion() throws Exception {
         final Feature feature = new Feature(ArtifactId.parse("g:a:1"));
         feature.setComplete(true);
         feature.setDescription("description");
@@ -113,7 +115,8 @@ public class ConvertersTest {
         assertEquals(Arrays.asList("c1", "c2"), slingFeature.getCategories());
     }
 
-    @Test public void testBundleConversion() throws Exception {
+    @Test
+    public void testBundleConversion() throws Exception {
         final Feature feature = new Feature(ArtifactId.parse("g:a:1"));
         final Artifact bundle = new Artifact(ArtifactId.parse("g:b:2"));
         bundle.getMetadata().put("key", "foo");
@@ -122,7 +125,8 @@ public class ConvertersTest {
         // convert to OSGi feature
         final org.osgi.service.feature.Feature osgiFeature = Converters.convert(feature);
         assertEquals(1, osgiFeature.getBundles().size());
-        final org.osgi.service.feature.FeatureBundle ob = osgiFeature.getBundles().get(0);
+        final org.osgi.service.feature.FeatureBundle ob =
+                osgiFeature.getBundles().get(0);
         assertEquals("g:b:2", ob.getID().toString());
         assertEquals(1, ob.getMetadata().size());
         assertEquals("foo", ob.getMetadata().get("key"));
@@ -136,7 +140,8 @@ public class ConvertersTest {
         assertEquals("foo", sb.getMetadata().get("key"));
     }
 
-    @Test public void testConfigurationConversion() throws Exception {
+    @Test
+    public void testConfigurationConversion() throws Exception {
         final Feature feature = new Feature(ArtifactId.parse("g:a:1"));
         final Configuration c1 = new Configuration("org.sling.config");
         c1.getProperties().put("key", "foo");
@@ -148,13 +153,15 @@ public class ConvertersTest {
         // convert to OSGi feature
         final org.osgi.service.feature.Feature osgiFeature = Converters.convert(feature);
         assertEquals(2, osgiFeature.getConfigurations().size());
-        final org.osgi.service.feature.FeatureConfiguration oc1 = osgiFeature.getConfigurations().get("org.sling.config");
+        final org.osgi.service.feature.FeatureConfiguration oc1 =
+                osgiFeature.getConfigurations().get("org.sling.config");
         assertEquals("org.sling.config", oc1.getPid());
         assertFalse(oc1.getFactoryPid().isPresent());
         assertEquals(1, oc1.getValues().size());
         assertEquals("foo", oc1.getValues().get("key"));
 
-        final org.osgi.service.feature.FeatureConfiguration oc2 = osgiFeature.getConfigurations().get("org.sling.factory~name");
+        final org.osgi.service.feature.FeatureConfiguration oc2 =
+                osgiFeature.getConfigurations().get("org.sling.factory~name");
         assertEquals("org.sling.factory~name", oc2.getPid());
         assertEquals("org.sling.factory", oc2.getFactoryPid().get());
         assertEquals(1, oc2.getValues().size());
@@ -178,7 +185,8 @@ public class ConvertersTest {
         assertEquals(5, sc2.getProperties().get("value"));
     }
 
-    @Test public void testVariablesConversion() throws Exception {
+    @Test
+    public void testVariablesConversion() throws Exception {
         final Feature feature = new Feature(ArtifactId.parse("g:a:1"));
         feature.getVariables().put("v1", "a");
         feature.getVariableMetadata("v1").put("x", "y");
@@ -198,7 +206,8 @@ public class ConvertersTest {
         assertTrue(slingFeature.getExtensions().isEmpty());
     }
 
-    @Test public void testFrameworkPropertiesConversion() throws Exception {
+    @Test
+    public void testFrameworkPropertiesConversion() throws Exception {
         final Feature feature = new Feature(ArtifactId.parse("g:a:1"));
         feature.getFrameworkProperties().put("v1", "a");
         feature.getFrameworkPropertyMetadata("v1").put("x", "y");
@@ -207,14 +216,18 @@ public class ConvertersTest {
         final org.osgi.service.feature.Feature osgiFeature = Converters.convert(feature);
         assertEquals(2, osgiFeature.getExtensions().size());
         assertNotNull(osgiFeature.getExtensions().get(Extension.EXTENSION_NAME_INTERNAL_DATA));
-        final org.osgi.service.feature.FeatureExtension e = osgiFeature.getExtensions().get("framework-launching-properties");
+        final org.osgi.service.feature.FeatureExtension e =
+                osgiFeature.getExtensions().get("framework-launching-properties");
         assertNotNull(e);
         assertEquals(org.osgi.service.feature.FeatureExtension.Type.JSON, e.getType());
-        try ( final StringReader r = new StringReader(e.getJSON()) ) {
-            final Hashtable<String, Object> p = Configurations.buildReader().verifyAsBundleResource(true).build(r).readConfiguration();
+        try (final StringReader r = new StringReader(e.getJSON())) {
+            final Hashtable<String, Object> p = Configurations.buildReader()
+                    .verifyAsBundleResource(true)
+                    .build(r)
+                    .readConfiguration();
             assertEquals(1, p.size());
             assertEquals("a", p.get("v1"));
-            }
+        }
 
         // and back to Sling Feature
         final Feature slingFeature = Converters.convert(osgiFeature);
@@ -224,7 +237,8 @@ public class ConvertersTest {
         assertTrue(slingFeature.getExtensions().isEmpty());
     }
 
-    @Test public void testJSONExtensionConversion() throws Exception {
+    @Test
+    public void testJSONExtensionConversion() throws Exception {
         final Feature feature = new Feature(ArtifactId.parse("g:a:1"));
         final Extension e = new Extension(ExtensionType.JSON, "ext", ExtensionState.OPTIONAL);
         e.setJSON("{\"a\":true}");
@@ -233,7 +247,8 @@ public class ConvertersTest {
         // convert to OSGi feature
         final org.osgi.service.feature.Feature osgiFeature = Converters.convert(feature);
         assertEquals(1, osgiFeature.getExtensions().size());
-        final org.osgi.service.feature.FeatureExtension oe = osgiFeature.getExtensions().get("ext");
+        final org.osgi.service.feature.FeatureExtension oe =
+                osgiFeature.getExtensions().get("ext");
         assertNotNull(oe);
         assertEquals(org.osgi.service.feature.FeatureExtension.Type.JSON, oe.getType());
         assertEquals("{\"a\":true}", oe.getJSON());
@@ -247,7 +262,8 @@ public class ConvertersTest {
         assertEquals("{\"a\":true}", se.getJSON());
     }
 
-    @Test public void testTextExtensionConversion() throws Exception {
+    @Test
+    public void testTextExtensionConversion() throws Exception {
         final Feature feature = new Feature(ArtifactId.parse("g:a:1"));
         final Extension e = new Extension(ExtensionType.TEXT, "ext", ExtensionState.OPTIONAL);
         e.setText("Hello World");
@@ -256,7 +272,8 @@ public class ConvertersTest {
         // convert to OSGi feature
         final org.osgi.service.feature.Feature osgiFeature = Converters.convert(feature);
         assertEquals(1, osgiFeature.getExtensions().size());
-        final org.osgi.service.feature.FeatureExtension oe = osgiFeature.getExtensions().get("ext");
+        final org.osgi.service.feature.FeatureExtension oe =
+                osgiFeature.getExtensions().get("ext");
         assertNotNull(oe);
         assertEquals(org.osgi.service.feature.FeatureExtension.Type.TEXT, oe.getType());
         assertEquals("Hello World", String.join("\n", oe.getText()));
@@ -270,7 +287,8 @@ public class ConvertersTest {
         assertEquals("Hello World", se.getText());
     }
 
-    @Test public void testArtifactExtensionConversion() throws Exception {
+    @Test
+    public void testArtifactExtensionConversion() throws Exception {
         final Feature feature = new Feature(ArtifactId.parse("g:a:1"));
         final Extension e = new Extension(ExtensionType.ARTIFACTS, "ext", ExtensionState.OPTIONAL);
         final Artifact artifact = new Artifact(ArtifactId.parse("g:b:2"));
@@ -281,7 +299,8 @@ public class ConvertersTest {
         // convert to OSGi feature
         final org.osgi.service.feature.Feature osgiFeature = Converters.convert(feature);
         assertEquals(1, osgiFeature.getExtensions().size());
-        final org.osgi.service.feature.FeatureExtension oe = osgiFeature.getExtensions().get("ext");
+        final org.osgi.service.feature.FeatureExtension oe =
+                osgiFeature.getExtensions().get("ext");
         assertNotNull(oe);
         assertEquals(org.osgi.service.feature.FeatureExtension.Type.ARTIFACTS, oe.getType());
         assertEquals(1, oe.getArtifacts().size());

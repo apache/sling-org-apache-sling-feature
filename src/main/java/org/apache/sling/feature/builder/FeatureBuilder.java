@@ -1,18 +1,20 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.feature.builder;
 
@@ -56,9 +58,8 @@ public abstract class FeatureBuilder {
      * @throws IllegalArgumentException If feature or context is {@code null}
      * @throws IllegalStateException If a prototype feature can't be provided or merged.
      */
-    public static Feature assemble(final Feature feature,
-            final BuilderContext context) {
-        if ( feature == null || context == null ) {
+    public static Feature assemble(final Feature feature, final BuilderContext context) {
+        if (feature == null || context == null) {
             throw new IllegalArgumentException("Feature and/or context must not be null");
         }
         return internalAssemble(new ArrayList<>(), feature, context);
@@ -73,17 +74,16 @@ public abstract class FeatureBuilder {
      * @throws IllegalArgumentException If context or featureIds is {@code null}
      * @throws IllegalStateException If the provided ids are invalid, or the feature can't be provided
      */
-    public static Feature[] resolve(final BuilderContext context,
-            final String... featureIds) {
-        if ( featureIds == null || context == null ) {
+    public static Feature[] resolve(final BuilderContext context, final String... featureIds) {
+        if (featureIds == null || context == null) {
             throw new IllegalArgumentException("Features and/or context must not be null");
         }
 
         final Feature[] features = new Feature[featureIds.length];
         int index = 0;
-        for(final String id : featureIds) {
+        for (final String id : featureIds) {
             features[index] = context.getFeatureProvider().provide(ArtifactId.parse(id));
-            if ( features[index] == null ) {
+            if (features[index] == null) {
                 throw new IllegalStateException("Unable to find prototype feature " + id);
             }
             index++;
@@ -102,26 +102,25 @@ public abstract class FeatureBuilder {
      * @param features A list of features
      * @return A list of features without duplicates.
      */
-    public static Feature[] deduplicate(final BuilderContext context,
-            final Feature... features) {
-        if ( features == null || context == null ) {
+    public static Feature[] deduplicate(final BuilderContext context, final Feature... features) {
+        if (features == null || context == null) {
             throw new IllegalArgumentException("Features and/or context must not be null");
         }
 
         // Remove duplicate features by selecting the one with the highest version
         final List<Feature> featureList = new ArrayList<>();
-        for(final Feature f : features) {
+        for (final Feature f : features) {
             Feature found = null;
-            for(final Feature s : featureList) {
-                if ( s.getId().isSame(f.getId()) ) {
+            for (final Feature s : featureList) {
+                if (s.getId().isSame(f.getId())) {
                     found = s;
                     break;
                 }
             }
             boolean add = true;
             // feature with different version found
-            if ( found != null ) {
-                if ( f.getId().getOSGiVersion().compareTo(found.getId().getOSGiVersion()) <= 0 ) {
+            if (found != null) {
+                if (f.getId().getOSGiVersion().compareTo(found.getId().getOSGiVersion()) <= 0) {
                     // higher version already included
                     add = false;
                 } else {
@@ -129,7 +128,7 @@ public abstract class FeatureBuilder {
                     featureList.remove(found);
                 }
             }
-            if ( add ) {
+            if (add) {
                 featureList.add(f);
             }
         }
@@ -137,14 +136,14 @@ public abstract class FeatureBuilder {
         // assemble each features
         final List<Feature> assembledFeatures = new ArrayList<>();
         final Set<ArtifactId> included = new HashSet<>();
-        for(final Feature f : featureList) {
+        for (final Feature f : featureList) {
             final Feature assembled = FeatureBuilder.assemble(f, context.clone(new FeatureProvider() {
 
                 @Override
                 public Feature provide(final ArtifactId id) {
                     included.add(id);
-                    for(final Feature f : features) {
-                        if ( f.getId().equals(id) ) {
+                    for (final Feature f : features) {
+                        if (f.getId().equals(id)) {
                             return f;
                         }
                     }
@@ -156,9 +155,9 @@ public abstract class FeatureBuilder {
 
         // filter out included features
         final Iterator<Feature> iter = assembledFeatures.iterator();
-        while ( iter.hasNext() ) {
+        while (iter.hasNext()) {
             final Feature f = iter.next();
-            if ( included.contains(f.getId())) {
+            if (included.contains(f.getId())) {
                 iter.remove();
             }
         }
@@ -180,10 +179,8 @@ public abstract class FeatureBuilder {
      * @throws IllegalStateException If a feature can't be provided or the feature can't be assembled
      */
     public static Feature assemble(
-            final ArtifactId featureId,
-            final BuilderContext context,
-            final Feature... features) {
-        if ( featureId == null || features == null || context == null ) {
+            final ArtifactId featureId, final BuilderContext context, final Feature... features) {
+        if (featureId == null || features == null || context == null) {
             throw new IllegalArgumentException("Features and/or context must not be null");
         }
 
@@ -192,9 +189,9 @@ public abstract class FeatureBuilder {
         final Feature[] assembledFeatures = FeatureBuilder.deduplicate(context, features);
 
         // append feature list in extension
-        final Extension list = new Extension(ExtensionType.ARTIFACTS, Extension.EXTENSION_NAME_ASSEMBLED_FEATURES,
-                ExtensionState.TRANSIENT);
-        for(final Feature feature : assembledFeatures) {
+        final Extension list = new Extension(
+                ExtensionType.ARTIFACTS, Extension.EXTENSION_NAME_ASSEMBLED_FEATURES, ExtensionState.TRANSIENT);
+        for (final Feature feature : assembledFeatures) {
             list.getArtifacts().add(new Artifact(feature.getId()));
         }
         target.getExtensions().add(list);
@@ -202,12 +199,20 @@ public abstract class FeatureBuilder {
         // assemble feature
         boolean targetIsComplete = true;
         boolean firstMerge = true;
-        for(final Feature assembled : assembledFeatures) {
+        for (final Feature assembled : assembledFeatures) {
             if (!assembled.isComplete()) {
                 targetIsComplete = false;
             }
 
-            merge(target, assembled, context, context.getArtifactOverrides(), context.getConfigOverrides(), null, false, firstMerge);
+            merge(
+                    target,
+                    assembled,
+                    context,
+                    context.getArtifactOverrides(),
+                    context.getConfigOverrides(),
+                    null,
+                    false,
+                    firstMerge);
             firstMerge = false;
         }
 
@@ -228,23 +233,25 @@ public abstract class FeatureBuilder {
      * @param feature The feature
      * @param additionalVariables Optional additional variables
      */
-    public static void resolveVariables(final Feature feature, final Map<String,String> additionalVariables) {
-        for(final Configuration cfg : feature.getConfigurations()) {
-        	final Set<String> keys = new HashSet<>(Collections.list(cfg.getProperties().keys()));
-        	for(final String key : keys) {
+    public static void resolveVariables(final Feature feature, final Map<String, String> additionalVariables) {
+        for (final Configuration cfg : feature.getConfigurations()) {
+            final Set<String> keys =
+                    new HashSet<>(Collections.list(cfg.getProperties().keys()));
+            for (final String key : keys) {
                 final Object value = cfg.getProperties().get(key);
-                if ( value instanceof String ) {
-                    cfg.getProperties().put(key, replaceVariables((String)value, additionalVariables, feature));
-                } else if ( value instanceof String[]) {
+                if (value instanceof String) {
+                    cfg.getProperties().put(key, replaceVariables((String) value, additionalVariables, feature));
+                } else if (value instanceof String[]) {
                     final String[] values = (String[]) value;
-                    for(int i=0;i<values.length;i++) {
+                    for (int i = 0; i < values.length; i++) {
                         values[i] = replaceVariables(values[i], additionalVariables, feature);
                     }
                     cfg.getProperties().put(key, values);
                 }
             }
         }
-        for(final Map.Entry<String, String> entry : feature.getFrameworkProperties().entrySet()) {
+        for (final Map.Entry<String, String> entry :
+                feature.getFrameworkProperties().entrySet()) {
             // the  value is always a string
             entry.setValue(replaceVariables(entry.getValue(), additionalVariables, feature));
         }
@@ -262,7 +269,8 @@ public abstract class FeatureBuilder {
      * @param feature The feature containing variables
      * @return The value with the variables substituted.
      */
-    static String replaceVariables(final String value, final Map<String,String> additionalVariables, final Feature feature) {
+    static String replaceVariables(
+            final String value, final Map<String, String> additionalVariables, final Feature feature) {
         final String textWithVars = value;
 
         final Matcher m = VARIABLE_PATTERN.matcher(textWithVars.toString());
@@ -272,20 +280,18 @@ public abstract class FeatureBuilder {
 
             final int len = var.length();
             final String name = var.substring(2, len - 1);
-            
+
             if (feature.getVariables().containsKey(name)) {
                 String val = null;
-                if (additionalVariables != null)
-                    val = additionalVariables.get(name);
+                if (additionalVariables != null) val = additionalVariables.get(name);
                 if (val == null) {
                     val = feature.getVariables().get(name);
                 }
 
-                if (val != null) { 
+                if (val != null) {
                     String replaced = replaceVariables(val, additionalVariables, feature);
                     m.appendReplacement(sb, Matcher.quoteReplacement(replaced));
-                }
-                else {
+                } else {
                     throw new IllegalStateException("Undefined variable: " + name);
                 }
             }
@@ -295,21 +301,21 @@ public abstract class FeatureBuilder {
         return sb.toString();
     }
 
-    private static Feature internalAssemble(final List<String> processedFeatures,
-            final Feature feature,
-            final BuilderContext context) {
-        if ( feature.isAssembled() ) {
+    private static Feature internalAssemble(
+            final List<String> processedFeatures, final Feature feature, final BuilderContext context) {
+        if (feature.isAssembled()) {
             return feature;
         }
-        if ( processedFeatures.contains(feature.getId().toMvnId()) ) {
-            throw new IllegalStateException("Recursive inclusion of " + feature.getId().toMvnId() + " via " + processedFeatures);
+        if (processedFeatures.contains(feature.getId().toMvnId())) {
+            throw new IllegalStateException(
+                    "Recursive inclusion of " + feature.getId().toMvnId() + " via " + processedFeatures);
         }
         processedFeatures.add(feature.getId().toMvnId());
 
         // we copy the feature as we set the assembled flag on the result
         final Feature result = feature.copy();
 
-        if ( result.getPrototype() != null) {
+        if (result.getPrototype() != null) {
             // clear everything in the result, will be added in the process
             result.getVariables().clear();
             result.getBundles().clear();
@@ -323,7 +329,7 @@ public abstract class FeatureBuilder {
             final Prototype i = feature.getPrototype();
 
             final Feature f = context.getFeatureProvider().provide(i.getId());
-            if ( f == null ) {
+            if (f == null) {
                 throw new IllegalStateException("Unable to find prototype feature " + i.getId());
             }
             if (f.isFinal()) {
@@ -335,14 +341,29 @@ public abstract class FeatureBuilder {
             // process prototype instructions
             processPrototype(prototypeFeature, i);
 
-            // and now merge the prototype feature into the result. No overrides should be needed since the result is empty before
-            merge(result, prototypeFeature, context, Collections.emptyList(), Collections.emptyMap(), TRACKING_KEY, true, true);
+            // and now merge the prototype feature into the result. No overrides should be needed since the result is
+            // empty before
+            merge(
+                    result,
+                    prototypeFeature,
+                    context,
+                    Collections.emptyList(),
+                    Collections.emptyMap(),
+                    TRACKING_KEY,
+                    true,
+                    true);
 
             // and merge the current feature over the prototype feature into the result
-            merge(result, feature, context, Collections.singletonList(
-                    ArtifactId.parse(BuilderUtil.CATCHALL_OVERRIDE + BuilderContext.VERSION_OVERRIDE_ALL)),
+            merge(
+                    result,
+                    feature,
+                    context,
+                    Collections.singletonList(
+                            ArtifactId.parse(BuilderUtil.CATCHALL_OVERRIDE + BuilderContext.VERSION_OVERRIDE_ALL)),
                     Collections.singletonMap("*", BuilderContext.CONFIG_MERGE_LATEST),
-                    TRACKING_KEY, true, false);
+                    TRACKING_KEY,
+                    true,
+                    false);
 
             for (Artifact a : result.getBundles()) {
                 a.getMetadata().remove(TRACKING_KEY);
@@ -359,9 +380,9 @@ public abstract class FeatureBuilder {
                 }
             }
             // correct feature origins
-            for(final Configuration cfg : result.getConfigurations()) {
+            for (final Configuration cfg : result.getConfigurations()) {
                 final List<ArtifactId> origins = cfg.getFeatureOrigins();
-                if ( origins.size() == 1 && origins.contains(feature.getId())) {
+                if (origins.size() == 1 && origins.contains(feature.getId())) {
                     cfg.setFeatureOrigins(null);
                 }
             }
@@ -374,21 +395,24 @@ public abstract class FeatureBuilder {
         return result;
     }
 
-    private static void merge(final Feature target,
+    private static void merge(
+            final Feature target,
             final Feature source,
             final BuilderContext context,
             final List<ArtifactId> artifactOverrides,
             final Map<String, String> configOverrides,
-            final String originKey,            
+            final String originKey,
             final boolean prototypeMerge,
             final boolean initialMerge) {
         BuilderUtil.mergeVariables(target, source, context.getVariablesOverrides());
         BuilderUtil.mergeArtifacts(target.getBundles(), source.getBundles(), source, artifactOverrides, originKey);
-        BuilderUtil.mergeConfigurations(target.getConfigurations(), source.getConfigurations(), configOverrides, source.getId());
+        BuilderUtil.mergeConfigurations(
+                target.getConfigurations(), source.getConfigurations(), configOverrides, source.getId());
         BuilderUtil.mergeFrameworkProperties(target, source, context.getFrameworkPropertiesOverrides());
         BuilderUtil.mergeRequirements(target.getRequirements(), source.getRequirements());
         BuilderUtil.mergeCapabilities(target.getCapabilities(), source.getCapabilities());
-        BuilderUtil.mergeExtensions(target, source, context, artifactOverrides, originKey, prototypeMerge, initialMerge);
+        BuilderUtil.mergeExtensions(
+                target, source, context, artifactOverrides, originKey, prototypeMerge, initialMerge);
     }
 
     /**
@@ -402,7 +426,7 @@ public abstract class FeatureBuilder {
         for (final ArtifactId a : prototype.getBundleRemovals()) {
             boolean removed = false;
             final boolean ignoreVersion = a.getOSGiVersion().equals(Version.emptyVersion);
-            if ( ignoreVersion ) {
+            if (ignoreVersion) {
                 // remove any version of that bundle
                 while (feature.getBundles().removeSame(a)) {
                     // continue to remove
@@ -412,23 +436,23 @@ public abstract class FeatureBuilder {
                 // remove exact version
                 removed = feature.getBundles().removeExact(a);
             }
-            if ( !removed ) {
+            if (!removed) {
                 throw new IllegalStateException("Bundle " + a + " can't be removed from feature " + feature.getId()
                         + " as it is not part of that feature.");
             }
             final Iterator<Configuration> iter = feature.getConfigurations().iterator();
-            while ( iter.hasNext() ) {
+            while (iter.hasNext()) {
                 final Configuration cfg = iter.next();
-                final String bundleId = (String)cfg.getProperties().get(Configuration.PROP_ARTIFACT_ID);
+                final String bundleId = (String) cfg.getProperties().get(Configuration.PROP_ARTIFACT_ID);
                 if (bundleId != null) {
                     final ArtifactId bundleArtifactId = ArtifactId.fromMvnId(bundleId);
                     boolean remove = false;
-                    if ( ignoreVersion ) {
+                    if (ignoreVersion) {
                         remove = bundleArtifactId.isSame(a);
                     } else {
                         remove = bundleArtifactId.equals(a);
                     }
-                    if (  remove) {
+                    if (remove) {
                         iter.remove();
                     }
                 }
@@ -442,8 +466,8 @@ public abstract class FeatureBuilder {
             final String attr = (attrPos == -1 ? null : c.substring(attrPos + 1));
 
             final Configuration found = feature.getConfigurations().getConfiguration(pid);
-            if ( found != null ) {
-                if ( attr == null ) {
+            if (found != null) {
+                if (attr == null) {
                     feature.getConfigurations().remove(found);
                 } else {
                     found.getProperties().remove(attr);
@@ -459,27 +483,28 @@ public abstract class FeatureBuilder {
         // process extensions removals
         for (final String name : prototype.getExtensionRemovals()) {
             for (final Extension ext : feature.getExtensions()) {
-                if ( ext.getName().equals(name) ) {
+                if (ext.getName().equals(name)) {
                     feature.getExtensions().remove(ext);
                     break;
                 }
             }
         }
         // process artifact extensions removals
-        for (final Map.Entry<String, List<ArtifactId>> entry : prototype.getArtifactExtensionRemovals().entrySet()) {
+        for (final Map.Entry<String, List<ArtifactId>> entry :
+                prototype.getArtifactExtensionRemovals().entrySet()) {
             for (final Extension ext : feature.getExtensions()) {
-                if ( ext.getName().equals(entry.getKey()) ) {
-                    for(final ArtifactId toRemove : entry.getValue() ) {
+                if (ext.getName().equals(entry.getKey())) {
+                    for (final ArtifactId toRemove : entry.getValue()) {
                         boolean removed = false;
                         final boolean ignoreVersion = toRemove.getOSGiVersion().equals(Version.emptyVersion);
                         final Iterator<Artifact> iter = ext.getArtifacts().iterator();
-                        while ( iter.hasNext() ) {
+                        while (iter.hasNext()) {
                             final Artifact a = iter.next();
 
                             boolean remove = false;
-                            if ( ignoreVersion ) {
+                            if (ignoreVersion) {
                                 // remove any version of that bundle
-                                if ( a.getId().isSame(toRemove) ) {
+                                if (a.getId().isSame(toRemove)) {
                                     remove = true;
                                 }
                             } else {
@@ -487,15 +512,15 @@ public abstract class FeatureBuilder {
 
                                 remove = a.getId().equals(toRemove);
                             }
-                            if ( remove ) {
+                            if (remove) {
                                 iter.remove();
                                 removed = true;
                             }
-                            if ( remove && !ignoreVersion ) {
+                            if (remove && !ignoreVersion) {
                                 break;
                             }
                         }
-                        if ( !removed ) {
+                        if (!removed) {
                             throw new IllegalStateException("Artifact " + toRemove + " can't be removed from feature "
                                     + feature.getId() + " as it is not part of that feature.");
                         }

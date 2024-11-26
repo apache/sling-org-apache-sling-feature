@@ -1,18 +1,20 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements. See the NOTICE file distributed with this
- * work for additional information regarding copyright ownership. The ASF
- * licenses this file to You under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.feature;
 
@@ -25,7 +27,6 @@ import java.io.StringWriter;
 import jakarta.json.Json;
 import jakarta.json.JsonStructure;
 import jakarta.json.JsonWriter;
-
 import org.apache.sling.feature.builder.BuilderContext;
 
 /**
@@ -123,11 +124,10 @@ public class Extension implements Serializable {
         }
     }
 
-    private void readObject(final ObjectInputStream in)
-    throws IOException, ClassNotFoundException {
+    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
         // initialize json object
-        if ( this.type == ExtensionType.JSON ) {
+        if (this.type == ExtensionType.JSON) {
             this.setJSON(this.text);
         }
     }
@@ -165,7 +165,7 @@ public class Extension implements Serializable {
      * @throws IllegalStateException if the type is not {@code ExtensionType#TEXT}
      */
     public String getText() {
-        if ( type != ExtensionType.TEXT ) {
+        if (type != ExtensionType.TEXT) {
             throw new IllegalStateException();
         }
         return text;
@@ -177,7 +177,7 @@ public class Extension implements Serializable {
      * @throws IllegalStateException if the type is not {@code ExtensionType#TEXT}
      */
     public void setText(final String text) {
-        if ( type != ExtensionType.TEXT ) {
+        if (type != ExtensionType.TEXT) {
             throw new IllegalStateException();
         }
         this.text = text;
@@ -190,7 +190,7 @@ public class Extension implements Serializable {
      * @throws IllegalStateException if the type is not {@code ExtensionType#JSON}
      */
     public String getJSON() {
-        if ( type != ExtensionType.JSON ) {
+        if (type != ExtensionType.JSON) {
             throw new IllegalStateException();
         }
         return text;
@@ -205,7 +205,7 @@ public class Extension implements Serializable {
      * @throws IllegalArgumentException If the structure is not valid
      */
     public void setJSON(String text) {
-        if ( type != ExtensionType.JSON ) {
+        if (type != ExtensionType.JSON) {
             throw new IllegalStateException();
         }
         this.text = text;
@@ -260,7 +260,7 @@ public class Extension implements Serializable {
      *                               {@code ExtensionType#ARTIFACTS}
      */
     public Artifacts getArtifacts() {
-        if ( type != ExtensionType.ARTIFACTS ) {
+        if (type != ExtensionType.ARTIFACTS) {
             throw new IllegalStateException();
         }
         return artifacts;
@@ -272,20 +272,20 @@ public class Extension implements Serializable {
      */
     public Extension copy() {
         Extension c = new Extension(type, name, state);
-        switch(type) {
-        case TEXT:
-            c.setText(text);
-            break;
-        case JSON:
-            c.setJSON(text);
-            break;
-        case ARTIFACTS:
-            if (artifacts != null) {
-                for (Artifact a : artifacts) {
-                    c.getArtifacts().add(a.copy(a.getId()));
+        switch (type) {
+            case TEXT:
+                c.setText(text);
+                break;
+            case JSON:
+                c.setJSON(text);
+                break;
+            case ARTIFACTS:
+                if (artifacts != null) {
+                    for (Artifact a : artifacts) {
+                        c.getArtifacts().add(a.copy(a.getId()));
+                    }
                 }
-            }
-            break;
+                break;
         }
         return c;
     }
@@ -303,7 +303,7 @@ public class Extension implements Serializable {
         if (obj == null || getClass() != obj.getClass()) {
             return false;
         }
-        return name.equals(((Extension)obj).name);
+        return name.equals(((Extension) obj).name);
     }
 
     @Override

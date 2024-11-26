@@ -1,18 +1,20 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements. See the NOTICE file distributed with this
- * work for additional information regarding copyright ownership. The ASF
- * licenses this file to You under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.feature.io.archive;
 
@@ -70,48 +72,47 @@ public class ArchiveReader {
      * @return The feature models mentioned in the manifest of the archive
      * @throws IOException If anything goes wrong
      */
-    public static Set<Feature> read(final InputStream in,
-                             final ArtifactConsumer consumer)
-    throws IOException {
+    public static Set<Feature> read(final InputStream in, final ArtifactConsumer consumer) throws IOException {
         final JarInputStream jis = new JarInputStream(in);
 
         // validate manifest and get feature ids
         final String[] featureIds = checkHeaderAndExtractContents(jis.getManifest());
         final List<String> featurePaths = Arrays.asList(featureIds).stream()
-                .map(id -> ArtifactId.parse(id).toMvnPath()).collect(Collectors.toList());
-
+                .map(id -> ArtifactId.parse(id).toMvnPath())
+                .collect(Collectors.toList());
 
         // read contents
         final Set<Feature> features = new HashSet<>();
         final Set<ArtifactId> artifacts = new HashSet<>();
 
         JarEntry entry = null;
-        while ( ( entry = jis.getNextJarEntry() ) != null ) {
+        while ((entry = jis.getNextJarEntry()) != null) {
             if (!entry.isDirectory() && !entry.getName().startsWith("META-INF/")) {
                 final ArtifactId id = ArtifactId.fromMvnPath(entry.getName());
 
                 if (featurePaths.contains(entry.getName())) {
                     // feature - read to string first
                     final String contents;
-                    try ( final StringWriter writer = new StringWriter()) {
+                    try (final StringWriter writer = new StringWriter()) {
                         // don't close the input stream
                         final Reader reader = new InputStreamReader(jis, "UTF-8");
                         final char[] buffer = new char[2048];
                         int l;
-                        while ( (l = reader.read(buffer)) > 0) {
+                        while ((l = reader.read(buffer)) > 0) {
                             writer.write(buffer, 0, l);
                         }
                         writer.flush();
                         contents = writer.toString();
                     }
                     // add to features
-                    try ( final Reader reader = new StringReader(contents) ) {
+                    try (final Reader reader = new StringReader(contents)) {
                         final Feature feature = FeatureJSONReader.read(reader, entry.getName());
                         features.add(feature);
                     }
                     // pass to consumer
-                    if ( consumer != null ) {
-                        try ( final InputStream is = new ByteArrayInputStream(contents.getBytes(StandardCharsets.UTF_8))) {
+                    if (consumer != null) {
+                        try (final InputStream is =
+                                new ByteArrayInputStream(contents.getBytes(StandardCharsets.UTF_8))) {
                             consumer.consume(id, is);
                         }
                     }
