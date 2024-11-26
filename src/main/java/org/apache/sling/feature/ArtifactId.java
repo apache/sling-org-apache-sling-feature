@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import org.osgi.framework.Version;
 
@@ -314,15 +315,10 @@ public class ArtifactId implements Comparable<ArtifactId>, Serializable {
      * @return {@code true} if group id, artifact id, type and classifier equal
      */
     public boolean isSame(final ArtifactId id) {
-        if (this.groupId.equals(id.groupId) && this.artifactId.equals(id.artifactId) && this.type.equals(id.type)) {
-            if (this.classifier == null && id.classifier == null) {
-                return true;
-            }
-            if (this.classifier != null) {
-                return this.classifier.equals(id.classifier);
-            }
-        }
-        return false;
+        return Objects.equals(this.groupId, id.groupId)
+                && Objects.equals(this.artifactId, id.artifactId)
+                && Objects.equals(this.type, id.type)
+                && Objects.equals(this.classifier, id.classifier);
     }
 
     /**
@@ -486,14 +482,15 @@ public class ArtifactId implements Comparable<ArtifactId>, Serializable {
 
     @Override
     public int hashCode() {
-        return toMvnUrl().hashCode();
+        return Objects.hash(groupId, artifactId, version, classifier, type);
     }
 
     @Override
     public boolean equals(Object o) {
         if (o == null) return false;
         if (!(o instanceof ArtifactId)) return false;
-        return toMvnUrl().equals(((ArtifactId) o).toMvnUrl());
+        ArtifactId artifactId = (ArtifactId) o;
+        return Objects.equals(version, artifactId.version) && isSame(artifactId);
     }
 
     @Override
