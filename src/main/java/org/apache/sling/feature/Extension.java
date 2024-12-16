@@ -27,7 +27,6 @@ import java.io.StringWriter;
 import jakarta.json.Json;
 import jakarta.json.JsonStructure;
 import jakarta.json.JsonWriter;
-import org.apache.sling.feature.builder.BuilderContext;
 
 /**
  * An Extension can either be of type
