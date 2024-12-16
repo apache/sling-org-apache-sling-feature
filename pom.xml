@@ -57,7 +57,6 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.resource</artifactId>
-            <version>1.0.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -69,7 +68,6 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.util.converter</artifactId>
-            <version>1.0.9</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -112,7 +110,6 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.util.function</artifactId>
-            <version>1.2.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
