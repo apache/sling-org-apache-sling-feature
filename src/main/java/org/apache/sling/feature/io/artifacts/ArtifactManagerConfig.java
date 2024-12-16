@@ -74,7 +74,7 @@ public class ArtifactManagerConfig implements ArtifactProviderContext {
         // set defaults
         String mvnRepositoryDirectory = getMvnRepositoryDirectory();
         this.repositoryUrls = new String[] {
-            "file://" + new File(mvnRepositoryDirectory).toURI().getPath(),
+            toFileUrl(mvnRepositoryDirectory),
             "https://repo.maven.apache.org/maven2",
             "https://repository.apache.org/content/groups/snapshots"
         };
@@ -219,5 +219,9 @@ public class ArtifactManagerConfig implements ArtifactProviderContext {
             }
         }
         return mavenDirectory + "/repository";
+    }
+
+    static final String toFileUrl(String path) {
+        return "file://" + new File(path).toURI().getPath();
     }
 }
