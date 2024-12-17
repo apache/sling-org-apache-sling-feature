@@ -18,12 +18,23 @@
  */
 package org.apache.sling.feature.io.artifacts;
 
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
 import java.io.File;
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.sling.feature.io.artifacts.spi.ArtifactProviderContext;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 /**
  * This class holds the configuration of artifact manager.
@@ -54,17 +65,20 @@ public class ArtifactManagerConfig implements ArtifactProviderContext {
      */
     private final @NotNull String repoHome;
 
+    private static final Logger logger = LoggerFactory.getLogger(ArtifactManagerConfig.class);
+
     /**
      * Create a new configuration object. Set the default values
      */
     public ArtifactManagerConfig() {
         // set defaults
+        String mvnRepositoryDirectory = getMvnRepositoryDirectory();
         this.repositoryUrls = new String[] {
-            "file://" + new File(System.getProperty("user.home")).toURI().getPath() + ".m2/repository",
+            toFileUrl(mvnRepositoryDirectory),
             "https://repo.maven.apache.org/maven2",
             "https://repository.apache.org/content/groups/snapshots"
         };
-        this.repoHome = System.getProperty("user.home") + "/.m2/repository/";
+        this.repoHome = mvnRepositoryDirectory + "/";
     }
 
     /**
@@ -178,5 +192,36 @@ public class ArtifactManagerConfig implements ArtifactProviderContext {
     @NotNull
     String getMvnHome() {
         return this.repoHome;
+    }
+
+    /**
+     * Get the .m2 directory for the current user.
+     * If a ~/.m2/settings.xml exists, it is checked for a localRepository configuration.
+     * Otherwise ~/.m2/repository is used as default value.
+     * @return Maven repository directory
+     */
+    private static final String getMvnRepositoryDirectory() {
+        String mavenDirectory = System.getProperty("user.home") + "/.m2";
+        File settings = new File(mavenDirectory, "settings.xml");
+        if (settings.exists()) {
+            try {
+                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+                factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+                DocumentBuilder builder = factory.newDocumentBuilder();
+                Document doc = builder.parse(settings);
+                NodeList nodes = doc.getElementsByTagName("localRepository");
+                if (nodes.getLength() > 0) {
+                    String localRepository = nodes.item(0).getTextContent();
+                    return new File(localRepository).getAbsolutePath();
+                }
+            } catch (ParserConfigurationException | SAXException | IOException ex) {
+                logger.warn("Unable to parse " + settings.getAbsolutePath(), ex);
+            }
+        }
+        return mavenDirectory + "/repository";
+    }
+
+    static final String toFileUrl(String path) {
+        return "file://" + new File(path).toURI().getPath();
     }
 }
