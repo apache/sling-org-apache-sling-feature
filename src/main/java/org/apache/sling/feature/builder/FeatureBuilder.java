@@ -216,6 +216,10 @@ public abstract class FeatureBuilder {
             firstMerge = false;
         }
 
+        // Resolve any OSGi-identity (BSN+Bundle-Version) collisions that the
+        // Maven-coordinate dedup cannot detect. No-op when no policy is set.
+        OsgiBsnDeduplicator.apply(target, context);
+
         // check complete flag
         if (targetIsComplete) {
             target.setComplete(true);

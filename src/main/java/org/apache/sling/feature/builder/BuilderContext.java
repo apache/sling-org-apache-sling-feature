@@ -110,6 +110,7 @@ public class BuilderContext {
     private final Map<String, String> variables = new HashMap<>();
     private final Map<String, String> frameworkProperties = new HashMap<>();
     private final Map<String, String> configOverrides = new LinkedHashMap<>();
+    private boolean osgiBsnCollisionDetection;
 
     /**
      * Create a new context.
@@ -230,6 +231,31 @@ public class BuilderContext {
     }
 
     /**
+     * Enable detection of OSGi Bundle-SymbolicName collisions during assembly.
+     * When bundles share a BSN but have different Maven coordinates, the
+     * wildcard overrides set with {@link #addArtifactsOverride(ArtifactId)}
+     * ({@code *:*:HIGHEST/LATEST/FIRST/ALL/<version>}) resolve them; if none
+     * matches, {@link FeatureBuilder#assemble} throws.
+     * {@link #setArtifactProvider(ArtifactProvider)} must be configured.
+     *
+     * @param enabled {@code true} to enable, {@code false} to disable (default)
+     * @return The builder context
+     * @since 2.1.0
+     */
+    public BuilderContext setOsgiBsnCollisionDetection(final boolean enabled) {
+        this.osgiBsnCollisionDetection = enabled;
+        return this;
+    }
+
+    /**
+     * @return whether BSN collision detection is enabled. Default {@code false}.
+     * @since 2.1.0
+     */
+    public boolean isOsgiBsnCollisionDetectionEnabled() {
+        return this.osgiBsnCollisionDetection;
+    }
+
+    /**
      * Obtain the handler configuration.
      *
      * @return The current handler configuration object. The key is the handler name
@@ -297,6 +323,7 @@ public class BuilderContext {
         ctx.extensionConfiguration.putAll(this.extensionConfiguration);
         ctx.mergeExtensions.addAll(mergeExtensions);
         ctx.postProcessExtensions.addAll(postProcessExtensions);
+        ctx.osgiBsnCollisionDetection = this.osgiBsnCollisionDetection;
         return ctx;
     }
 }
