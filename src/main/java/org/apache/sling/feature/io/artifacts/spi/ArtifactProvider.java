@@ -57,4 +57,22 @@ public interface ArtifactProvider {
      * @return A local url if the artifact exists or {@code null}
      */
     URL getArtifact(String url, String relativeCachePath);
+
+    /**
+     * Get a local file for the artifact URL.
+     *
+     * @param url Artifact url
+     * @param relativeCachePath A relative path that can be used as a cache path
+     *                          by the provider. The path does not start with a slash.
+     * @return A local url, never {@code null}
+     * @throws IOException If the artifact cannot be retrieved or does not exist.
+     * @since 1.1.0
+     */
+    default URL getArtifactFile(String url, String relativeCachePath) throws IOException {
+        final URL result = getArtifact(url, relativeCachePath);
+        if (result == null) {
+            throw new IOException("Artifact not found: " + url);
+        }
+        return result;
+    }
 }

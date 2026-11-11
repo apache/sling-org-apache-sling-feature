@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.ProcessBuilder.Redirect;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -39,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -164,18 +166,30 @@ public class ArtifactManager implements AutoCloseable, org.apache.sling.feature.
         });
     }
 
-    private final URL getArtifactFromProviders(final String url, final String relativeCachePath) throws IOException {
-        final int pos = url.indexOf(":");
-        final String scheme = url.substring(0, pos);
-
+    ArtifactProvider getArtifactProvider(final String scheme) {
         ArtifactProvider provider = this.providers.get(scheme);
         if (provider == null) {
             provider = this.providers.get("*");
         }
+        return provider;
+    }
+
+    private final URL getArtifactFromProviders(final String url, final String relativeCachePath) throws IOException {
+        final int pos = url.indexOf(":");
+        final String scheme = url.substring(0, pos);
+
+        final ArtifactProvider provider = this.getArtifactProvider(scheme);
         if (provider == null) {
             throw new IOException("No URL provider found for " + url);
         }
-        return provider.getArtifact(url, relativeCachePath);
+        URL file = provider.getArtifactFile(url, relativeCachePath);
+        if (file == null) {
+            file = provider.getArtifact(url, relativeCachePath);
+        }
+        if (file == null) {
+            throw new IOException("Artifact not found: " + url);
+        }
+        return file;
     }
 
     /**
@@ -227,6 +241,7 @@ public class ArtifactManager implements AutoCloseable, org.apache.sling.feature.
         }
         logger.debug("Querying repositories for {}", path);
 
+        final Map<String, Exception> failures = new LinkedHashMap<>();
         for (final String repoUrl : this.config.getRepositoryUrls()) {
             final StringBuilder builder = new StringBuilder();
             builder.append(repoUrl);
@@ -237,17 +252,27 @@ public class ArtifactManager implements AutoCloseable, org.apache.sling.feature.
             final int pos = artifactUrl.indexOf(":");
             final String scheme = artifactUrl.substring(0, pos);
 
-            ArtifactProvider handler = this.providers.get(scheme);
+            ArtifactProvider handler = this.getArtifactProvider(scheme);
             if (handler == null) {
-                handler = this.providers.get("*");
-            }
-            if (handler == null) {
-                throw new IOException("No URL handler found for " + artifactUrl);
+                failures.put(repoUrl, new IOException("No URL handler found for " + artifactUrl));
+                continue;
             }
 
             logger.debug("Checking {} to get artifact from {}", handler, artifactUrl);
 
-            final URL file = handler.getArtifact(artifactUrl, path);
+            URL file = null;
+            try {
+                file = handler.getArtifactFile(artifactUrl, path);
+            } catch (final IOException e) {
+                logger.debug("Failed to get artifact from {}", artifactUrl, e);
+                failures.put(repoUrl, e);
+            }
+            if (file == null && !failures.containsKey(repoUrl)) {
+                file = handler.getArtifact(artifactUrl, path);
+                if (file == null) {
+                    failures.put(repoUrl, new IOException("Artifact not found: " + artifactUrl));
+                }
+            }
             if (file != null) {
                 logger.debug("Found artifact {}", artifactUrl);
                 return new ArtifactHandler(artifactUrl, file);
@@ -275,9 +300,6 @@ public class ArtifactManager implements AutoCloseable, org.apache.sling.feature.
                             pos2++;
                         }
                         final URL file2 = this.getArtifactFromProviders(fullURL, path);
-                        if (file2 == null) {
-                            throw new IOException("Artifact " + fullURL + " not found.");
-                        }
                         return new ArtifactHandler(artifactUrl, file2);
                     }
                 } catch (final IOException ignore) {
@@ -294,7 +316,23 @@ public class ArtifactManager implements AutoCloseable, org.apache.sling.feature.
                 return new ArtifactHandler(file);
             }
         }
-        throw new IOException("Artifact " + url + " not found in any repository.");
+
+        if (failures.isEmpty()) {
+            throw new IOException("Artifact " + url + " not found in any repository.");
+        }
+        final StringBuilder message = new StringBuilder("Artifact ");
+        message.append(url).append(" not found in configured repositories:");
+        for (final Map.Entry<String, Exception> entry : failures.entrySet()) {
+            message.append("\n  - ")
+                    .append(entry.getKey())
+                    .append(": ")
+                    .append(entry.getValue().getMessage());
+        }
+        final IOException exception = new IOException(message.toString());
+        for (final Exception failure : failures.values()) {
+            exception.addSuppressed(failure);
+        }
+        throw exception;
     }
 
     protected String getFileContents(final ArtifactHandler handler) throws IOException {
@@ -388,70 +426,112 @@ public class ArtifactManager implements AutoCloseable, org.apache.sling.feature.
 
         @Override
         public URL getArtifact(final String url, final String relativeCachePath) {
-            logger.debug("Checking url to be local file {}", url);
-            // check if this is already a local file
             try {
-                URI uri = new URI(url);
+                return getArtifactFile(url, relativeCachePath);
+            } catch (final IOException e) {
+                logger.info("Artifact not found in one repository", e);
+                return null;
+            }
+        }
+
+        private URL checkLocalFile(final String url) throws IOException {
+            logger.debug("Checking url to be local file {}", url);
+            try {
+                final URI uri = new URI(url);
                 if (FileSystems.getDefault().provider().getScheme().equals(uri.getScheme())) {
                     final Path f = Paths.get(uri);
                     if (Files.exists(f)) {
                         this.config.incLocalArtifacts();
                         return f.toUri().toURL();
                     }
-                    return null;
+                    throw new IOException("Local file does not exist: " + url);
                 }
-            } catch (final URISyntaxException ise) {
-                // ignore
-            } catch (final MalformedURLException mue) {
+            } catch (final URISyntaxException | MalformedURLException ignored) {
                 // ignore
             }
-            logger.debug("Checking remote url {}", url);
+            return null;
+        }
+
+        private Path getCacheFile(final String relativeCachePath) {
+            String adjustedRelativePath = relativeCachePath;
+            // For Windows we need to remove the drive name from the path
+            int pos = adjustedRelativePath.indexOf(":/");
+            if (pos >= 0) {
+                adjustedRelativePath = adjustedRelativePath.substring(pos + 2);
+            }
+            return cacheDir.resolve(adjustedRelativePath.replace(
+                    "/", java.nio.file.FileSystems.getDefault().getSeparator()));
+        }
+
+        private void setupAuthorization(final URL u, final URLConnection con) throws IOException {
+            final String userInfo = u.getUserInfo();
+            if (userInfo != null) {
+                try {
+                    con.addRequestProperty(
+                            "Authorization",
+                            "Basic "
+                                    + Base64.getEncoder()
+                                            .encodeToString(
+                                                    u.toURI().getUserInfo().getBytes("UTF-8")));
+                } catch (final URISyntaxException use) {
+                    throw new IOException("Malformed user info URI in " + u, use);
+                }
+            }
+        }
+
+        private void downloadRemoteArtifact(final String url, final Path cacheFile) throws IOException {
+            Files.createDirectories(cacheFile.getParent());
+            final URL u = new URL(url);
+            final URLConnection con = u.openConnection();
+            setupAuthorization(u, con);
             try {
-                // check for url
-                if (url.indexOf(":") == -1) {
-                    return null;
-                }
-
-                String adjustedRelativePath = relativeCachePath;
-                // For Windows we need to remove the drive name from the path
-                int pos = adjustedRelativePath.indexOf(":/");
-                if (pos >= 0) {
-                    adjustedRelativePath = adjustedRelativePath.substring(pos + 2);
-                }
-                Path cacheFile = cacheDir.resolve(adjustedRelativePath.replace(
-                        "/", java.nio.file.FileSystems.getDefault().getSeparator()));
-                if (!Files.exists(cacheFile)) {
-                    Files.createDirectories(cacheFile.getParent());
-                    final URL u = new URL(url);
-                    final URLConnection con = u.openConnection();
-                    final String userInfo = u.getUserInfo();
-                    if (userInfo != null) {
-                        con.addRequestProperty(
-                                "Authorization",
-                                "Basic "
-                                        + Base64.getEncoder()
-                                                .encodeToString(
-                                                        u.toURI().getUserInfo().getBytes("UTF-8")));
-                    }
-                    con.connect();
-
-                    try (InputStream input = con.getInputStream()) {
-                        Files.copy(input, cacheFile);
-                    } catch (IOException e) {
-                        // TODO: Remove this logging statement when it settled down
-                        logger.debug("Failed to copy file", e);
-                        throw e;
-                    }
-                    this.config.incDownloadedArtifacts();
-                } else {
-                    this.config.incCachedArtifacts();
-                }
-                return cacheFile.toUri().toURL();
-            } catch (final Exception e) {
-                logger.info("Artifact not found in one repository", e);
-                // ignore for now
-                return null;
+                con.connect();
+            } catch (final IOException ce) {
+                throw new IOException("Connection failed to " + url + ": " + ce.getMessage(), ce);
             }
+
+            try (InputStream input = con.getInputStream()) {
+                Files.copy(input, cacheFile);
+            } catch (IOException e) {
+                if (con instanceof HttpURLConnection) {
+                    final HttpURLConnection httpCon = (HttpURLConnection) con;
+                    int code = -1;
+                    String msg = null;
+                    try {
+                        code = httpCon.getResponseCode();
+                        msg = httpCon.getResponseMessage();
+                    } catch (final IOException ignored) {
+                        // fall back to e
+                    }
+                    if (code != -1) {
+                        throw new IOException(
+                                "HTTP " + code + (msg != null && !msg.isEmpty() ? " " + msg : "") + " from " + url, e);
+                    }
+                }
+                throw new IOException("Failed to download artifact from " + url + ": " + e.getMessage(), e);
+            }
+            this.config.incDownloadedArtifacts();
+        }
+
+        @Override
+        public URL getArtifactFile(final String url, final String relativeCachePath) throws IOException {
+            final URL localFile = checkLocalFile(url);
+            if (localFile != null) {
+                return localFile;
+            }
+
+            logger.debug("Checking remote url {}", url);
+            if (url.indexOf(":") == -1) {
+                throw new IOException("Malformed URL without scheme: " + url);
+            }
+
+            final Path cacheFile = getCacheFile(relativeCachePath);
+            if (!Files.exists(cacheFile)) {
+                downloadRemoteArtifact(url, cacheFile);
+            } else {
+                this.config.incCachedArtifacts();
+            }
+            return cacheFile.toUri().toURL();
         }
 
         @Override
